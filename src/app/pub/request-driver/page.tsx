@@ -297,37 +297,17 @@ function RequestDriverContent() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 16, marginTop: 12, width: '100%', maxWidth: '360px' }}>
-                <button 
-                  onClick={() => {
-                    navigator.clipboard.writeText(trackingUrl);
-                    alert('คัดลอกลิงก์ติดตามการเดินทางเรียบร้อยแล้ว!');
-                  }}
-                  style={{
-                    flex: 1,
-                    backgroundColor: '#ffffff',
-                    color: '#4f46e5',
-                    border: '1.5px solid #4f46e5',
-                    borderRadius: 12,
-                    padding: '12px 16px',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    fontFamily: "'Kanit', sans-serif"
-                  }}
-                >
-                  🔗 คัดลอกลิงก์
-                </button>
+              <div style={{ marginTop: 12, width: '100%', maxWidth: '360px' }}>
                 <button 
                   onClick={() => router.push(`/pub/tracking?id=${trackingCode}`)}
                   style={{
-                    flex: 1.5,
+                    width: '100%',
                     backgroundColor: '#4f46e5',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: 12,
-                    padding: '12px 16px',
-                    fontSize: 14,
+                    padding: '13px 16px',
+                    fontSize: 15,
                     fontWeight: 700,
                     cursor: 'pointer',
                     fontFamily: "'Kanit', sans-serif"

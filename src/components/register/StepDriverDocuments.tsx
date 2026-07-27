@@ -5,6 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React from 'react'
+import PaperclipIcon from '@/components/ui/PaperclipIcon'
 
 interface StepDriverDocumentsProps {
   files: {
@@ -45,7 +46,7 @@ export default function StepDriverDocuments({
             onClick={() => inputRef.current?.click()}
             title="แนบไฟล์"
           >
-            📎
+            <PaperclipIcon size={16} color="#475569" />
           </button>
           <span style={styles.fileName}>
             {file ? file.name : 'ยังไม่ได้เลือกไฟล์'}

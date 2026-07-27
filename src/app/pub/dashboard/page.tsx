@@ -70,7 +70,7 @@ export default function PubDashboardPage() {
         </div>
         <div style={s.navRight}>
           <span style={s.navGreeting}>สวัสดี, <strong>{pubName}</strong></span>
-          <button style={s.logoutBtn} onClick={handleLogout}>ออกจากระบบ</button>
+          <button style={s.logoutBtn} className="pub-logout-btn" onClick={handleLogout}>ออกจากระบบ</button>
         </div>
       </nav>
 
@@ -86,7 +86,7 @@ export default function PubDashboardPage() {
       <main style={s.main}>
         <div style={s.cardGrid}>
           {cards.map(card => (
-            <div key={card.id} style={s.card} className={`pub-card-${card.id}`}>
+            <div key={card.id} style={s.card} className={`glass-card pub-card-${card.id}`}>
               {/* Header Image */}
               <img src={card.image} alt={card.title} style={s.cardImg} />
 
@@ -100,6 +100,7 @@ export default function PubDashboardPage() {
 
                 {/* Button */}
                 <button
+                  className="pub-card-btn"
                   style={{
                     ...s.cardBtn,
                     backgroundColor: card.accentColor,
@@ -138,10 +139,19 @@ export default function PubDashboardPage() {
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
-        * { box-sizing: border-box; font-family: 'Kanit', sans-serif; }
+        * { box-sizing: border-box; font-family: 'Kanit', 'Inter', sans-serif; }
         .pub-card-request:hover, .pub-card-summary:hover, .pub-card-list:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
+          transform: translateY(-3px);
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.09), 0 0 0 1px rgba(79, 70, 229, 0.12) !important;
+          border-color: #c7d2fe !important;
+        }
+        .pub-logout-btn:hover {
+          background: rgba(255,255,255,0.12) !important;
+          border-color: rgba(255,255,255,0.2) !important;
+        }
+        .pub-card-btn:hover {
+          filter: brightness(1.08);
+          transform: translateY(-1px);
         }
       `}</style>
     </div>
@@ -152,7 +162,7 @@ const s: { [k: string]: React.CSSProperties } = {
   page: {
     minHeight: '100vh',
     backgroundColor: '#f8fafc',
-    fontFamily: "'Kanit', sans-serif",
+    fontFamily: "'Kanit', 'Inter', sans-serif",
     display: 'flex',
     flexDirection: 'column',
   },
@@ -162,60 +172,62 @@ const s: { [k: string]: React.CSSProperties } = {
     alignItems: 'center',
     padding: '0 48px',
     height: 64,
-    backgroundColor: '#ffffff',
-    borderBottom: '1px solid #e2e8f0',
+    backgroundColor: '#0f172a',
     position: 'sticky',
     top: 0,
     zIndex: 100,
   },
   navLeft: { display: 'flex', alignItems: 'center', gap: 10 },
   logoCircle: {
-    width: 36, height: 36,
-    borderRadius: '50%',
-    backgroundColor: '#eef2ff',
+    width: 34, height: 34,
+    borderRadius: '8px',
+    backgroundColor: 'rgba(79, 70, 229, 0.15)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 18,
-    border: '1.5px solid #c7d2fe',
+    fontSize: 17,
+    border: '1px solid rgba(99, 102, 241, 0.3)',
   },
-  logoText: { fontSize: 20, fontWeight: 700, color: '#1e293b' },
-  logoAccent: { color: '#4f46e5' },
-  navRight: { display: 'flex', alignItems: 'center', gap: 20 },
-  navGreeting: { fontSize: 14, color: '#64748b' },
+  logoText: { fontSize: 18, fontWeight: 700, color: '#f1f5f9', letterSpacing: '-0.3px' },
+  logoAccent: { color: '#818cf8' },
+  navRight: { display: 'flex', alignItems: 'center', gap: 16 },
+  navGreeting: { fontSize: 13, color: '#94a3b8' },
   logoutBtn: {
-    background: 'none',
-    border: '1px solid #e2e8f0',
+    background: 'rgba(255,255,255,0.07)',
+    border: '1px solid rgba(255,255,255,0.12)',
     borderRadius: 8,
-    padding: '7px 16px',
+    padding: '6px 14px',
     fontSize: 13,
-    color: '#64748b',
+    color: '#cbd5e1',
     cursor: 'pointer',
     fontFamily: "'Kanit', sans-serif",
-    transition: 'all 0.2s',
+    transition: 'background 150ms ease, border-color 150ms ease',
   },
   pageHeader: {
-    backgroundImage: "linear-gradient(to bottom, rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.92)), url('/images/pub_dashboard_bg.png')",
+    backgroundImage: "linear-gradient(160deg, #0b0f1a 0%, #1e1b4b 60%, #0f172a 100%), url('/images/pub_dashboard_bg.png')",
+    backgroundBlendMode: 'overlay',
     backgroundPosition: 'center',
     backgroundSize: 'cover',
     color: '#ffffff',
-    padding: '70px 48px',
+    padding: '64px 48px 56px',
     textAlign: 'center',
-    boxShadow: 'inset 0 -10px 20px rgba(0, 0, 0, 0.2)',
+    borderBottom: '1px solid rgba(99, 102, 241, 0.15)',
   },
   headerOverlay: {
-    maxWidth: 800,
+    maxWidth: 680,
     margin: '0 auto',
   },
   pageTitle: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: 700,
-    margin: '0 0 12px 0',
-    textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+    margin: '0 0 10px 0',
+    lineHeight: 1.3,
+    letterSpacing: '-0.5px',
   },
   pageSubtitle: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.85)',
+    fontSize: 15,
+    color: 'rgba(255, 255, 255, 0.7)',
     margin: 0,
-    lineHeight: 1.6,
+    lineHeight: 1.65,
+    fontWeight: 400,
   },
   main: {
     flex: 1,
@@ -227,77 +239,95 @@ const s: { [k: string]: React.CSSProperties } = {
   cardGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: 28,
+    gap: 24,
     width: '100%',
-    maxWidth: 1050,
-    marginBottom: 40,
+    maxWidth: 1020,
+    marginBottom: 32,
   },
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: 20,
+    borderRadius: 16,
     border: '1px solid #e2e8f0',
     overflow: 'hidden',
-    transition: 'transform 0.25s ease, box-shadow 0.25s ease',
-    boxShadow: '0 4px 20px rgba(15, 23, 42, 0.03)',
+    transition: 'box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1), border-color 250ms ease, transform 250ms cubic-bezier(0.16, 1, 0.3, 1)',
+    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.03)',
     display: 'flex',
     flexDirection: 'column',
   },
   cardImg: {
     width: '100%',
-    height: '145px',
+    height: '140px',
     objectFit: 'cover',
   },
   cardContent: {
-    padding: '24px',
+    padding: '20px 24px 24px',
     display: 'flex',
     flexDirection: 'column',
-    gap: 20,
+    gap: 16,
     flex: 1,
     justifyContent: 'space-between',
   },
-  cardText: { display: 'flex', flexDirection: 'column', gap: 6 },
-  cardSubtitle: { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 },
-  cardTitle: { fontSize: 20, fontWeight: 700, color: '#0f172a', margin: '2px 0 0' },
-  cardDesc: { fontSize: 14, color: '#64748b', lineHeight: 1.6, margin: '4px 0 0' },
+  cardText: { display: 'flex', flexDirection: 'column', gap: 4 },
+  cardSubtitle: {
+    fontSize: 11,
+    fontWeight: 700,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.7px',
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 700,
+    color: '#0f172a',
+    margin: '2px 0 0',
+    letterSpacing: '-0.2px',
+  },
+  cardDesc: {
+    fontSize: 13.5,
+    color: '#64748b',
+    lineHeight: 1.6,
+    margin: '4px 0 0',
+    fontWeight: 400,
+  },
   cardBtn: {
     border: 'none',
-    borderRadius: 12,
-    padding: '12px 20px',
+    borderRadius: 10,
+    padding: '11px 18px',
     color: '#ffffff',
     fontSize: 14,
-    fontWeight: 700,
+    fontWeight: 600,
     fontFamily: "'Kanit', sans-serif",
-    transition: 'transform 0.2s, filter 0.2s',
+    cursor: 'pointer',
+    transition: 'filter 150ms ease, transform 150ms ease',
+    letterSpacing: '0.1px',
   },
   statsRow: {
     display: 'flex',
     gap: 0,
     backgroundColor: '#ffffff',
     border: '1px solid #e2e8f0',
-    borderRadius: 16,
-    padding: '20px 32px',
+    borderRadius: 14,
+    padding: '18px 28px',
     width: '100%',
-    maxWidth: 1050,
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.01)',
+    maxWidth: 1020,
+    boxShadow: '0 1px 4px rgba(15, 23, 42, 0.04)',
   },
   statItem: {
     flex: 1,
     display: 'flex',
     alignItems: 'center',
-    gap: 14,
-    padding: '0 24px',
+    gap: 12,
+    padding: '0 20px',
     borderRight: '1px solid #f1f5f9',
   },
-  statLabel: { fontSize: 12, color: '#94a3b8', marginBottom: 2 },
+  statLabel: { fontSize: 12, color: '#94a3b8', marginBottom: 2, fontWeight: 400 },
   statValue: { fontSize: 14, fontWeight: 700, color: '#0f172a' },
   footer: {
-    padding: '24px 48px',
-    borderTop: '1px solid #e2e8f0',
+    padding: '20px 48px',
+    borderTop: '1px solid #f1f5f9',
     textAlign: 'center',
-    fontSize: 13,
+    fontSize: 12,
     color: '#94a3b8',
-    position: 'relative',
-    zIndex: 1,
     backgroundColor: '#ffffff',
   },
 }
+

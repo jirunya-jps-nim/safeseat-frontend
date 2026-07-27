@@ -136,7 +136,7 @@ export default function SummaryPage() {
       {/* ── Navbar ── */}
       <nav style={s.navbar}>
         <div style={s.navLeft}>
-          <div style={s.logoCircle}>🛡️</div>
+          <span style={{ fontSize: 22 }}>🛡️</span>
           <span style={s.logoText}>Safe<span style={s.logoAccent}>Seat</span></span>
         </div>
         <div style={s.navRight}>
@@ -280,13 +280,13 @@ export default function SummaryPage() {
         {/* Bottom Row: Stat Cards */}
         <div style={s.statsRow}>
           {[
-            { label: 'รายได้ต่อวัน', value: `฿${dailyEarnings}`, icon: '💵' },
-            { label: 'รายได้ต่อเดือน', value: `฿${monthlyEarnings}`, icon: '🪙' },
-            { label: 'รายได้ทั้งหมด', value: `฿${totalEarnings}`, icon: '💰' }
+            { label: 'รายได้ต่อวัน', value: `฿${dailyEarnings}`, icon: '💵', gradient: 'linear-gradient(135deg, #fce7f3, #fbcfe8)' },
+            { label: 'รายได้ต่อเดือน', value: `฿${monthlyEarnings}`, icon: '🪙', gradient: 'linear-gradient(135deg, #ede9fe, #ddd6fe)' },
+            { label: 'รายได้ทั้งหมด', value: `฿${totalEarnings}`, icon: '💰', gradient: 'linear-gradient(135deg, #d1fae5, #a7f3d0)' }
           ].map((stat, i) => (
-            <div key={i} style={s.statCard}>
+            <div key={i} style={{ ...s.statCard, background: stat.gradient }}>
               <div style={s.statIconWrapper}>
-                <span style={{ fontSize: 32 }}>{stat.icon}</span>
+                <span style={{ fontSize: 28 }}>{stat.icon}</span>
               </div>
               <div style={s.statText}>
                 <div style={s.statLabel}>{stat.label}</div>
@@ -322,24 +322,17 @@ const s: { [k: string]: React.CSSProperties } = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '0 40px',
-    height: 64,
+    padding: '0 32px',
+    height: 60,
     backgroundColor: '#ffffff',
-    borderBottom: '1px solid #e2e8f0',
+    borderBottom: '1px solid #f1f5f9',
     position: 'sticky',
     top: 0,
     zIndex: 100,
+    boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
   },
   navLeft: { display: 'flex', alignItems: 'center', gap: 10 },
-  logoCircle: {
-    width: 36, height: 36,
-    borderRadius: '50%',
-    backgroundColor: '#eef2ff',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 18,
-    border: '1.5px solid #c7d2fe',
-  },
-  logoText: { fontSize: 20, fontWeight: 700, color: '#1e293b' },
+  logoText: { fontSize: 18, fontWeight: 700, color: '#1e293b' },
   logoAccent: { color: '#4f46e5' },
   navRight: { display: 'flex', alignItems: 'center' },
   backBtn: {
@@ -651,24 +644,24 @@ const s: { [k: string]: React.CSSProperties } = {
     gap: 24,
   },
   statCard: {
-    backgroundColor: '#e0f7fa',
-    border: '1.5px solid #b2ebf2',
+    border: '1px solid rgba(0,0,0,0.05)',
     borderRadius: 20,
-    padding: '22px 28px',
+    padding: '22px 24px',
     display: 'flex',
     alignItems: 'center',
-    gap: 20,
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.01)',
+    gap: 16,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
   },
   statIconWrapper: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#ffffff',
+    width: 52,
+    height: 52,
+    backgroundColor: 'rgba(255,255,255,0.7)',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+    flexShrink: 0,
   },
   statText: {
     display: 'flex',
@@ -676,14 +669,15 @@ const s: { [k: string]: React.CSSProperties } = {
     gap: 2,
   },
   statLabel: {
-    fontSize: 13,
-    color: '#006064',
+    fontSize: 12,
+    color: '#475569',
     fontWeight: 600,
+    marginBottom: 2,
   },
   statValue: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: 800,
-    color: '#006064',
+    color: '#1e293b',
   },
   footer: {
     padding: '20px 40px',

@@ -30,7 +30,7 @@ function WaitingDriverContent() {
   const trackingParam = searchParams.get('id')
   const requestId = trackingParam ? decodeId(trackingParam) : null
 
-  const [timeLeft, setTimeLeft] = useState(60)
+  const [timeLeft, setTimeLeft] = useState(300)
   const [status, setStatus] = useState('กำลังรอให้คนขับรับงาน...')
   const [error, setError] = useState('')
   const [isTimeout, setIsTimeout] = useState(false)
@@ -125,8 +125,7 @@ function WaitingDriverContent() {
             {timeLeft} <span style={{ fontSize: 20 }}>วินาที</span>
           </div>
         </div>
-
-        {/* QR Code and Sharing Actions for customers */}
+        {/* QR Code for customers */}
         {trackingUrl && (
           <div style={{
             backgroundColor: '#f8fafc',
@@ -147,32 +146,6 @@ function WaitingDriverContent() {
                 alt="Trip Tracking QR Code"
                 style={{ width: 130, height: 130, display: 'block' }}
               />
-            </div>
-            
-            <div style={{ width: '100%' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(trackingUrl);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
-                style={{
-                  width: '100%',
-                  backgroundColor: copied ? '#059669' : '#4f46e5',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 10,
-                  padding: '10px 14px',
-                  fontWeight: 700,
-                  fontSize: 13,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  fontFamily: "'Prompt', sans-serif"
-                }}
-              >
-                {copied ? '✅ คัดลอกสำเร็จ!' : '📋 คัดลอกลิงก์ให้ลูกค้า'}
-              </button>
             </div>
           </div>
         )}

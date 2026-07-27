@@ -5,6 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React from 'react'
+import PaperclipIcon from '@/components/ui/PaperclipIcon'
 
 interface StepDriverTrainingProps {
   files: {
@@ -105,7 +106,7 @@ export default function StepDriverTraining({
                       onClick={() => document.getElementById(inputId)?.click()}
                       title="แนบเกียรติบัตร"
                     >
-                      📎
+                      <PaperclipIcon size={16} color="#475569" />
                     </button>
                     <span style={styles.fileName}>
                       {file ? file.name : course.hint}

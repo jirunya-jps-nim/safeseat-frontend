@@ -140,8 +140,7 @@ export default function RegisterPubPage() {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
 
-      alert('สมัครสมาชิกพาร์ทเนอร์ร้านค้าสำเร็จ!')
-      router.push('/login')
+      router.push('/login?registered=1')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด กรุณาลองใหม่')
     } finally {

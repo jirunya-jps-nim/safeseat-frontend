@@ -5,6 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import React from 'react'
+import PaperclipIcon from '@/components/ui/PaperclipIcon'
 
 interface StepDriverPersonalInfoProps {
   form: {
@@ -144,7 +145,7 @@ export default function StepDriverPersonalInfo({
                 onClick={() => profileRef.current?.click()}
                 title="แนบรูปภาพ"
               >
-                📎
+                <PaperclipIcon size={16} color="#475569" />
               </button>
               <span style={styles.fileName}>
                 {profileFile ? profileFile.name : 'รูปถ่ายไม่เกิน 10 MB (JPG/PNG)'}

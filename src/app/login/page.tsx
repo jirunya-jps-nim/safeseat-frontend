@@ -10,8 +10,8 @@
 //  4. เก็บข้อมูล user ลง localStorage → redirect ไป /dashboard
 // ═══════════════════════════════════════════════════════════════
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 // ── Shared Components ─────────────────────────────────────────
 import Navbar from '@/components/ui/Navbar'
@@ -27,9 +27,12 @@ import { validateLogin } from '@/lib/validation/loginValidation'
 // ── Types ─────────────────────────────────────────────────────
 import { LoginForm } from '@/types'
 
-export default function LoginPage() {
+import { Suspense } from 'react'
+
+function LoginContent() {
   // useRouter: ใช้ navigate ไปหน้าอื่นโดยไม่ reload
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   // ── State ──────────────────────────────────────────────────
   // form: เก็บค่าที่ผู้ใช้พิมพ์ใน input แบบ controlled component
@@ -42,6 +45,20 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState<boolean>(false)
   // role: เลือกว่าจะเข้าสู่ระบบในฐานะ Pub, Driver หรือ Admin
   const [role, setRole] = useState<'pub' | 'driver' | 'admin'>('pub')
+
+  // ── Toast State ───────────────────────────────────────────
+  const [toast, setToast] = useState<string>('')
+  const showToast = (msg: string) => {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3500)
+  }
+
+  useEffect(() => {
+    // แสดง toast หากสมัครสำเร็จ
+    if (searchParams.get('registered') === '1') {
+      showToast('สมัครสำเร็จแล้ว! กรุณารอการตรวจสอบและอนุมัติจากทีม SafeSeat')
+    }
+  }, [])
 
   // ── Handler: เมื่อพิมพ์ใน input ───────────────────────────────
   // ใช้ [e.target.name] เป็น key เพื่อ update field ที่ถูกต้องใน form object
@@ -80,7 +97,7 @@ export default function LoginPage() {
 
         if (userData.registerstatus === 'อนุมัติแล้ว') {
           // If approved, show alert (in a real app, might redirect to a specific page or show modal)
-          alert('คุณได้รับการอนุมัติแล้ว สามารถเริ่มงานได้ที่แอปพลิเคชันบนมือถือ (Mobile App)')
+          showToast('คุณได้รับการอนุมัติแล้ว สามารถเริ่มงานได้ที่แอปพลิเคชันบนมือถือ (Mobile App)')
         } else {
           router.push('/driver-status')
         }
@@ -105,6 +122,27 @@ export default function LoginPage() {
       {/* วงกลมตกแต่งพื้นหลัง — ใช้ radial-gradient สร้าง glow effect */}
       <div style={styles.bgCircle1} />
       <div style={styles.bgCircle2} />
+
+      {/* Toast Notification */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          top: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999,
+          backgroundColor: '#059669',
+          color: '#ffffff',
+          padding: '12px 24px',
+          borderRadius: 12,
+          fontSize: 14,
+          fontWeight: 600,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+          whiteSpace: 'nowrap',
+        }}>
+          ✅ {toast}
+        </div>
+      )}
 
       {/* Navbar: ซ่อนปุ่ม "เข้าสู่ระบบ" เพราะอยู่ในหน้านี้แล้ว */}
       <Navbar showLoginButton={false} />
@@ -376,3 +414,11 @@ Object.assign(styles, {
     boxShadow: '0 4px 12px rgba(79,70,229,0.12)',
   }
 })
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
+  )
+}

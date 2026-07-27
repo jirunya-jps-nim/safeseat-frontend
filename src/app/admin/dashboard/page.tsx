@@ -85,8 +85,15 @@ export default function AdminDashboard() {
 
   // Filters & Searches
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('All')
   const [dateFilter, setDateFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+
+  // ── Toast State ──────────────────────────────────────────────
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+    setToast({ msg, type })
+    setTimeout(() => setToast(null), 3500)
+  }
 
   // Modals for Detail Viewing
   const [selectedDriver, setSelectedDriver] = useState<DriverData | null>(null)
@@ -179,13 +186,13 @@ export default function AdminDashboard() {
     try {
       const res = await api.put(`/admin/drivers/${username}/status`, { status: newStatus })
       if (res.data && res.data.success) {
-        alert(`ดำเนินการเปลี่ยนสถานะคนขับเป็น "${newStatus}" เรียบร้อยแล้ว`)
+        showToast(`เปลี่ยนสถานะคนขับเป็น "${newStatus}" เรียบร้อยแล้ว`)
         setSelectedDriver(null)
         fetchTabData('driver-app')
         fetchStats()
       }
     } catch (err: any) {
-      alert(err?.response?.data?.error || 'ไม่สามารถอัปเดตสถานะได้')
+      showToast(err?.response?.data?.error || 'ไม่สามารถอัปเดตสถานะได้', 'error')
     } finally {
       setActionLoading(false)
     }
@@ -197,13 +204,13 @@ export default function AdminDashboard() {
       const res = await api.put(`/admin/pubs/${username}/status`, { status: newStatus })
       if (res.data && res.data.success) {
         const thaiStatus = newStatus === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'
-        alert(`ดำเนินการเปลี่ยนสถานะสถานประกอบการเป็น "${thaiStatus}" เรียบร้อยแล้ว`)
+        showToast(`เปลี่ยนสถานะสถานประกอบการเป็น "${thaiStatus}" เรียบร้อยแล้ว`)
         setSelectedPub(null)
         fetchTabData('pub-app')
         fetchStats()
       }
     } catch (err: any) {
-      alert(err?.response?.data?.error || 'ไม่สามารถอัปเดตสถานะได้')
+      showToast(err?.response?.data?.error || 'ไม่สามารถอัปเดตสถานะได้', 'error')
     } finally {
       setActionLoading(false)
     }
@@ -217,13 +224,13 @@ export default function AdminDashboard() {
         : `/admin/user-reports/${reportId}/status`
       const res = await api.put(endpoint, { status: newStatus })
       if (res.data && res.data.success) {
-        alert('อัปเดตสถานะรายงานสำเร็จ')
+        showToast('อัปเดตสถานะรายงานสำเร็จ')
         setSelectedReport(null)
         fetchTabData(type === 'driver' ? 'driver-report' : 'user-report')
         fetchStats()
       }
     } catch (err: any) {
-      alert(err?.response?.data?.error || 'ไม่สามารถอัปเดตสถานะรายงานได้')
+      showToast(err?.response?.data?.error || 'ไม่สามารถอัปเดตสถานะรายงานได้', 'error')
     } finally {
       setActionLoading(false)
     }
@@ -231,8 +238,7 @@ export default function AdminDashboard() {
 
   // ── Logout ──────────────────────────────────────────────────
   const handleLogout = () => {
-    const isConfirmed = window.confirm('คุณต้องการออกจากระบบใช่หรือไม่?')
-    if (isConfirmed) {
+    if (window.confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
       localStorage.removeItem('admin_user')
       router.push('/login')
     }
@@ -273,6 +279,30 @@ export default function AdminDashboard() {
       {/* Background neon glows */}
       <div style={styles.bgGlowPurple} />
       <div style={styles.bgGlowCyan} />
+
+      {/* ── Toast Notification ── */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          top: 24,
+          right: 24,
+          zIndex: 9999,
+          backgroundColor: toast.type === 'success' ? '#059669' : '#dc2626',
+          color: '#ffffff',
+          padding: '12px 20px',
+          borderRadius: 12,
+          fontSize: 14,
+          fontWeight: 600,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          animation: 'fadeUp 0.3s ease',
+          maxWidth: 360,
+        }}>
+          {toast.type === 'success' ? '✅' : '❌'} {toast.msg}
+        </div>
+      )}
 
       {/* ─── 1. Left Sidebar (Premium Control Finish) ─── */}
       <aside style={styles.sidebar}>
@@ -655,15 +685,6 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div style={styles.filterGroup}>
-                  <label style={styles.filterLabel}>Date :</label>
-                  <input
-                    type="date"
-                    value={dateFilter}
-                    onChange={e => setDateFilter(e.target.value)}
-                    style={styles.filterInput}
-                  />
-                </div>
-                <div style={styles.filterGroup}>
                   <label style={styles.filterLabel}>Status :</label>
                   <select
                     value={statusFilter}
@@ -715,8 +736,6 @@ export default function AdminDashboard() {
                         <th style={styles.th}>Username</th>
                         <th style={styles.th}>Pub / Restaurant Name</th>
                         <th style={styles.th}>Email</th>
-                        <th style={styles.th}>Phone</th>
-                        <th style={styles.th}>Date Registered</th>
                         <th style={styles.th}>Status</th>
                         <th style={styles.th}>Actions</th>
                       </tr>
@@ -740,8 +759,6 @@ export default function AdminDashboard() {
                             <td style={{ ...styles.td, fontWeight: 600 }}>#{pub.username}</td>
                             <td style={styles.td}>{pub.pubname}</td>
                             <td style={styles.td}>{pub.pubemail}</td>
-                            <td style={styles.td}>{pub.pubphone}</td>
-                            <td style={styles.td}>{formatThaiDate(pub.regisdate)}</td>
                             <td style={styles.td}>
                               <span style={{
                                 ...styles.statusDot,
@@ -765,7 +782,7 @@ export default function AdminDashboard() {
                         ))}
                       {pubs.length === 0 && (
                         <tr>
-                          <td colSpan={7} style={styles.tdNoData}>ไม่มีข้อมูลการสมัครประกอบกิจการร้านค้าในระบบ</td>
+                          <td colSpan={5} style={styles.tdNoData}>ไม่มีข้อมูลการสมัครประกอบกิจการร้านค้าในระบบ</td>
                         </tr>
                       )}
                     </tbody>

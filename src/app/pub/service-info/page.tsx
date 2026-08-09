@@ -324,10 +324,12 @@ export default function ServiceInfoPage() {
         )}
       </main>
 
-      {/* ── QR CODE MODAL ── */}
+      <Footer />
+
+      {/* ── QR CODE MODAL (ROOT LEVEL Z-99999 OVER EVERYTHING) ── */}
       {selectedQrRecord && (
-        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setSelectedQrRecord(null)}>
-          <div className="bg-[var(--color-card)] border border-[#7C3AED]/30 rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl flex flex-col items-center gap-5 text-center relative" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[99999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setSelectedQrRecord(null)}>
+          <div className="bg-[var(--color-card)] border border-[#7C3AED]/40 rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl flex flex-col items-center gap-5 text-center relative" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setSelectedQrRecord(null)}
               className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-bold text-lg p-1 cursor-pointer"
@@ -382,8 +384,6 @@ export default function ServiceInfoPage() {
           </div>
         </div>
       )}
-
-      <Footer />
     </div>
   )
 }

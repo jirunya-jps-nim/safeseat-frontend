@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 interface AnalogClockPickerProps {
   isOpen: boolean
@@ -17,6 +18,12 @@ export default function AnalogClockPicker({
   onChange,
   title = 'เลือกเวลา (เข็มนาฬิกา)',
 }: AnalogClockPickerProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Parse initial time
   const parseInitial = (val: string) => {
     if (!val || !val.includes(':')) return { hour12: 6, minute: 0, period: 'PM' as const }
@@ -45,7 +52,7 @@ export default function AnalogClockPicker({
     }
   }, [isOpen, value])
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
   // Calculate 24h format string
   const get24Hour = (h12: number, p: 'AM' | 'PM') => {
@@ -89,9 +96,9 @@ export default function AnalogClockPicker({
   const hoursList = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
   const minutesList = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
 
-  return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in font-inter">
-      <div className="bg-[#111827] border border-[#374151] rounded-3xl p-6 w-full max-w-sm shadow-2xl text-white flex flex-col items-center gap-5 relative overflow-hidden">
+  return createPortal(
+    <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in font-inter overflow-y-auto">
+      <div className="bg-[#111827] border border-[#374151] rounded-3xl p-6 w-full max-w-sm shadow-2xl text-white flex flex-col items-center gap-5 relative overflow-hidden my-auto">
         
         {/* Glow Header */}
         <div className="absolute -top-16 -left-16 w-36 h-36 bg-[#7C3AED]/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -300,6 +307,7 @@ export default function AnalogClockPicker({
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

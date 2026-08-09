@@ -249,6 +249,7 @@ export const statusStyles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '6px',
+    whiteSpace: 'nowrap',
     transition: 'all 0.2s ease',
     boxShadow: '0 4px 15px rgba(124, 58, 237, 0.4)',
   },

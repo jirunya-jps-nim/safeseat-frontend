@@ -298,12 +298,16 @@ export default function RegisterPubPage() {
                 form={form}
                 onChange={handleChange}
                 onPin={(lat: number, lng: number) => {
-                  setForm(prev => ({
-                    ...prev,
+                  const updated = {
+                    ...form,
                     pubAddress: `พิกัด: ${lat.toFixed(4)}, ${lng.toFixed(4)}`,
                     pubAddressLat: lat,
                     pubAddressLng: lng,
-                  }))
+                  }
+                  setForm(updated)
+                  try {
+                    localStorage.setItem('pub_draft_form', JSON.stringify(updated))
+                  } catch {}
                 }}
                 inputStyle={styles.input}
               />

@@ -419,7 +419,7 @@ export default function StatusPage() {
 
           {/* ── Action Buttons ───────────────────────────── */}
           {!loading && (
-            <div style={{ ...styles.btnRow, justifyContent: 'center', flexWrap: 'wrap', gap: 12 }}>
+            <div style={{ ...styles.btnRow, justifyContent: 'center', flexWrap: 'wrap', gap: 16 }}>
               <button
                 id="btn-refresh"
                 onClick={() => fetchStatus(username, true)}
@@ -428,8 +428,8 @@ export default function StatusPage() {
                   ...styles.refreshBtn,
                   opacity: refreshing ? 0.75 : 1,
                   cursor: refreshing ? 'not-allowed' : 'pointer',
-                  width: '100%',
-                  maxWidth: '220px',
+                  whiteSpace: 'nowrap',
+                  padding: '12px 24px',
                 }}
               >
                 {refreshing && <span style={styles.spinner} />}
@@ -440,10 +440,19 @@ export default function StatusPage() {
                 <button
                   onClick={() => {
                     if (statusData) {
+                      const s = statusData as any
                       const draft = {
-                        pubName: statusData.pubname || '',
-                        pubEmail: statusData.pubemail || '',
-                        pubPhone: statusData.pubphone || '',
+                        pubName: s.pubname || '',
+                        pubEmail: s.pubemail || '',
+                        pubPhone: s.pubphone || '',
+                        pubOpen: s.pubopen || '18:00',
+                        pubClose: s.pubclose || '00:00',
+                        pubAddress: s.pubaddress || (s.pubaddresslat ? `พิกัด: ${s.pubaddresslat}, ${s.pubaddresslng}` : ''),
+                        pubAddressLat: s.pubaddresslat ?? undefined,
+                        pubAddressLng: s.pubaddresslng ?? undefined,
+                        taxNumber: s.taxnumber || '',
+                        bankAccountNo: s.bankaccountno || '',
+                        bankAccountName: s.bankaccountname || '',
                         username: username,
                       }
                       localStorage.setItem('pub_draft_form', JSON.stringify(draft))
@@ -455,9 +464,9 @@ export default function StatusPage() {
                     background: 'linear-gradient(135deg, #7C3AED, #1D4ED8)',
                     color: '#ffffff',
                     border: 'none',
-                    width: '100%',
-                    maxWidth: '240px',
                     fontWeight: 700,
+                    whiteSpace: 'nowrap',
+                    padding: '12px 24px',
                   }}
                 >
                   ✏️ แก้ไขข้อมูลและยื่นสมัครใหม่

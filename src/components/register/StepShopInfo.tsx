@@ -7,6 +7,7 @@
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
 import Field from '@/components/ui/Field'
+import AnalogClockPicker from '@/components/ui/AnalogClockPicker'
 import { RegisterForm } from '@/types'
 
 // Dynamic import ป้องกัน error "window is not defined" จาก Leaflet ตอนทำ SSR
@@ -20,8 +21,34 @@ interface StepShopInfoProps {
   labelColor?: string // ส่งสีของ label และข้อความประกอบมาเพื่อความยืดหยุ่นของธีม
 }
 
+// Helper formatting 24h "18:00" -> "06:00 PM"
+function formatDisplayTime(val: string): string {
+  if (!val) return '06:00 PM'
+  const parts = val.split(':')
+  if (parts.length < 2) return val
+  let h = parseInt(parts[0], 10)
+  if (isNaN(h)) return val
+  const m = parts[1] || '00'
+  const period = h >= 12 ? 'PM' : 'AM'
+  let h12 = h % 12
+  if (h12 === 0) h12 = 12
+  return `${String(h12).padStart(2, '0')}:${m} ${period}`
+}
+
 export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelColor }: StepShopInfoProps) {
   const [isMapOpen, setIsMapOpen] = useState(false)
+  const [activeClock, setActiveClock] = useState<'pubOpen' | 'pubClose' | null>(null)
+
+  const handleClockChange = (timeStr: string) => {
+    if (!activeClock) return
+    const event = {
+      target: {
+        name: activeClock,
+        value: timeStr,
+      },
+    } as unknown as React.ChangeEvent<HTMLInputElement>
+    onChange(event)
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -37,31 +64,89 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
         />
       </Field>
 
-      {/* ── เวลาเปิด-ปิด (วางชิดกัน 2 ช่อง) ── */}
+      {/* ── เวลาเปิด-ปิด (ตัวเลือกเวลาแบบเข็มนาฬิกา Analog Clock) ── */}
       <div style={{ display: 'flex', gap: 12 }}>
         <div style={{ flex: 1 }}>
           <Field label="เวลาเปิด *" icon="🕐" color={labelColor}>
-            <input
-              name="pubOpen"
-              type="time"
-              value={form.pubOpen}
-              onChange={onChange}
-              style={inputStyle}
-            />
+            <div
+              onClick={() => setActiveClock('pubOpen')}
+              className="relative flex items-center cursor-pointer group"
+            >
+              <input
+                name="pubOpen"
+                readOnly
+                value={formatDisplayTime(form.pubOpen || '18:00')}
+                style={{
+                  ...inputStyle,
+                  cursor: 'pointer',
+                  paddingRight: '40px',
+                  fontWeight: 600,
+                  letterSpacing: '0.5px',
+                }}
+                className="select-none"
+              />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setActiveClock('pubOpen')
+                }}
+                className="absolute right-3 p-1 text-gray-400 group-hover:text-[#7C3AED] transition-colors"
+                title="เลือกเวลาด้วยเข็มนาฬิกา"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </div>
           </Field>
         </div>
+
         <div style={{ flex: 1 }}>
           <Field label="เวลาปิด *" icon="🕙" color={labelColor}>
-            <input
-              name="pubClose"
-              type="time"
-              value={form.pubClose}
-              onChange={onChange}
-              style={inputStyle}
-            />
+            <div
+              onClick={() => setActiveClock('pubClose')}
+              className="relative flex items-center cursor-pointer group"
+            >
+              <input
+                name="pubClose"
+                readOnly
+                value={formatDisplayTime(form.pubClose || '02:00')}
+                style={{
+                  ...inputStyle,
+                  cursor: 'pointer',
+                  paddingRight: '40px',
+                  fontWeight: 600,
+                  letterSpacing: '0.5px',
+                }}
+                className="select-none"
+              />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setActiveClock('pubClose')
+                }}
+                className="absolute right-3 p-1 text-gray-400 group-hover:text-[#7C3AED] transition-colors"
+                title="เลือกเวลาด้วยเข็มนาฬิกา"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            </div>
           </Field>
         </div>
       </div>
+
+      {/* Analog Clock Picker Modal (ตัวเลือกเข็มนาฬิกา) */}
+      <AnalogClockPicker
+        isOpen={activeClock !== null}
+        onClose={() => setActiveClock(null)}
+        value={activeClock === 'pubOpen' ? (form.pubOpen || '18:00') : (form.pubClose || '02:00')}
+        onChange={handleClockChange}
+        title={activeClock === 'pubOpen' ? 'ตั้งค่าเวลาเปิดร้าน (เข็มนาฬิกา)' : 'ตั้งค่าเวลาปิดร้าน (เข็มนาฬิกา)'}
+      />
 
       {/* ── อีเมล ── */}
       <Field label="อีเมล *" icon="📧" color={labelColor}>

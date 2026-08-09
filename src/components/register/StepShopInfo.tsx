@@ -94,12 +94,16 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
           <input
             value={form.pubAddress}
             readOnly
+            className="placeholder:text-[var(--color-text-muted)] opacity-90 font-medium"
             style={{
               ...inputStyle,
-              backgroundColor: labelColor ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9',
-              cursor: 'not-allowed',
+              backgroundColor: 'var(--color-surface)',
+              color: 'var(--color-text)',
+              borderColor: 'var(--color-border)',
+              cursor: 'pointer',
             }}
             placeholder="กรุณาปักหมุดผ่านแผนที่"
+            onClick={() => setIsMapOpen(true)}
           />
 
           <button

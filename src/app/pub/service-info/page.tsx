@@ -326,8 +326,8 @@ export default function ServiceInfoPage() {
 
       {/* ── QR CODE MODAL ── */}
       {selectedQrRecord && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setSelectedQrRecord(null)}>
-          <div className="bg-[var(--color-card)] border border-[#7C3AED]/30 rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl flex flex-col items-center gap-5 text-center relative" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setSelectedQrRecord(null)}>
+          <div className="bg-[var(--color-card)] border border-[#7C3AED]/30 rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl flex flex-col items-center gap-5 text-center relative" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setSelectedQrRecord(null)}
               className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-bold text-lg p-1 cursor-pointer"
@@ -343,9 +343,8 @@ export default function ServiceInfoPage() {
               <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">
                 QR Code ติดตามการเดินทาง #{selectedQrRecord.id}
               </h3>
-              <p className="text-xs text-[var(--color-text-muted)] mt-1 leading-relaxed">
-                ลูกค้า: <span className="font-bold text-[var(--color-text)]">{selectedQrRecord.custName}</span><br />
-                ให้ลูกค้าใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางเรียลไทม์
+              <p className="text-xs text-[var(--color-text-muted)] mt-1.5 font-medium whitespace-nowrap overflow-x-auto px-2">
+                ให้ลูกค้าใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางของคนขับได้ทันทีเรียลไทม์ (ลูกค้า: {selectedQrRecord.custName})
               </p>
             </div>
 

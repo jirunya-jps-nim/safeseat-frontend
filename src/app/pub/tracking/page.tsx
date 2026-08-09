@@ -241,31 +241,15 @@ function TrackingContent() {
             </div>
           </div>
 
-          {/* Copy Share Link & QR Code Buttons */}
+          {/* Combined Share Link & QR Code Button */}
           {trackingUrl && (
-            <div className="flex flex-wrap items-center justify-end gap-3">
+            <div className="flex justify-end">
               <button
                 onClick={() => setShowQrModal(true)}
-                className="py-2.5 px-6 rounded-full text-xs font-bold bg-[var(--color-surface)] border border-[#7C3AED]/40 text-[#7C3AED] hover:bg-[#7C3AED]/10 transition-all shadow-md flex items-center gap-2 cursor-pointer"
+                className="py-2.5 px-6 rounded-full text-xs font-bold bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white transition-all shadow-md flex items-center gap-2 cursor-pointer"
               >
-                <QrCode className="w-4 h-4 text-[#7C3AED]" />
-                📲 แสดง QR Code ให้ลูกค้าสแกน
-              </button>
-
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(trackingUrl)
-                  setCopied(true)
-                  setTimeout(() => setCopied(false), 2500)
-                }}
-                className={`py-2.5 px-6 rounded-full text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer ${
-                  copied
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white'
-                }`}
-              >
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                {copied ? 'คัดลอกลิงก์สำเร็จ!' : '📋 คัดลอกลิงก์ติดตามส่งให้ลูกค้า'}
+                <QrCode className="w-4 h-4" />
+                📲 แสดง QR Code & ลิงก์ติดตามส่งให้ลูกค้า
               </button>
             </div>
           )}

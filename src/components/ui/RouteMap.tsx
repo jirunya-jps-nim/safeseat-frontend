@@ -97,6 +97,27 @@ function AutoFitBounds({
   return null
 }
 
+async function fetchOSRMRoute(waypoints: string): Promise<[number, number][]> {
+  const endpoints = [
+    `https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`,
+    `https://routing.openstreetmap.de/routed-car/route/v1/driving/${waypoints}?overview=full&geometries=geojson`
+  ]
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+          return data.routes[0].geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]] as [number, number])
+        }
+      }
+    } catch (e) {
+      console.warn('[RouteMap Warning] OSRM fetch failed on endpoint:', url, e)
+    }
+  }
+  return []
+}
+
 interface RouteMapProps {
   pickupLat: number
   pickupLng: number
@@ -108,7 +129,8 @@ interface RouteMapProps {
 }
 
 export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng, driverLat, driverLng, currentStep }: RouteMapProps) {
-  const [routeCoords, setRouteCoords] = useState<[number, number][]>([])
+  const [mainRouteCoords, setMainRouteCoords] = useState<[number, number][]>([])
+  const [driverRouteCoords, setDriverRouteCoords] = useState<[number, number][]>([])
 
   const defaultCenter: [number, number] = [
     (pickupLat + dropoffLat) / 2,
@@ -117,61 +139,60 @@ export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng,
 
   useEffect(() => {
     let active = true
-    const fetchRoute = async () => {
-      try {
-        let startLng = pickupLng
-        let startLat = pickupLat
-        let endLng = dropoffLng
-        let endLat = dropoffLat
 
-        // หากคนขับกำลังเดินทางไปรับที่ร้านค้า (Pub) ให้วาดเส้นจากตำแหน่งคนขับ ➔ ร้านค้า
-        if (currentStep === 1 && driverLat && driverLng) {
-          startLat = driverLat
-          startLng = driverLng
-          endLat = pickupLat
-          endLng = pickupLng
-        } 
-        // หากกำลังนำส่งผู้ใช้ไปยังจุดหมายปลายทาง ให้วาดเส้นจากตำแหน่งคนขับ ➔ จุดหมายปลายทาง
-        else if (currentStep === 3 && driverLat && driverLng) {
-          startLat = driverLat
-          startLng = driverLng
-          endLat = dropoffLat
-          endLng = dropoffLng
+    const loadRoutes = async () => {
+      // 1. ดึงเส้นทางถนนจริงระหว่าง จุดรับ (Pickup) ➔ จุดหมายปลายทาง (Dropoff)
+      const mainWaypoints = `${pickupLng},${pickupLat};${dropoffLng},${dropoffLat}`
+      const mainCoords = await fetchOSRMRoute(mainWaypoints)
+
+      if (active) {
+        if (mainCoords.length > 0) {
+          setMainRouteCoords(mainCoords)
+        } else {
+          setMainRouteCoords([[pickupLat, pickupLng], [dropoffLat, dropoffLng]])
+        }
+      }
+
+      // 2. ถ้ามีตำแหน่งคนขับ ดึงเส้นทางถนนจริงจาก ตำแหน่งคนขับ ➔ จุดรับ หรือ จุดหมายปลายทาง
+      if (driverLat && driverLng) {
+        let driverWaypoints = ''
+        if (currentStep === 1) {
+          // คนขับกำลังเดินทางไปรับที่ร้านค้า (Driver ➔ Pickup)
+          driverWaypoints = `${driverLng},${driverLat};${pickupLng},${pickupLat}`
+        } else if (currentStep === 3 || currentStep === 4) {
+          // คนขับกำลังนำส่งผู้ใช้ (Driver ➔ Dropoff)
+          driverWaypoints = `${driverLng},${driverLat};${dropoffLng},${dropoffLat}`
+        } else {
+          // คนขับไปยังจุดรับ
+          driverWaypoints = `${driverLng},${driverLat};${pickupLng},${pickupLat}`
         }
 
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`
-        const response = await fetch(osrmUrl)
-        if (response.ok) {
-          const data = await response.json()
-          if (active && data.code === 'Ok' && data.routes && data.routes.length > 0) {
-            const coords = data.routes[0].geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]] as [number, number])
-            setRouteCoords(coords)
-            return
-          }
-        }
-        throw new Error('OSRM response was not Ok')
-      } catch (err) {
-        console.warn('[RouteMap Warning] OSRM route fetch failed, using straight-line fallback:', err)
+        const drvCoords = await fetchOSRMRoute(driverWaypoints)
         if (active) {
-          let sLat = pickupLat, sLng = pickupLng, eLat = dropoffLat, eLng = dropoffLng
-          if (currentStep === 1 && driverLat && driverLng) {
-            sLat = driverLat; sLng = driverLng; eLat = pickupLat; eLng = pickupLng
-          } else if (currentStep === 3 && driverLat && driverLng) {
-            sLat = driverLat; sLng = driverLng; eLat = dropoffLat; eLng = dropoffLng
+          if (drvCoords.length > 0) {
+            setDriverRouteCoords(drvCoords)
+          } else {
+            setDriverRouteCoords([[driverLat, driverLng], currentStep === 3 ? [dropoffLat, dropoffLng] : [pickupLat, pickupLng]])
           }
-          setRouteCoords([
-            [sLat, sLng],
-            [eLat, eLng]
-          ])
         }
+      } else {
+        if (active) setDriverRouteCoords([])
       }
     }
 
-    fetchRoute()
+    loadRoutes()
     return () => {
       active = false
     }
   }, [pickupLat, pickupLng, dropoffLat, dropoffLng, driverLat, driverLng, currentStep])
+
+  const allPositions = [
+    ...mainRouteCoords,
+    ...driverRouteCoords,
+    [pickupLat, pickupLng] as [number, number],
+    [dropoffLat, dropoffLng] as [number, number],
+    ...(driverLat && driverLng ? [[driverLat, driverLng] as [number, number]] : [])
+  ]
 
   return (
     <div style={{ width: '100%', height: '100%', minHeight: 250, borderRadius: 16, overflow: 'hidden' }}>
@@ -180,19 +201,41 @@ export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng,
           attribution='&copy; Google Maps'
           url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
         />
+
+        {/* หมุดจุดรับ (ร้านค้า) */}
         <Marker position={[pickupLat, pickupLng]} icon={pickupIcon || undefined} />
+
+        {/* หมุดจุดหมายปลายทาง */}
         <Marker position={[dropoffLat, dropoffLng]} icon={dropoffIcon || undefined} />
+
+        {/* หมุดคนขับ (ถ้ามี) */}
         {driverLat && driverLng && (
           <Marker position={[driverLat, driverLng]} icon={driverIcon || undefined} />
         )}
-        {routeCoords.length > 0 && (
+
+        {/* เส้นทางถนนจริงหลัก (จุดรับ ➔ จุดหมาย) */}
+        {mainRouteCoords.length > 0 && (
           <Polyline
-            positions={routeCoords}
-            color="#4f46e5"
+            positions={mainRouteCoords}
+            color="#7C3AED"
             weight={5}
+            opacity={0.8}
           />
         )}
-        {routeCoords.length > 0 && <AutoFitBounds positions={routeCoords} driverLat={driverLat} driverLng={driverLng} />}
+
+        {/* เส้นทางถนนจริงของคนขับ (ตำแหน่งคนขับ ➔ จุดรับ/จุดหมาย) */}
+        {driverRouteCoords.length > 0 && (
+          <Polyline
+            positions={driverRouteCoords}
+            color="#06b6d4"
+            weight={6}
+            dashArray="8, 8"
+          />
+        )}
+
+        {allPositions.length > 0 && (
+          <AutoFitBounds positions={allPositions} driverLat={driverLat} driverLng={driverLng} />
+        )}
       </MapContainer>
     </div>
   )

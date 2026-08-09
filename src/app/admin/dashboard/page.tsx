@@ -1304,8 +1304,8 @@ export default function AdminDashboard() {
             </div>
             
             <div>
-              <h3 className="text-lg font-bold text-[var(--color-text)] mb-2 flex items-center justify-center gap-2">
-                <span>⚠️</span> {confirmRejectModal.title}
+              <h3 className="text-lg font-bold text-[var(--color-text)] mb-2">
+                {confirmRejectModal.title}
               </h3>
               <p className="text-xs text-[var(--color-text-muted)] font-medium whitespace-nowrap overflow-x-auto px-2">
                 {confirmRejectModal.message}

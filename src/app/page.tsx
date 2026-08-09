@@ -135,7 +135,7 @@ export default function HomePage() {
                   <Search className="w-5 h-5 text-[#7C3AED]" />
                   <input
                     type="text"
-                    placeholder="ป้อนรหัสติดตามบริการ (เช่น #10000001)..."
+                    placeholder="ป้อนรหัสติดตามบริการ (เช่น #55 หรือ 55)..."
                     value={searchCode}
                     onChange={(e) => setSearchCode(e.target.value)}
                     className="w-full bg-transparent text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none font-semibold"

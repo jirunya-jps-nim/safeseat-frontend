@@ -97,7 +97,7 @@ export default function HelpCenterPage() {
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-[var(--color-text-muted)] leading-relaxed max-w-2xl font-light mb-8">
+          <p className="text-xs sm:text-sm md:text-base text-[var(--color-text-muted)] font-light mb-8 whitespace-nowrap overflow-x-auto px-2">
             ค้นหาข้อมูลการใช้งาน คำถามที่พบบ่อย และคู่มือขั้นตอนการให้บริการสำหรับลูกค้า ร้านค้าพาร์ทเนอร์ และผู้ขับขี่แทน
           </p>
 

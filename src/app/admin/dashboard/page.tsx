@@ -1012,9 +1012,16 @@ export default function AdminDashboard() {
           }
         }
 
+        const carObj = Array.isArray(selectedDriver.drivercar) ? selectedDriver.drivercar[0] : selectedDriver.drivercar
+        const carBrand = carObj?.carbrand || carObj?.car_brand || '—'
+        const carModel = carObj?.carmodel || carObj?.car_model || '—'
+        const carColor = carObj?.carcolor || carObj?.car_color || '—'
+        const carPlate = carObj?.carplate || carObj?.carplateno || carObj?.carPlateNo || carObj?.car_plate_no || carObj?.car_plate || '—'
+        const carImg = carObj?.carimagepath || carObj?.carImagePath || carObj?.car_image_path
+
         const docItems = [
           { label: '📸 รูปโปรไฟล์ใบหน้า', url: docs.profile },
-          { label: '🚗 รูปถ่ายยานพาหนะ', url: (selectedDriver.drivercar as any)?.carimagepath || (selectedDriver.drivercar as any)?.carImagePath },
+          { label: '🚗 รูปถ่ายยานพาหนะ', url: carImg },
           { label: '🪪 ใบขับขี่', url: docs.driverLicense },
           { label: '⚖️ ประวัติอาชญากรรม', url: docs.criminalRecord },
           { label: '🏥 ใบรับรองแพทย์', url: docs.medicalCertificate },
@@ -1059,14 +1066,14 @@ export default function AdminDashboard() {
                   <span className="text-[var(--color-text-muted)] block">เพศ</span>
                   <span className="font-bold text-[var(--color-text)]">{selectedDriver.gender === 2 ? 'หญิง' : 'ชาย'}</span>
                 </div>
-                {selectedDriver.drivercar && (
+                {carObj && (
                   <div className="md:col-span-2 pt-2 border-t border-[var(--color-border)]">
                     <span className="text-[var(--color-text-muted)] block mb-1">ข้อมูลยานพาหนะ</span>
                     <div className="flex flex-wrap gap-3 font-semibold text-xs text-[var(--color-text)]">
-                      <span className="px-2.5 py-1 bg-[var(--color-card)] border border-[var(--color-border)] rounded-md">ยี่ห้อ: {selectedDriver.drivercar.carbrand}</span>
-                      <span className="px-2.5 py-1 bg-[var(--color-card)] border border-[var(--color-border)] rounded-md">รุ่น: {selectedDriver.drivercar.carmodel}</span>
-                      <span className="px-2.5 py-1 bg-[var(--color-card)] border border-[var(--color-border)] rounded-md">สี: {selectedDriver.drivercar.carcolor}</span>
-                      <span className="px-2.5 py-1 bg-[#7C3AED]/10 text-[#7C3AED] border border-[#7C3AED]/30 rounded-md font-mono">ทะเบียน: {selectedDriver.drivercar.carplateno}</span>
+                      <span className="px-2.5 py-1 bg-[var(--color-card)] border border-[var(--color-border)] rounded-md">ยี่ห้อ: {carBrand}</span>
+                      <span className="px-2.5 py-1 bg-[var(--color-card)] border border-[var(--color-border)] rounded-md">รุ่น: {carModel}</span>
+                      <span className="px-2.5 py-1 bg-[var(--color-card)] border border-[var(--color-border)] rounded-md">สี: {carColor}</span>
+                      <span className="px-2.5 py-1 bg-[#7C3AED]/10 text-[#7C3AED] border border-[#7C3AED]/30 rounded-md font-mono">ทะเบียน: {carPlate}</span>
                     </div>
                   </div>
                 )}

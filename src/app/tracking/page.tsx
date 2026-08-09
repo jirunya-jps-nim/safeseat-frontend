@@ -85,11 +85,53 @@ function TrackingContent() {
 
   if (error || !reqData) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center text-[var(--color-text)] font-inter px-6">
-        <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl text-center max-w-md shadow-xl flex flex-col items-center gap-4">
-          <AlertCircle className="w-12 h-12 text-red-500" />
-          <h2 className="text-xl font-bold font-manrope text-red-500">ไม่พบข้อมูลการเดินทาง</h2>
-          <p className="text-xs text-[var(--color-text-muted)]">{error}</p>
+      <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter flex flex-col items-center justify-center p-6 relative overflow-x-hidden">
+        <div className="gradient-blur"></div>
+
+        <div className="relative z-10 p-8 sm:p-10 bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl text-center max-w-lg w-full shadow-2xl flex flex-col items-center gap-6">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#7C3AED]/20 to-[#1D4ED8]/20 border border-[#7C3AED]/30 flex items-center justify-center text-3xl shadow-inner">
+            📱
+          </div>
+
+          <div>
+            <span className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest font-manrope">RECOMMENDED FOR CUSTOMERS</span>
+            <h2 className="text-xl sm:text-2xl font-extrabold font-manrope text-[var(--color-text)] mt-1">
+              คำแนะนำสำหรับผู้ใช้บริการ SafeSeat
+            </h2>
+            <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-2 leading-relaxed">
+              สำหรับผู้ใช้บริการทั่วไป แนะนำให้เรียกรถและติดตามสถานะผ่าน <strong className="text-[#7C3AED] font-bold">แอปพลิเคชันบนมือถือ (Mobile Application)</strong> เพื่อรับประสบการณ์การบริการที่ดีที่สุดและสะดวกสูงสุดในการใช้งาน
+            </p>
+          </div>
+
+          <div className="w-full p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col gap-3 text-left">
+            <div className="flex items-center gap-2.5 text-xs font-bold text-[var(--color-text)]">
+              <span className="w-2 h-2 rounded-full bg-[#7C3AED]"></span>
+              <span>ติดตามตำแหน่งคนขับบนแผนที่แบบ Realtime</span>
+            </div>
+            <div className="flex items-center gap-2.5 text-xs font-bold text-[var(--color-text)]">
+              <span className="w-2 h-2 rounded-full bg-[#7C3AED]"></span>
+              <span>แจ้งเตือนสถานะทันทีเมื่อคนขับเดินทางถึงจุดรับ</span>
+            </div>
+            <div className="flex items-center gap-2.5 text-xs font-bold text-[var(--color-text)]">
+              <span className="w-2 h-2 rounded-full bg-[#7C3AED]"></span>
+              <span>โทรติดต่อทีมคนขับหลักและบัดดี้ได้โดยตรง</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <button
+              onClick={() => router.push('/')}
+              className="flex-1 py-3 px-6 bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[#7C3AED] text-[var(--color-text)] rounded-full text-xs font-bold transition-all cursor-pointer"
+            >
+              🏠 กลับสู่หน้าหลัก
+            </button>
+            <button
+              onClick={() => router.push('/pub/dashboard')}
+              className="flex-1 py-3 px-6 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white rounded-full text-xs font-bold transition-all shadow-md cursor-pointer"
+            >
+              เข้าสู่ระบบพาร์ทเนอร์
+            </button>
+          </div>
         </div>
       </div>
     )

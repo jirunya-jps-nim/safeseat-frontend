@@ -191,32 +191,24 @@ export default function AdminDashboard() {
       if (res.data && res.data.success) {
         const payload = res.data.data
         if (tab === 'driver-app') {
-          // Filter out rejected drivers
-          const validDrivers = payload.filter((d: DriverData) => d.registerstatus !== 'ปฏิเสธ' && (d as any).registerstatus !== 'rejected')
-          setDrivers(sortItems(validDrivers, 'registerstatus', 'regisdate'))
+          setDrivers(sortItems(payload, 'registerstatus', 'regisdate'))
         }
         else if (tab === 'pub-app') {
-          // Filter out rejected pubs
-          const validPubs = payload.filter((p: PubData) => p.regisstatus !== 'rejected' && (p as any).regisstatus !== 'ปฏิเสธ')
-          setPubs(sortItems(validPubs, 'regisstatus', 'regisdate'))
+          setPubs(sortItems(payload, 'regisstatus', 'regisdate'))
         }
         else if (tab === 'driver-report') {
           const mapped = payload.map((item: any) => ({
             ...item,
             status: item.status || item.reportstatus || 'รอดำเนินการ'
           }))
-          // Filter out rejected driver reports
-          const validDriverReports = mapped.filter((r: ReportData) => r.status !== 'ปฏิเสธ' && r.status !== 'ไม่อนุมัติ')
-          setDriverReports(sortItems(validDriverReports, 'status', 'reportdate'))
+          setDriverReports(sortItems(mapped, 'status', 'reportdate'))
         }
         else if (tab === 'user-report') {
           const mapped = payload.map((item: any) => ({
             ...item,
             status: item.status || item.reportstatus || 'รอดำเนินการ'
           }))
-          // Filter out rejected user reports
-          const validUserReports = mapped.filter((r: ReportData) => r.status !== 'ปฏิเสธ' && r.status !== 'ไม่อนุมัติ')
-          setUserReports(sortItems(validUserReports, 'status', 'reportdate'))
+          setUserReports(sortItems(mapped, 'status', 'reportdate'))
         }
       }
     } catch (err) {
@@ -661,7 +653,12 @@ export default function AdminDashboard() {
                   <tbody className="divide-y divide-[var(--color-border)] text-xs text-[var(--color-text)] font-medium">
                     {drivers.filter(d => {
                       const matchSearch = d.username.toLowerCase().includes(searchQuery.toLowerCase()) || `${d.firstname} ${d.lastname}`.toLowerCase().includes(searchQuery.toLowerCase())
-                      const matchStatus = statusFilter === 'All' || d.registerstatus === statusFilter
+                      const regStatus = String(d.registerstatus || '')
+                      const matchStatus = statusFilter === 'All' || 
+                        regStatus === statusFilter ||
+                        (statusFilter === 'รอดำเนินการ' && (regStatus === 'รอดำเนินการ' || regStatus === 'pending')) ||
+                        (statusFilter === 'อนุมัติแล้ว' && (regStatus === 'อนุมัติแล้ว' || regStatus === 'approved')) ||
+                        (statusFilter === 'ปฏิเสธ' && (regStatus === 'ปฏิเสธ' || regStatus === 'rejected'))
                       return matchSearch && matchStatus
                     }).map(driver => (
                       <tr key={driver.username} className="hover:bg-[var(--color-card-hover)] transition-colors">

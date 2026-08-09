@@ -10,7 +10,7 @@ import api from '@/services/api'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
 import FloatingNav from '@/components/ui/FloatingNav'
-import { Search, RefreshCw, Plus, FileText, ArrowRight } from 'lucide-react'
+import { Search, RefreshCw, Plus, FileText, ArrowRight, QrCode, Copy, Check } from 'lucide-react'
 
 interface RequestRecord {
   requestId?: number
@@ -37,6 +37,8 @@ export default function ServiceInfoPage() {
   const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [selectedQrRecord, setSelectedQrRecord] = useState<{ url: string; id: number; custName: string } | null>(null)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     const userStr = localStorage.getItem('pub_user')
@@ -289,13 +291,29 @@ export default function ServiceInfoPage() {
                         </span>
                       </td>
                       <td className="p-4 text-right">
-                        <button
-                          type="button"
-                          onClick={() => router.push(`/pub/tracking?id=${recordId}`)}
-                          className="px-4 py-1.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white rounded-full text-xs font-bold shadow-md cursor-pointer transition-all inline-flex items-center gap-1"
-                        >
-                          ดูรายละเอียด <ArrowRight className="w-3 h-3" />
-                        </button>
+                        <div className="flex items-center justify-end gap-2">
+                          {recordId && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const originUrl = typeof window !== 'undefined' ? window.location.origin : ''
+                                const tUrl = `${originUrl}/tracking?id=${recordId}`
+                                setSelectedQrRecord({ url: tUrl, id: recordId, custName: item.custname })
+                              }}
+                              className="px-3 py-1.5 bg-[var(--color-surface)] border border-[#7C3AED]/30 text-[#7C3AED] hover:bg-[#7C3AED]/10 rounded-full text-xs font-bold cursor-pointer transition-colors inline-flex items-center gap-1.5"
+                              title="แสดง QR Code สำหรับติดตาม"
+                            >
+                              <QrCode className="w-3.5 h-3.5 text-[#7C3AED]" /> QR Code
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => router.push(`/pub/tracking?id=${recordId}`)}
+                            className="px-4 py-1.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white rounded-full text-xs font-bold shadow-md cursor-pointer transition-all inline-flex items-center gap-1"
+                          >
+                            ดูรายละเอียด <ArrowRight className="w-3 h-3" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -305,6 +323,66 @@ export default function ServiceInfoPage() {
           </div>
         )}
       </main>
+
+      {/* ── QR CODE MODAL ── */}
+      {selectedQrRecord && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setSelectedQrRecord(null)}>
+          <div className="bg-[var(--color-card)] border border-[#7C3AED]/30 rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl flex flex-col items-center gap-5 text-center relative" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setSelectedQrRecord(null)}
+              className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-bold text-lg p-1 cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <div className="w-12 h-12 bg-[#7C3AED]/15 rounded-full flex items-center justify-center text-[#7C3AED] text-2xl">
+              📲
+            </div>
+
+            <div>
+              <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">
+                QR Code ติดตามการเดินทาง #{selectedQrRecord.id}
+              </h3>
+              <p className="text-xs text-[var(--color-text-muted)] mt-1 leading-relaxed">
+                ลูกค้า: <span className="font-bold text-[var(--color-text)]">{selectedQrRecord.custName}</span><br />
+                ให้ลูกค้าใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางเรียลไทม์
+              </p>
+            </div>
+
+            {/* QR Code Image */}
+            <div className="p-4 bg-white rounded-2xl shadow-xl border border-gray-200 my-1">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(selectedQrRecord.url)}`}
+                alt="QR Code สำหรับติดตามการเดินทาง"
+                className="w-56 h-56 object-contain mx-auto"
+              />
+            </div>
+
+            <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] p-3 rounded-xl flex items-center justify-between gap-2 text-xs font-mono">
+              <span className="truncate text-[var(--color-text-muted)] text-[11px]">
+                {selectedQrRecord.url}
+              </span>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(selectedQrRecord.url)
+                  setCopied(true)
+                  setTimeout(() => setCopied(false), 2500)
+                }}
+                className="px-3 py-1.5 bg-[#7C3AED] text-white rounded-lg font-bold text-[11px] shrink-0 hover:bg-[#6D28D9] transition-colors cursor-pointer"
+              >
+                {copied ? 'คัดลอกแล้ว' : 'คัดลอก'}
+              </button>
+            </div>
+
+            <button
+              onClick={() => setSelectedQrRecord(null)}
+              className="w-full py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] rounded-full text-xs font-bold hover:bg-[var(--color-card)] transition-colors cursor-pointer"
+            >
+              ปิดหน้าต่าง
+            </button>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

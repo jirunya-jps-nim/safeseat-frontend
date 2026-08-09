@@ -11,7 +11,7 @@ import api from '@/services/api'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
 import FloatingNav from '@/components/ui/FloatingNav'
-import { Car, Phone, Copy, Check, Clock, ShieldCheck, MapPin, RefreshCw, AlertCircle } from 'lucide-react'
+import { Car, Phone, Copy, Check, Clock, ShieldCheck, MapPin, RefreshCw, AlertCircle, QrCode } from 'lucide-react'
 
 const RouteMap = dynamic(() => import('@/components/ui/RouteMap'), { ssr: false })
 
@@ -45,6 +45,7 @@ function TrackingContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [showQrModal, setShowQrModal] = useState(false)
   const [trackingUrl, setTrackingUrl] = useState('')
   const [isPubLoggedIn, setIsPubLoggedIn] = useState(false)
   const [isRequestTimeout, setIsRequestTimeout] = useState(false)
@@ -240,9 +241,17 @@ function TrackingContent() {
             </div>
           </div>
 
-          {/* Copy Share Link Button */}
+          {/* Copy Share Link & QR Code Buttons */}
           {trackingUrl && (
-            <div className="flex justify-end">
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <button
+                onClick={() => setShowQrModal(true)}
+                className="py-2.5 px-6 rounded-full text-xs font-bold bg-[var(--color-surface)] border border-[#7C3AED]/40 text-[#7C3AED] hover:bg-[#7C3AED]/10 transition-all shadow-md flex items-center gap-2 cursor-pointer"
+              >
+                <QrCode className="w-4 h-4 text-[#7C3AED]" />
+                📲 แสดง QR Code ให้ลูกค้าสแกน
+              </button>
+
               <button
                 onClick={() => {
                   navigator.clipboard.writeText(trackingUrl)
@@ -319,6 +328,65 @@ function TrackingContent() {
           </div>
 
         </div>
+
+        {/* ── QR CODE MODAL ── */}
+        {showQrModal && trackingUrl && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setShowQrModal(false)}>
+            <div className="bg-[var(--color-card)] border border-[#7C3AED]/30 rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl flex flex-col items-center gap-5 text-center relative" onClick={e => e.stopPropagation()}>
+              <button
+                onClick={() => setShowQrModal(false)}
+                className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-bold text-lg p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+
+              <div className="w-12 h-12 bg-[#7C3AED]/15 rounded-full flex items-center justify-center text-[#7C3AED] text-2xl">
+                📲
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">
+                  QR Code ติดตามการเดินทาง
+                </h3>
+                <p className="text-xs text-[var(--color-text-muted)] mt-1 leading-relaxed">
+                  ให้ลูกค้าใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางของคนขับได้ทันทีเรียลไทม์
+                </p>
+              </div>
+
+              {/* QR Code Image */}
+              <div className="p-4 bg-white rounded-2xl shadow-xl border border-gray-200 my-1">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(trackingUrl)}`}
+                  alt="QR Code สำหรับติดตามการเดินทาง"
+                  className="w-56 h-56 object-contain mx-auto"
+                />
+              </div>
+
+              <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] p-3 rounded-xl flex items-center justify-between gap-2 text-xs font-mono">
+                <span className="truncate text-[var(--color-text-muted)] text-[11px]">
+                  {trackingUrl}
+                </span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(trackingUrl)
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 2500)
+                  }}
+                  className="px-3 py-1.5 bg-[#7C3AED] text-white rounded-lg font-bold text-[11px] shrink-0 hover:bg-[#6D28D9] transition-colors cursor-pointer"
+                >
+                  {copied ? 'คัดลอกแล้ว' : 'คัดลอก'}
+                </button>
+              </div>
+
+              <button
+                onClick={() => setShowQrModal(false)}
+                className="w-full py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] rounded-full text-xs font-bold hover:bg-[var(--color-card)] transition-colors cursor-pointer"
+              >
+                ปิดหน้าต่าง
+              </button>
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer />

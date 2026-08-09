@@ -132,8 +132,25 @@ export default function RegisterDriverPage() {
     }
   }, [files.driverLicensePath])
 
+  // Load draft from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('driver_draft_form')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setForm((prev) => ({ ...prev, ...parsed }))
+      }
+    } catch (e) {
+      console.error("Failed to load driver draft", e)
+    }
+  }, [])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const updated = { ...form, [e.target.name]: e.target.value }
+    setForm(updated)
+    try {
+      localStorage.setItem('driver_draft_form', JSON.stringify(updated))
+    } catch {}
     setError('')
   }
 
@@ -345,6 +362,7 @@ export default function RegisterDriverPage() {
       })
 
       if (response.data && response.data.success) {
+        localStorage.removeItem('driver_draft_form')
         setIsRegistered(true)
       } else {
         setError(response.data?.message || 'เกิดข้อผิดพลาดในการลงทะเบียน')

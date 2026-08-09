@@ -5,7 +5,7 @@
 // รูปแบบเดียวกับหน้าสมัครคนขับ โดยใช้โครงสร้างธีมสว่าง สะอาดตา
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 // ── Shared Components ─────────────────────────────────────────
@@ -62,8 +62,25 @@ export default function RegisterPubPage() {
   const licenseRef = useRef<HTMLInputElement>(null)
   const shopImgRef = useRef<HTMLInputElement>(null)
 
+  // Load pub draft from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('pub_draft_form')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        setForm((prev: RegisterForm) => ({ ...prev, ...parsed }))
+      }
+    } catch (e) {
+      console.error("Failed to load pub draft", e)
+    }
+  }, [])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const updated = { ...form, [e.target.name]: e.target.value }
+    setForm(updated)
+    try {
+      localStorage.setItem('pub_draft_form', JSON.stringify(updated))
+    } catch {}
     setError('')
   }
 
@@ -160,6 +177,7 @@ export default function RegisterPubPage() {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
 
+      localStorage.removeItem('pub_draft_form')
       router.push('/login?registered=1')
     } catch (err: unknown) {
       setError(parseApiError(err, 'เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง'))

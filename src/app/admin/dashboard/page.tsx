@@ -551,6 +551,7 @@ export default function AdminDashboard() {
                 <option value="All">สถานะทั้งหมด</option>
                 <option value="รอดำเนินการ">รอดำเนินการ (Pending)</option>
                 <option value="อนุมัติแล้ว">อนุมัติแล้ว (Approved)</option>
+                <option value="ปฏิเสธ">ปฏิเสธ (Rejected)</option>
               </select>
             </div>
 
@@ -571,10 +572,9 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody className="divide-y divide-[var(--color-border)] text-xs text-[var(--color-text)] font-medium">
                     {drivers.filter(d => {
-                      const notRejected = d.registerstatus !== 'ปฏิเสธ' && (d as any).registerstatus !== 'rejected'
                       const matchSearch = d.username.toLowerCase().includes(searchQuery.toLowerCase()) || `${d.firstname} ${d.lastname}`.toLowerCase().includes(searchQuery.toLowerCase())
                       const matchStatus = statusFilter === 'All' || d.registerstatus === statusFilter
-                      return notRejected && matchSearch && matchStatus
+                      return matchSearch && matchStatus
                     }).map(driver => (
                       <tr key={driver.username} className="hover:bg-[var(--color-card-hover)] transition-colors">
                         <td className="p-4 font-mono font-bold text-[var(--color-text)]">#{driver.username}</td>
@@ -583,7 +583,11 @@ export default function AdminDashboard() {
                         <td className="p-4">{formatThaiDate(driver.regisdate)}</td>
                         <td className="p-4">
                           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
-                            driver.registerstatus === 'อนุมัติแล้ว' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-amber-500/10 border-amber-500/30 text-amber-500'
+                            driver.registerstatus === 'อนุมัติแล้ว' 
+                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' 
+                              : driver.registerstatus === 'ปฏิเสธ'
+                              ? 'bg-red-500/10 border-red-500/30 text-red-500'
+                              : 'bg-amber-500/10 border-amber-500/30 text-amber-500'
                           }`}>
                             <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                             {driver.registerstatus}
@@ -599,7 +603,7 @@ export default function AdminDashboard() {
                         </td>
                       </tr>
                     ))}
-                    {drivers.filter(d => d.registerstatus !== 'ปฏิเสธ' && (d as any).registerstatus !== 'rejected').length === 0 && (
+                    {drivers.length === 0 && (
                       <tr>
                         <td colSpan={6} className="p-8 text-center text-xs text-[var(--color-text-muted)] font-bold">ไม่มีคำขอสมัครคนขับในระบบขณะนี้</td>
                       </tr>
@@ -635,6 +639,7 @@ export default function AdminDashboard() {
                 <option value="All">สถานะทั้งหมด</option>
                 <option value="รอดำเนินการ">รอดำเนินการ (Pending)</option>
                 <option value="อนุมัติแล้ว">อนุมัติแล้ว (Approved)</option>
+                <option value="ปฏิเสธ">ปฏิเสธ (Rejected)</option>
               </select>
             </div>
 
@@ -655,13 +660,13 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody className="divide-y divide-[var(--color-border)] text-xs text-[var(--color-text)] font-medium">
                     {pubs.filter(p => {
-                      const notRejected = p.regisstatus !== 'rejected' && (p as any).regisstatus !== 'ปฏิเสธ'
                       const matchSearch = p.username.toLowerCase().includes(searchQuery.toLowerCase()) || p.pubname.toLowerCase().includes(searchQuery.toLowerCase())
                       const matchStatus = statusFilter === 'All' || 
                         p.regisstatus === statusFilter || 
                         (statusFilter === 'รอดำเนินการ' && (p.regisstatus === 'pending' || p.regisstatus === 'รอดำเนินการ')) ||
-                        (statusFilter === 'อนุมัติแล้ว' && (p.regisstatus === 'approved' || p.regisstatus === 'อนุมัติแล้ว'))
-                      return notRejected && matchSearch && matchStatus
+                        (statusFilter === 'อนุมัติแล้ว' && (p.regisstatus === 'approved' || p.regisstatus === 'อนุมัติแล้ว')) ||
+                        (statusFilter === 'ปฏิเสธ' && (p.regisstatus === 'rejected' || p.regisstatus === 'ปฏิเสธ'))
+                      return matchSearch && matchStatus
                     }).map(pub => (
                       <tr key={pub.username} className="hover:bg-[var(--color-card-hover)] transition-colors">
                         <td className="p-4 font-mono font-bold text-[var(--color-text)]">#{pub.username}</td>
@@ -670,10 +675,14 @@ export default function AdminDashboard() {
                         <td className="p-4 font-mono">{pub.pubphone}</td>
                         <td className="p-4">
                           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
-                            pub.regisstatus === 'approved' || (pub as any).regisstatus === 'อนุมัติแล้ว' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-amber-500/10 border-amber-500/30 text-amber-500'
+                            pub.regisstatus === 'approved' || (pub as any).regisstatus === 'อนุมัติแล้ว' 
+                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' 
+                              : pub.regisstatus === 'rejected' || (pub as any).regisstatus === 'ปฏิเสธ'
+                              ? 'bg-red-500/10 border-red-500/30 text-red-500'
+                              : 'bg-amber-500/10 border-amber-500/30 text-amber-500'
                           }`}>
                             <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                            {pub.regisstatus === 'approved' || (pub as any).regisstatus === 'อนุมัติแล้ว' ? 'อนุมัติแล้ว' : 'รอดำเนินการ'}
+                            {pub.regisstatus === 'approved' || (pub as any).regisstatus === 'อนุมัติแล้ว' ? 'อนุมัติแล้ว' : pub.regisstatus === 'rejected' || (pub as any).regisstatus === 'ปฏิเสธ' ? 'ปฏิเสธ' : 'รอดำเนินการ'}
                           </span>
                         </td>
                         <td className="p-4 text-right">
@@ -686,7 +695,7 @@ export default function AdminDashboard() {
                         </td>
                       </tr>
                     ))}
-                    {pubs.filter(p => p.regisstatus !== 'rejected' && (p as any).regisstatus !== 'ปฏิเสธ').length === 0 && (
+                    {pubs.length === 0 && (
                       <tr>
                         <td colSpan={6} className="p-8 text-center text-xs text-[var(--color-text-muted)] font-bold">ไม่พบข้อมูลคำขอพาร์ทเนอร์ร้านค้าในระบบ</td>
                       </tr>
@@ -722,6 +731,7 @@ export default function AdminDashboard() {
                 <option value="All">สถานะทั้งหมด</option>
                 <option value="รอดำเนินการ">รอดำเนินการ (Pending)</option>
                 <option value="อนุมัติแล้ว">อนุมัติแล้ว (Approved)</option>
+                <option value="ปฏิเสธ">ปฏิเสธ (Rejected)</option>
               </select>
             </div>
 
@@ -742,7 +752,6 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody className="divide-y divide-[var(--color-border)] text-xs text-[var(--color-text)] font-medium">
                     {driverReports.filter(r => {
-                      const notRejected = r.status !== 'ปฏิเสธ' && (r as any).status !== 'ไม่อนุมัติ'
                       const q = searchQuery.toLowerCase()
                       const matchSearch = !searchQuery || 
                         (r.reporttype && r.reporttype.toLowerCase().includes(q)) || 
@@ -750,10 +759,12 @@ export default function AdminDashboard() {
                         `#drv-${r.driverreportid}`.includes(q) ||
                         `#booking-${r.reportindex || ''}`.includes(q)
                       const isApproved = r.status === 'แก้ไขแล้ว' || r.status === 'อนุมัติแล้ว'
+                      const isRejected = r.status === 'ปฏิเสธ' || r.status === 'ไม่อนุมัติ'
                       const matchStatus = statusFilter === 'All' ||
                         (statusFilter === 'อนุมัติแล้ว' && isApproved) ||
-                        (statusFilter === 'รอดำเนินการ' && !isApproved)
-                      return notRejected && matchSearch && matchStatus
+                        (statusFilter === 'ปฏิเสธ' && isRejected) ||
+                        (statusFilter === 'รอดำเนินการ' && !isApproved && !isRejected)
+                      return matchSearch && matchStatus
                     }).map(report => (
                       <tr key={report.driverreportid} className="hover:bg-[var(--color-card-hover)] transition-colors">
                         <td className="p-4 font-mono font-bold text-[var(--color-text)]">#DRV-{report.driverreportid}</td>
@@ -762,10 +773,14 @@ export default function AdminDashboard() {
                         <td className="p-4 font-mono">#BOOKING-{report.reportindex || '—'}</td>
                         <td className="p-4">
                           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
-                            report.status === 'แก้ไขแล้ว' || report.status === 'อนุมัติแล้ว' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-amber-500/10 border-amber-500/30 text-amber-500'
+                            report.status === 'แก้ไขแล้ว' || report.status === 'อนุมัติแล้ว' 
+                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' 
+                              : report.status === 'ปฏิเสธ' || report.status === 'ไม่อนุมัติ'
+                              ? 'bg-red-500/10 border-red-500/30 text-red-500'
+                              : 'bg-amber-500/10 border-amber-500/30 text-amber-500'
                           }`}>
                             <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                            {report.status === 'แก้ไขแล้ว' || report.status === 'อนุมัติแล้ว' ? report.status : 'รอดำเนินการ'}
+                            {report.status}
                           </span>
                         </td>
                         <td className="p-4 text-right">
@@ -781,20 +796,7 @@ export default function AdminDashboard() {
                         </td>
                       </tr>
                     ))}
-                    {driverReports.filter(r => {
-                      const notRejected = r.status !== 'ปฏิเสธ' && (r as any).status !== 'ไม่อนุมัติ'
-                      const q = searchQuery.toLowerCase()
-                      const matchSearch = !searchQuery || 
-                        (r.reporttype && r.reporttype.toLowerCase().includes(q)) || 
-                        (r.reportdetail && r.reportdetail.toLowerCase().includes(q)) ||
-                        `#drv-${r.driverreportid}`.includes(q) ||
-                        `#booking-${r.reportindex || ''}`.includes(q)
-                      const isApproved = r.status === 'แก้ไขแล้ว' || r.status === 'อนุมัติแล้ว'
-                      const matchStatus = statusFilter === 'All' ||
-                        (statusFilter === 'อนุมัติแล้ว' && isApproved) ||
-                        (statusFilter === 'รอดำเนินการ' && !isApproved)
-                      return notRejected && matchSearch && matchStatus
-                    }).length === 0 && (
+                    {driverReports.length === 0 && (
                       <tr>
                         <td colSpan={6} className="p-8 text-center text-xs text-[var(--color-text-muted)] font-bold">ไม่มีรายการร้องเรียนคนขับตามเงื่อนไขที่ค้นหา</td>
                       </tr>
@@ -830,6 +832,7 @@ export default function AdminDashboard() {
                 <option value="All">สถานะทั้งหมด</option>
                 <option value="รอดำเนินการ">รอดำเนินการ (Pending)</option>
                 <option value="อนุมัติแล้ว">อนุมัติแล้ว (Approved)</option>
+                <option value="ปฏิเสธ">ปฏิเสธ (Rejected)</option>
               </select>
             </div>
 
@@ -850,7 +853,6 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody className="divide-y divide-[var(--color-border)] text-xs text-[var(--color-text)] font-medium">
                     {userReports.filter(r => {
-                      const notRejected = r.status !== 'ปฏิเสธ' && (r as any).status !== 'ไม่อนุมัติ'
                       const q = searchQuery.toLowerCase()
                       const matchSearch = !searchQuery || 
                         (r.reporttype && r.reporttype.toLowerCase().includes(q)) || 
@@ -858,10 +860,12 @@ export default function AdminDashboard() {
                         `#usr-${r.userreportid}`.includes(q) ||
                         `#booking-${r.request_id || ''}`.includes(q)
                       const isApproved = r.status === 'อนุมัติแล้ว' || r.status === 'แก้ไขแล้ว'
+                      const isRejected = r.status === 'ปฏิเสธ' || r.status === 'ไม่อนุมัติ'
                       const matchStatus = statusFilter === 'All' ||
                         (statusFilter === 'อนุมัติแล้ว' && isApproved) ||
-                        (statusFilter === 'รอดำเนินการ' && !isApproved)
-                      return notRejected && matchSearch && matchStatus
+                        (statusFilter === 'ปฏิเสธ' && isRejected) ||
+                        (statusFilter === 'รอดำเนินการ' && !isApproved && !isRejected)
+                      return matchSearch && matchStatus
                     }).map(report => (
                       <tr key={report.userreportid} className="hover:bg-[var(--color-card-hover)] transition-colors">
                         <td className="p-4 font-mono font-bold text-[var(--color-text)]">#USR-{report.userreportid}</td>
@@ -870,10 +874,14 @@ export default function AdminDashboard() {
                         <td className="p-4 font-mono">#BOOKING-{report.request_id || '—'}</td>
                         <td className="p-4">
                           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${
-                            report.status === 'อนุมัติแล้ว' || report.status === 'แก้ไขแล้ว' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' : 'bg-amber-500/10 border-amber-500/30 text-amber-500'
+                            report.status === 'อนุมัติแล้ว' || report.status === 'แก้ไขแล้ว' 
+                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' 
+                              : report.status === 'ปฏิเสธ' || report.status === 'ไม่อนุมัติ'
+                              ? 'bg-red-500/10 border-red-500/30 text-red-500'
+                              : 'bg-amber-500/10 border-amber-500/30 text-amber-500'
                           }`}>
                             <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
-                            {report.status === 'อนุมัติแล้ว' || report.status === 'แก้ไขแล้ว' ? report.status : 'รอดำเนินการ'}
+                            {report.status}
                           </span>
                         </td>
                         <td className="p-4 text-right">
@@ -889,20 +897,7 @@ export default function AdminDashboard() {
                         </td>
                       </tr>
                     ))}
-                    {userReports.filter(r => {
-                      const notRejected = r.status !== 'ปฏิเสธ' && (r as any).status !== 'ไม่อนุมัติ'
-                      const q = searchQuery.toLowerCase()
-                      const matchSearch = !searchQuery || 
-                        (r.reporttype && r.reporttype.toLowerCase().includes(q)) || 
-                        (r.reportdetail && r.reportdetail.toLowerCase().includes(q)) ||
-                        `#usr-${r.userreportid}`.includes(q) ||
-                        `#booking-${r.request_id || ''}`.includes(q)
-                      const isApproved = r.status === 'อนุมัติแล้ว' || r.status === 'แก้ไขแล้ว'
-                      const matchStatus = statusFilter === 'All' ||
-                        (statusFilter === 'อนุมัติแล้ว' && isApproved) ||
-                        (statusFilter === 'รอดำเนินการ' && !isApproved)
-                      return notRejected && matchSearch && matchStatus
-                    }).length === 0 && (
+                    {userReports.length === 0 && (
                       <tr>
                         <td colSpan={6} className="p-8 text-center text-xs text-[var(--color-text-muted)] font-bold">ไม่มีรายการร้องเรียนลูกค้าตามเงื่อนไขที่ค้นหา</td>
                       </tr>

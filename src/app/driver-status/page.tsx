@@ -416,7 +416,7 @@ export default function StatusPage() {
 
           {/* ── Action Buttons ───────────────────────────── */}
           {!loading && (
-            <div style={{ ...styles.btnRow, justifyContent: 'center' }}>
+            <div style={{ ...styles.btnRow, justifyContent: 'center', flexWrap: 'wrap', gap: 12 }}>
               <button
                 id="btn-refresh"
                 onClick={() => fetchStatus(username, true)}
@@ -426,12 +426,41 @@ export default function StatusPage() {
                   opacity: refreshing ? 0.75 : 1,
                   cursor: refreshing ? 'not-allowed' : 'pointer',
                   width: '100%',
-                  maxWidth: '240px',
+                  maxWidth: '220px',
                 }}
               >
                 {refreshing && <span style={styles.spinner} />}
                 {refreshing ? 'กำลังโหลด...' : '🔄 รีเฟรช'}
               </button>
+
+              {(statusData?.registerstatus === 'ปฏิเสธ' || (statusData as any)?.registerstatus === 'rejected') && (
+                <button
+                  onClick={() => {
+                    if (statusData) {
+                      const draft = {
+                        firstName: statusData.firstname || '',
+                        lastName: statusData.lastname || '',
+                        email: statusData.email || '',
+                        phoneNo: statusData.phoneno || '',
+                        username: username,
+                      }
+                      localStorage.setItem('driver_draft_form', JSON.stringify(draft))
+                    }
+                    router.push('/register/driver')
+                  }}
+                  style={{
+                    ...styles.refreshBtn,
+                    background: 'linear-gradient(135deg, #7C3AED, #1D4ED8)',
+                    color: '#ffffff',
+                    border: 'none',
+                    width: '100%',
+                    maxWidth: '240px',
+                    fontWeight: 700,
+                  }}
+                >
+                  ✏️ แก้ไขข้อมูลและยื่นสมัครใหม่
+                </button>
+              )}
             </div>
           )}
 

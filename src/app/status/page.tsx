@@ -419,7 +419,7 @@ export default function StatusPage() {
 
           {/* ── Action Buttons ───────────────────────────── */}
           {!loading && (
-            <div style={{ ...styles.btnRow, justifyContent: 'center' }}>
+            <div style={{ ...styles.btnRow, justifyContent: 'center', flexWrap: 'wrap', gap: 12 }}>
               <button
                 id="btn-refresh"
                 onClick={() => fetchStatus(username, true)}
@@ -429,12 +429,40 @@ export default function StatusPage() {
                   opacity: refreshing ? 0.75 : 1,
                   cursor: refreshing ? 'not-allowed' : 'pointer',
                   width: '100%',
-                  maxWidth: '240px',
+                  maxWidth: '220px',
                 }}
               >
                 {refreshing && <span style={styles.spinner} />}
                 {refreshing ? 'กำลังโหลด...' : '🔄 รีเฟรช'}
               </button>
+
+              {((statusData as any)?.regisstatus === 'rejected' || (statusData as any)?.regisstatus === 'ปฏิเสธ') && (
+                <button
+                  onClick={() => {
+                    if (statusData) {
+                      const draft = {
+                        pubName: statusData.pubname || '',
+                        pubEmail: statusData.pubemail || '',
+                        pubPhone: statusData.pubphone || '',
+                        username: username,
+                      }
+                      localStorage.setItem('pub_draft_form', JSON.stringify(draft))
+                    }
+                    router.push('/register/pub')
+                  }}
+                  style={{
+                    ...styles.refreshBtn,
+                    background: 'linear-gradient(135deg, #7C3AED, #1D4ED8)',
+                    color: '#ffffff',
+                    border: 'none',
+                    width: '100%',
+                    maxWidth: '240px',
+                    fontWeight: 700,
+                  }}
+                >
+                  ✏️ แก้ไขข้อมูลและยื่นสมัครใหม่
+                </button>
+              )}
             </div>
           )}
 

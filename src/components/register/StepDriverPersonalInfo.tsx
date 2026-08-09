@@ -1,8 +1,4 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// components/register/StepDriverPersonalInfo.tsx
-// หน้าแรกของการลงทะเบียนคนขับ (ข้อมูลส่วนตัว + บัญชี + รูปโปรไฟล์ + ทักษะ) - Light Theme
-// ═══════════════════════════════════════════════════════════════
 
 import React from 'react'
 import PaperclipIcon from '@/components/ui/PaperclipIcon'

@@ -1,8 +1,4 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// components/register/StepDriverVehicleInfo.tsx
-// หน้าที่สองของการลงทะเบียนคนขับ (ข้อมูลยานพาหนะ + รูปถ่ายรถ + Checkbox นโยบาย) - Light Theme
-// ═══════════════════════════════════════════════════════════════
 
 import React from 'react'
 import PaperclipIcon from '@/components/ui/PaperclipIcon'

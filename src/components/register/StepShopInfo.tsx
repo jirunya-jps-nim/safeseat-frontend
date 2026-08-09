@@ -1,8 +1,4 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// components/register/StepShopInfo.tsx
-// Form ขั้นตอนที่ 1 ของหน้าสมัครสมาชิก — ข้อมูลสถานประกอบการ (รองรับสีตัวอักษร)
-// ═══════════════════════════════════════════════════════════════
 
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'

@@ -99,11 +99,8 @@ export default function AnalogClockPicker({
   return createPortal(
     <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in font-inter overflow-y-auto">
       <div className="bg-[#111827] border border-[#374151] rounded-3xl p-6 w-full max-w-sm shadow-2xl text-white flex flex-col items-center gap-5 relative overflow-hidden my-auto">
-        
-        {/* Glow Header */}
         <div className="absolute -top-16 -left-16 w-36 h-36 bg-[#7C3AED]/20 rounded-full blur-3xl pointer-events-none"></div>
 
-        {/* Title */}
         <div className="w-full flex items-center justify-between border-b border-gray-800 pb-3">
           <div className="flex items-center gap-2">
             <span className="text-xl">🕐</span>

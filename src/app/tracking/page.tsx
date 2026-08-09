@@ -118,18 +118,12 @@ function TrackingContent() {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <div className="w-full">
             <button
               onClick={() => router.push('/')}
-              className="flex-1 py-3 px-6 bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[#7C3AED] text-[var(--color-text)] rounded-full text-xs font-bold transition-all cursor-pointer"
+              className="w-full py-3.5 px-6 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white rounded-full text-xs font-bold transition-all shadow-md cursor-pointer"
             >
               🏠 กลับสู่หน้าหลัก
-            </button>
-            <button
-              onClick={() => router.push('/pub/dashboard')}
-              className="flex-1 py-3 px-6 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white rounded-full text-xs font-bold transition-all shadow-md cursor-pointer"
-            >
-              เข้าสู่ระบบพาร์ทเนอร์
             </button>
           </div>
         </div>

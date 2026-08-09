@@ -302,6 +302,45 @@ export default function AdminDashboard() {
       setActionLoading(false)
     }
   }
+  const [confirmRejectModal, setConfirmRejectModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    onConfirm: () => void
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  })
+
+  const promptDriverReject = (username: string) => {
+    setConfirmRejectModal({
+      isOpen: true,
+      title: '⚠️ ยืนยันการปฏิเสธการสมัครคนขับ',
+      message: `คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอสมัครของคนขับ @${username}? (สถานะจะถูกเปลี่ยนเป็น "ปฏิเสธ")`,
+      onConfirm: () => handleDriverStatus(username, 'ปฏิเสธ')
+    })
+  }
+
+  const promptPubReject = (username: string) => {
+    setConfirmRejectModal({
+      isOpen: true,
+      title: '⚠️ ยืนยันการปฏิเสธการสมัครพาร์ทเนอร์ร้านค้า',
+      message: `คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอสมัครของร้านค้า @${username}? (สถานะจะถูกเปลี่ยนเป็น "ปฏิเสธ")`,
+      onConfirm: () => handlePubStatus(username, 'rejected')
+    })
+  }
+
+  const promptReportReject = (reportId: number, type: 'driver' | 'user') => {
+    const label = type === 'driver' ? `รายงานคนขับ #DRV-${reportId}` : `รายงานลูกค้า #USR-${reportId}`
+    setConfirmRejectModal({
+      isOpen: true,
+      title: '⚠️ ยืนยันการปฏิเสธรายการรายงาน',
+      message: `คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธ ${label}? (สถานะจะถูกเปลี่ยนเป็น "ปฏิเสธ")`,
+      onConfirm: () => handleReportStatus(reportId, type, type === 'user' ? 'ไม่อนุมัติ' : 'ปฏิเสธ')
+    })
+  }
 
 
 
@@ -1025,7 +1064,7 @@ export default function AdminDashboard() {
 
               {/* Action Buttons */}
               <div className="flex justify-end gap-3 border-t border-[var(--color-border)] pt-4">
-                <button onClick={() => handleDriverStatus(selectedDriver.username, 'ปฏิเสธ')} className="px-6 py-2.5 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 rounded-full text-xs font-bold cursor-pointer transition-colors">
+                <button onClick={() => promptDriverReject(selectedDriver.username)} className="px-6 py-2.5 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 rounded-full text-xs font-bold cursor-pointer transition-colors">
                   ปฏิเสธคำขอ
                 </button>
                 <button onClick={() => handleDriverStatus(selectedDriver.username, 'อนุมัติแล้ว')} className="px-6 py-2.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:opacity-90 text-white rounded-full text-xs font-bold cursor-pointer shadow-md transition-opacity">
@@ -1121,7 +1160,7 @@ export default function AdminDashboard() {
 
               {/* Action Buttons */}
               <div className="flex justify-end gap-3 border-t border-[var(--color-border)] pt-4">
-                <button onClick={() => handlePubStatus(selectedPub.username, 'rejected')} className="px-6 py-2.5 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 rounded-full text-xs font-bold cursor-pointer transition-colors">
+                <button onClick={() => promptPubReject(selectedPub.username)} className="px-6 py-2.5 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 rounded-full text-xs font-bold cursor-pointer transition-colors">
                   ปฏิเสธคำขอร้านค้า
                 </button>
                 <button onClick={() => handlePubStatus(selectedPub.username, 'approved')} className="px-6 py-2.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:opacity-90 text-white rounded-full text-xs font-bold cursor-pointer shadow-md transition-opacity">
@@ -1217,10 +1256,7 @@ export default function AdminDashboard() {
               {/* Actions */}
               <div className="flex justify-end gap-3 border-t border-[var(--color-border)] pt-4">
                 <button 
-                  onClick={() => {
-                    if (selectedReportType === 'user') handleReportStatus(selectedReport.userreportid || 0, 'user', 'ไม่อนุมัติ')
-                    else handleReportStatus(selectedReport.driverreportid || 0, 'driver', 'ปฏิเสธ')
-                  }} 
+                  onClick={() => promptReportReject(selectedReportType === 'user' ? (selectedReport.userreportid || 0) : (selectedReport.driverreportid || 0), selectedReportType)} 
                   className="px-6 py-2.5 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 rounded-full text-xs font-bold cursor-pointer transition-colors"
                 >
                   ปฏิเสธ / ลบรายงาน
@@ -1255,6 +1291,45 @@ export default function AdminDashboard() {
               alt="รูปภาพขยาย"
               className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-white/10"
             />
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Reject Modal */}
+      {confirmRejectModal.isOpen && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[var(--color-card)] border border-red-500/30 rounded-2xl p-6 max-w-md w-full shadow-2xl flex flex-col gap-5 text-center">
+            <div className="w-14 h-14 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center mx-auto text-red-500 text-2xl">
+              ⚠️
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-bold text-[var(--color-text)] mb-2">
+                {confirmRejectModal.title}
+              </h3>
+              <p className="text-xs text-[var(--color-text-muted)] leading-relaxed font-medium">
+                {confirmRejectModal.message}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 justify-center pt-2">
+              <button
+                onClick={() => setConfirmRejectModal({ isOpen: false, title: '', message: '', onConfirm: () => {} })}
+                className="px-5 py-2.5 rounded-full border border-[var(--color-border)] text-xs font-bold text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] cursor-pointer transition-colors"
+              >
+                ยกเลิก (Cancel)
+              </button>
+              <button
+                onClick={() => {
+                  const action = confirmRejectModal.onConfirm
+                  setConfirmRejectModal({ isOpen: false, title: '', message: '', onConfirm: () => {} })
+                  action()
+                }}
+                className="px-6 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-lg shadow-red-600/30 cursor-pointer transition-all"
+              >
+                ยืนยันการปฏิเสธ (Confirm Reject)
+              </button>
+            </div>
           </div>
         </div>
       )}

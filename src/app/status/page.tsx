@@ -57,8 +57,8 @@ const STEPS = [
 // rejected → step 2 (ไม่ผ่าน)
 // ─────────────────────────────────────────────────────────────
 function getActiveStep(status: string | undefined): number {
-  if (status === 'approved' || status === 'rejected') return 2
-  if (status === 'pending') return 1
+  if (status === 'approved' || status === 'อนุมัติแล้ว' || status === 'rejected' || status === 'ปฏิเสธ') return 2
+  if (status === 'pending' || status === 'รอดำเนินการ') return 1
   return 0
 }
 
@@ -68,6 +68,7 @@ function getActiveStep(status: string | undefined): number {
 function getStatusConfig(status: string | undefined) {
   switch (status) {
     case 'approved':
+    case 'อนุมัติแล้ว':
       return {
         icon: '🎉',
         title: 'ยินดีด้วย! ร้านของคุณได้รับการอนุมัติแล้ว',
@@ -80,6 +81,7 @@ function getStatusConfig(status: string | undefined) {
         lineDone: '#10b981',
       }
     case 'rejected':
+    case 'ปฏิเสธ':
       return {
         icon: '❌',
         title: 'ขออภัย — คำขอลงทะเบียนไม่ผ่านการพิจารณา',
@@ -92,6 +94,7 @@ function getStatusConfig(status: string | undefined) {
         lineDone: '#ef4444',
       }
     case 'pending':
+    case 'รอดำเนินการ':
     default:
       return {
         icon: '⏳',
@@ -416,14 +419,7 @@ export default function StatusPage() {
 
           {/* ── Action Buttons ───────────────────────────── */}
           {!loading && (
-            <div style={styles.btnRow}>
-              <button
-                id="btn-logout"
-                onClick={handleLogout}
-                style={styles.logoutBtn}
-              >
-                ออกจากระบบ
-              </button>
+            <div style={{ ...styles.btnRow, justifyContent: 'center' }}>
               <button
                 id="btn-refresh"
                 onClick={() => fetchStatus(username, true)}
@@ -432,6 +428,8 @@ export default function StatusPage() {
                   ...styles.refreshBtn,
                   opacity: refreshing ? 0.75 : 1,
                   cursor: refreshing ? 'not-allowed' : 'pointer',
+                  width: '100%',
+                  maxWidth: '240px',
                 }}
               >
                 {refreshing && <span style={styles.spinner} />}
@@ -462,33 +460,17 @@ export default function StatusPage() {
 
       <Footer />
 
-      {/* Inline CSS: Font + Animations */}
+      <link
+        rel="stylesheet"
+        href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@700,500,400&display=swap"
+      />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Prompt', sans-serif; box-sizing: border-box; }
-
-        @keyframes spin {
-          to { transform: rotate(360deg); }
+        .btn-invert-hover {
+          transition: all 0.2s cubic-bezier(0.77, 0, 0.175, 1);
         }
-
-        @keyframes shimmer {
-          0%   { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(14px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Hover effects สำหรับ button */
-        #btn-logout:hover {
-          background: rgba(79, 70, 229, 0.05) !important;
-          color: #4f46e5 !important;
-          border-color: rgba(79, 70, 229, 0.4) !important;
-        }
-        #btn-refresh:hover {
-          filter: brightness(1.08);
+        .btn-invert-hover:hover {
+          background-color: #111111 !important;
+          color: #ffffff !important;
         }
       `}</style>
     </div>

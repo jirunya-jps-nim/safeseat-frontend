@@ -1,316 +1,147 @@
 'use client'
+
 // ═══════════════════════════════════════════════════════════════
-// app/about/page.tsx
-// หน้า "เกี่ยวกับเรา" (About Us Page - Cohesive Light Theme)
+// app/about/page.tsx — SafeSeat About Page (Thai Language)
 // ═══════════════════════════════════════════════════════════════
 
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
+import FloatingNav from '@/components/ui/FloatingNav'
+import { Shield, Car, Store, Smartphone, ArrowRight } from 'lucide-react'
 
 export default function AboutPage() {
   const router = useRouter()
 
   return (
-    <div style={styles.page}>
-      {/* วงกลมตกแต่งพื้นหลัง (Decorative glow) */}
-      <div style={styles.bgCircle1} />
-      <div style={styles.bgCircle2} />
-      <div style={styles.bgCircle3} />
+    <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
+      
+      {/* Global Background Glow */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
+      </div>
 
+      <div className="gradient-blur"></div>
       <Navbar />
+      <FloatingNav />
 
-      <main style={styles.main}>
-        {/* ── ส่วนที่ 1: Hero Section ── */}
-        <section style={styles.heroSection}>
-          <div style={styles.badge}>🛡️ เกี่ยวกับเรา</div>
-          <h1 style={styles.title}>
-            เราออกแบบระบบเพื่อชีวิตและ<br />
-            ความปลอดภัยของทุกคนบนท้องถนน
+      <main className="relative z-10 max-w-6xl mx-auto px-6 pt-44 pb-24 flex flex-col gap-20">
+        
+        {/* ── Hero Header Section ── */}
+        <section className="text-center max-w-4xl mx-auto flex flex-col items-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] backdrop-blur-md mb-6">
+            <span className="w-2 h-2 rounded-full bg-[#7C3AED] animate-pulse"></span>
+            <span className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest font-manrope">
+              วิสัยทัศน์ &amp; พันธกิจ
+            </span>
+          </div>
+
+          <h1 className="text-4xl sm:text-6xl font-bold font-manrope tracking-tight leading-tight mb-6 text-[var(--color-text)]">
+            เราออกแบบระบบเพื่อยกระดับความปลอดภัย{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8]">
+              และความอุ่นใจ
+            </span>{' '}
+            ในทุกการเดินทางบนท้องถนน
           </h1>
-          <p style={styles.subtitle}>
-            SafeSeat คือแพลตฟอร์มสนับสนุนการป้องกันอุบัติเหตุจากการเมาแล้วขับ<br />
-            ด้วยบริการผู้ขับขี่แทน (Replacement Driver Service) ที่เชื่อมโยงสถานบันเทิงและลูกค้าอย่างมีประสิทธิภาพ
+
+          <p className="text-lg md:text-xl text-[var(--color-text-muted)] leading-relaxed font-light">
+            SafeSeat คือแพลตฟอร์มสนับสนุนการป้องกันอุบัติเหตุจากการเมาแล้วขับด้วยบริการผู้ขับขี่แทน (Designated Driver Service)
+            ที่เชื่อมโยงระหว่างผู้ใช้บริการ สถานบันเทิงพาร์ทเนอร์ และผู้ขับขี่แทนอย่างมีประสิทธิภาพด้วยเทคโนโลยีนำทางและ GPS เรียลไทม์
           </p>
         </section>
 
-        {/* ── ส่วนที่ 2: Content Grid ── */}
-        <section style={styles.contentGrid}>
-          {/* การ์ดวิสัยทัศน์ */}
-          <div style={styles.card}>
-            <div style={styles.iconContainer}>🎯</div>
-            <h2 style={styles.cardTitle}>วิสัยทัศน์ของเรา (Our Vision)</h2>
-            <p style={styles.cardDesc}>
-              มุ่งมั่นที่จะเป็นส่วนหนึ่งในการลดอัตราการเกิดอุบัติเหตุทางถนนจากการขับขี่ขณะมึนเมา 
-              และสร้างสังคมการสัญจรที่ปลอดภัยในค่ำคืนการพักผ่อนของทุกคน
+        {/* ── Vision & Mission Grid ── */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col gap-4 hover:border-[#7C3AED]/50 transition-all">
+            <span className="text-xs font-mono font-bold tracking-widest text-[#7C3AED]">
+              01 // วิสัยทัศน์ของเรา
+            </span>
+            <h2 className="text-2xl font-bold font-manrope text-[var(--color-text)]">
+              การปฏิวัติความปลอดภัยทางถนน
+            </h2>
+            <p className="text-sm text-[var(--color-text-muted)] leading-relaxed font-light">
+              มุ่งมั่นที่จะเป็นส่วนหนึ่งในการลดอัตราการเกิดอุบัติเหตุทางถนนจากการขับขี่ขณะมึนเมา
+              พร้อมยกระดับสังคมการสัญจรให้ปลอดภัยในค่ำคืนการพักผ่อนของทุกคนด้วยระบบการจองและติดตามเรียลไทม์
             </p>
           </div>
 
-          {/* การ์ดพันธกิจ */}
-          <div style={styles.card}>
-            <div style={styles.iconContainer}>🤝</div>
-            <h2 style={styles.cardTitle}>พันธกิจของเรา (Our Mission)</h2>
-            <p style={styles.cardDesc}>
-              ยกระดับมาตรฐานความปลอดภัยโดยส่งมอบบริการที่เชื่อถือได้ ปลอดภัย และโปร่งใส 
-              พร้อมสร้างรายได้เสริมให้กับพนักงานขับรถที่มีประสิทธิภาพและผ่านการตรวจสอบประวัติอย่างเข้มงวด
+          <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col gap-4 hover:border-[#7C3AED]/50 transition-all">
+            <span className="text-xs font-mono font-bold tracking-widest text-[#7C3AED]">
+              02 // พันธกิจของเรา
+            </span>
+            <h2 className="text-2xl font-bold font-manrope text-[var(--color-text)]">
+              มาตรฐานสวัสดิภาพที่ไม่ประนีประนอม
+            </h2>
+            <p className="text-sm text-[var(--color-text-muted)] leading-relaxed font-light">
+              ส่งมอบบริการที่โปร่งใส ปลอดภัย และเชื่อถือได้ ควบคู่ไปกับการสร้างโอกาสและรายได้เสริมที่มั่นคงให้แก่ผู้ขับขี่แทน
+              ที่ผ่านการตรวจสอบประวัติอาชญากรรมและการยืนยันตัวตนอย่างเข้มงวด
             </p>
           </div>
         </section>
 
-        {/* ── ส่วนที่ 3: Key Features Section ── */}
-        <section style={styles.featuresSection}>
-          <h2 style={styles.sectionHeading}>เหตุผลที่ต้องเลือกใช้บริการ SafeSeat</h2>
-          <div style={styles.featuresGrid}>
-            <div style={styles.featureItem}>
-              <div style={styles.featureIcon}>🚗</div>
+        {/* ── Key Features Section ── */}
+        <section className="flex flex-col gap-10">
+          <div className="text-center">
+            <span className="text-xs font-bold tracking-[0.2em] text-[#7C3AED] uppercase">ทำไมต้องเลือก SAFESEAT</span>
+            <h2 className="text-3xl font-bold font-manrope text-[var(--color-text)] mt-2">มาตรฐานบริการของ SAFESEAT</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex items-start gap-4 shadow-md">
+              <div className="p-3 bg-[#7C3AED]/10 border border-[#7C3AED]/30 rounded-xl text-[#7C3AED] shrink-0">
+                <Car className="w-6 h-6" />
+              </div>
               <div>
-                <h3 style={styles.featureTitle}>คนขับมืออาชีพที่ไว้วางใจได้</h3>
-                <p style={styles.featureText}>พนักงานขับรถสำรองทุกคนได้รับการตรวจสอบประวัติอาชญากรรมและใบขับขี่อย่างเข้มข้น</p>
+                <h3 className="text-lg font-bold font-manrope text-[var(--color-text)] mb-2">พนักงานขับรถผ่านการคัดกรอง</h3>
+                <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+                  พนักงานขับรถสำรองทุกคนผ่านการตรวจสอบประวัติอาชญากรรม ประวัติการขับขี่ และมีใบอนุญาตขับขี่ถูกต้องตามกฎหมาย
+                </p>
               </div>
             </div>
 
-            <div style={styles.featureItem}>
-              <div style={styles.featureIcon}>🏪</div>
+            <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex items-start gap-4 shadow-md">
+              <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-400 shrink-0">
+                <Store className="w-6 h-6" />
+              </div>
               <div>
-                <h3 style={styles.featureTitle}>ระบบพาร์ทเนอร์ร้านค้าที่ลื่นไหล</h3>
-                <p style={styles.featureText}>สถานบันเทิงสามารถเรียกพนักงานขับรถ ส่งงาน และเช็คประวัติการเดินทางได้อย่างง่ายดาย</p>
+                <h3 className="text-lg font-bold font-manrope text-[var(--color-text)] mb-2">เครือข่ายพาร์ทเนอร์ร้านค้า</h3>
+                <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+                  สถานบันเทิง ร้านอาหาร และผับ สามารถเรียกรถ ส่งงาน และตรวจสอบสถิติเรียลไทม์เพื่อดูแลสวัสดิภาพลูกค้าหน้าร้านได้อย่างไร้รอยต่อ
+                </p>
               </div>
             </div>
 
-            <div style={styles.featureItem}>
-              <div style={styles.featureIcon}>📲</div>
+            <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex items-start gap-4 shadow-md">
+              <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-xl text-purple-400 shrink-0">
+                <Smartphone className="w-6 h-6" />
+              </div>
               <div>
-                <h3 style={styles.featureTitle}>การติดตามและสถานะเรียลไทม์</h3>
-                <p style={styles.featureText}>ตรวจสอบประวัติ รายละเอียดการจอง และเช็คขั้นตอนการอนุมัติได้แบบนาทีต่อนาที</p>
+                <h3 className="text-lg font-bold font-manrope text-[var(--color-text)] mb-2">ระบบติดตาม GPS เรียลไทม์</h3>
+                <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+                  ระบบติดตามสถานะการเดินทางอย่างแม่นยำ พร้อมระบบแจ้งเตือนฉุกเฉินเพื่อให้ญาติหรือเจ้าของร้านอุ่นใจตลอดเส้นทาง
+                </p>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── ส่วนที่ 4: CTA Section ── */}
-        <section style={styles.ctaSection}>
-          <div style={styles.ctaCard}>
-            <h2 style={styles.ctaTitle}>มาร่วมสร้างค่ำคืนที่ปลอดภัยร่วมกับเรา</h2>
-            <p style={styles.ctaDesc}>ไม่ว่าคุณจะเป็นเจ้าของสถานบริการ หรือผู้ให้บริการขับรถแทน สมัครเข้าร่วมเป็นพาร์ทเนอร์กับเราได้แล้ววันนี้</p>
-            <button style={styles.ctaBtn} onClick={() => router.push('/register')}>
-              เริ่มต้นลงทะเบียนฟรี →
-            </button>
-          </div>
+        {/* ── CTA Banner ── */}
+        <section className="p-12 bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#1D4ED8] rounded-3xl text-center text-white shadow-2xl flex flex-col items-center gap-6">
+          <h2 className="text-3xl md:text-4xl font-bold font-manrope">ร่วมเป็นส่วนหนึ่งของเครือข่ายความปลอดภัย</h2>
+          <p className="text-sm md:text-base text-white/80 max-w-xl leading-relaxed">
+            ไม่ว่าคุณจะเป็นเจ้าของสถานบริการ หรือต้องการร่วมเป็นผู้ให้บริการขับรถแทน สมัครเป็นพาร์ทเนอร์กับ SafeSeat วันนี้
+          </p>
+          <button
+            onClick={() => router.push('/register')}
+            className="px-8 py-3.5 bg-white text-[#7C3AED] font-bold text-xs tracking-wider uppercase rounded-full hover:bg-slate-100 transition-all shadow-lg cursor-pointer flex items-center gap-2"
+          >
+            สมัครใช้งานเลย <ArrowRight className="w-4 h-4" />
+          </button>
         </section>
+
       </main>
 
       <Footer />
-
-      {/* CSS Animation & Hover Interactivity */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Prompt', sans-serif; }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e0e7ff 100%)',
-    display: 'flex',
-    flexDirection: 'column',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  bgCircle1: {
-    position: 'absolute',
-    top: '-150px',
-    left: '-150px',
-    width: '450px',
-    height: '450px',
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)',
-    pointerEvents: 'none',
-  },
-  bgCircle2: {
-    position: 'absolute',
-    bottom: '-100px',
-    right: '-100px',
-    width: '400px',
-    height: '400px',
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)',
-    pointerEvents: 'none',
-  },
-  bgCircle3: {
-    position: 'absolute',
-    top: '30%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: '550px',
-    height: '550px',
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(79,70,229,0.04) 0%, transparent 70%)',
-    pointerEvents: 'none',
-  },
-  main: {
-    flex: 1,
-    maxWidth: '1000px',
-    width: '100%',
-    margin: '0 auto',
-    padding: '60px 24px',
-    zIndex: 5,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '60px',
-  },
-
-  // ── Hero Section ──
-  heroSection: {
-    textAlign: 'center',
-    animation: 'fadeUp 0.4s ease both',
-  },
-  badge: {
-    display: 'inline-block',
-    background: '#e0e7ff',
-    color: '#4f46e5',
-    fontSize: '13px',
-    fontWeight: 600,
-    padding: '6px 16px',
-    borderRadius: '20px',
-    border: '1px solid rgba(79,70,229,0.2)',
-    marginBottom: '18px',
-  },
-  title: {
-    fontSize: '34px',
-    fontWeight: 700,
-    color: '#0f172a',
-    lineHeight: 1.4,
-    marginBottom: '16px',
-  },
-  subtitle: {
-    fontSize: '15px',
-    color: '#475569',
-    lineHeight: 1.7,
-    margin: '0 auto',
-    maxWidth: '720px',
-  },
-
-  // ── Content Grid ──
-  contentGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '30px',
-    animation: 'fadeUp 0.5s ease both',
-  },
-  card: {
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '20px',
-    padding: '36px 30px',
-    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.02)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-  },
-  iconContainer: {
-    fontSize: '36px',
-    marginBottom: '18px',
-  },
-  cardTitle: {
-    fontSize: '18px',
-    fontWeight: 700,
-    color: '#0f172a',
-    marginBottom: '12px',
-  },
-  cardDesc: {
-    fontSize: '14.5px',
-    color: '#475569',
-    lineHeight: 1.6,
-  },
-
-  // ── Features Section ──
-  featuresSection: {
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '24px',
-    padding: '40px 36px',
-    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.02)',
-    animation: 'fadeUp 0.6s ease both',
-  },
-  sectionHeading: {
-    fontSize: '22px',
-    fontWeight: 700,
-    color: '#0f172a',
-    marginBottom: '32px',
-    textAlign: 'center',
-  },
-  featuresGrid: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px',
-  },
-  featureItem: {
-    display: 'flex',
-    gap: '18px',
-    alignItems: 'flex-start',
-  },
-  featureIcon: {
-    fontSize: '24px',
-    background: 'rgba(79,70,229,0.08)',
-    width: '46px',
-    height: '46px',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  featureTitle: {
-    fontSize: '15.5px',
-    fontWeight: 600,
-    color: '#0f172a',
-    marginBottom: '6px',
-  },
-  featureText: {
-    fontSize: '14px',
-    color: '#64748b',
-    lineHeight: 1.5,
-  },
-
-  // ── CTA Section ──
-  ctaSection: {
-    animation: 'fadeUp 0.7s ease both',
-  },
-  ctaCard: {
-    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-    borderRadius: '24px',
-    padding: '44px 30px',
-    textAlign: 'center',
-    boxShadow: '0 20px 40px rgba(79,70,229,0.2)',
-  },
-  ctaTitle: {
-    color: '#ffffff',
-    fontSize: '24px',
-    fontWeight: 700,
-    marginBottom: '12px',
-  },
-  ctaDesc: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: '14.5px',
-    marginBottom: '24px',
-  },
-  ctaBtn: {
-    background: '#ffffff',
-    color: '#4f46e5',
-    border: 'none',
-    padding: '13px 32px',
-    borderRadius: '12px',
-    fontWeight: 600,
-    fontSize: '15px',
-    cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-  },
 }

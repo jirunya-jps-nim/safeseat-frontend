@@ -91,6 +91,21 @@ export default function RegisterPubPage() {
     setError('')
   }
 
+  const parseApiError = (err: unknown, defaultMsg: string): string => {
+    if (typeof err === 'object' && err !== null) {
+      if ('response' in err && (err as { response?: { data?: { message?: string } } }).response?.data?.message) {
+        return (err as { response: { data: { message: string } } }).response.data.message
+      }
+      if ('message' in err && (err as { message?: string }).message === 'Network Error') {
+        return 'ไม่สามารถเชื่อมต่อเครื่องเซิร์ฟเวอร์ได้ (Network Error) กรุณาตรวจสอบว่า Backend ทำงานอยู่หรือไม่'
+      }
+      if ('message' in err && typeof (err as { message?: string }).message === 'string') {
+        return (err as { message: string }).message
+      }
+    }
+    return defaultMsg
+  }
+
   const handleNext = async (): Promise<void> => {
     setError('')
     if (step === 1) {
@@ -98,23 +113,28 @@ export default function RegisterPubPage() {
       
       setLoading(true)
       try {
-        await api.post('/pub/check-email', { email: form.pubEmail })
+        await api.post('/pub/check-email', { pubEmail: form.pubEmail, pubPhone: form.pubPhone })
       } catch (err: unknown) {
-        const errorMessage =
-          typeof err === 'object' && err !== null && 'response' in err
-            ? (err as { response: { data?: { message?: string } } }).response?.data?.message
-            : err instanceof Error
-            ? err.message
-            : undefined
-
-        setError(errorMessage || 'เกิดข้อผิดพลาดในการตรวจสอบอีเมล')
+        setError(parseApiError(err, 'เกิดข้อผิดพลาดในการตรวจสอบอีเมลและเบอร์โทรศัพท์'))
         setLoading(false)
         return
       }
       setLoading(false)
     }
     
-    if (step === 2 && !validateStep2(form, licenseFile, shopImgFile, setError)) return
+    if (step === 2) {
+      if (!validateStep2(form, licenseFile, shopImgFile, setError)) return
+      
+      setLoading(true)
+      try {
+        await api.post('/pub/check-email', { taxNumber: form.taxNumber })
+      } catch (err: unknown) {
+        setError(parseApiError(err, 'เกิดข้อผิดพลาดในการตรวจสอบเลขผู้เสียภาษี'))
+        setLoading(false)
+        return
+      }
+      setLoading(false)
+    }
     setStep(step + 1)
   }
 
@@ -142,7 +162,7 @@ export default function RegisterPubPage() {
 
       router.push('/login?registered=1')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด กรุณาลองใหม่')
+      setError(parseApiError(err, 'เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง'))
     } finally {
       setLoading(false)
     }
@@ -161,13 +181,13 @@ export default function RegisterPubPage() {
         {/* ─── Hero Panel (Left 40% - Pub Bright Vibe) ─── */}
         <div style={styles.heroPanel}>
           <img
-            src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=700&q=80"
-            alt="ร้านบาร์/ผับ ยามค่ำคืนพรีเมียม"
-            style={styles.heroImage}
+            src="/images/safeseat_futuristic_dashboard_preview.png"
+            alt="Futuristic SafeSeat Dispatch System"
+            style={{ ...styles.heroImage, opacity: 0.65 }}
           />
           <div style={{
             ...styles.heroOverlay,
-            background: 'linear-gradient(160deg, rgba(15,23,42,0.15) 0%, rgba(79,70,229,0.3) 100%)',
+            background: 'linear-gradient(160deg, rgba(5,7,20,0.85) 0%, rgba(124,58,237,0.4) 100%)',
           }} />
           <div style={styles.heroContent}>
             <div style={styles.heroBadge}>🏪 พาร์ทเนอร์สถานบริการ</div>
@@ -312,13 +332,14 @@ export default function RegisterPubPage() {
               )}
 
               {step < STEPS.length ? (
-                <button onClick={handleNext} style={styles.nextBtn}>
+                <button onClick={handleNext} style={styles.nextBtn} className="btn-invert-hover">
                   ถัดไป →
                 </button>
               ) : (
                 <button
                   onClick={handleSubmit}
                   disabled={loading}
+                  className="btn-invert-hover"
                   style={{ ...styles.nextBtn, opacity: loading ? 0.75 : 1 }}
                 >
                   {loading ? 'กำลังบันทึก...' : 'สมัครสมาชิก ✓'}
@@ -333,9 +354,22 @@ export default function RegisterPubPage() {
 
       <Footer />
 
+      <link
+        rel="stylesheet"
+        href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@700,500,400&display=swap"
+      />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Prompt', sans-serif; }
+        input:focus {
+          border-color: #111111 !important;
+          box-shadow: 0 0 0 2px rgba(17, 17, 17, 0.1) !important;
+        }
+        .btn-invert-hover {
+          transition: all 0.2s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        .btn-invert-hover:hover {
+          background-color: #111111 !important;
+          color: #ffffff !important;
+        }
       `}</style>
     </div>
   )

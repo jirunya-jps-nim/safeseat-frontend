@@ -1,45 +1,75 @@
-// ═══════════════════════════════════════════════════════════════
-// components/ui/Footer.tsx
-// Footer ที่ใช้ร่วมกันทั้งหน้า Login, Register และ Home (สีเข้มข้น ตัวหนังสือชัดเจน)
-// ═══════════════════════════════════════════════════════════════
+'use client'
 
 import React from 'react'
+import Link from 'next/link'
+import { ShieldCheck, Mail, Phone } from 'lucide-react'
 
 export default function Footer() {
   return (
-    <footer style={styles.footer}>
-      {/* ── ข้อความ Copyright ── */}
-      <span style={styles.copyrightText}>© 2026 Safe Seat Application. All rights reserved.</span>
+    <footer className="bg-[var(--color-bg)] border-t border-[var(--color-border)] pt-10 pb-6 relative overflow-hidden text-[var(--color-text)] font-inter transition-colors duration-300">
+      
+      {/* Footer Top Grid */}
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 mb-6 relative z-10">
+        
+        {/* Brand Summary */}
+        <div className="md:col-span-2">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-5 h-5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] rounded-sm rotate-45 shadow-[0_0_15px_rgba(124,58,237,0.7)]"></div>
+            <span className="text-xl font-bold font-manrope tracking-tight text-[var(--color-text)]">Safe<span className="text-[#7C3AED]">Seat</span></span>
+          </div>
+          <p className="text-[var(--color-text-muted)] max-w-sm leading-relaxed text-xs font-normal">
+            แพลตฟอร์มบริการคนขับรถแทนมืออาชีพ เพื่อยกระดับความปลอดภัย ยุติอุบัติเหตุเมาแล้วขับ และสร้างความอุ่นใจในการเดินทางทุกค่ำคืน
+          </p>
+        </div>
+        
+        {/* Navigation */}
+        <div>
+          <h4 className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest mb-4 font-manrope">เมนูหลัก</h4>
+          <ul className="space-y-2.5 text-[var(--color-text-muted)] text-xs font-medium">
+            <li><Link href="/" className="hover:text-[var(--color-text)] transition-colors">หน้าแรก</Link></li>
+            <li><Link href="/about" className="hover:text-[var(--color-text)] transition-colors">เกี่ยวกับเรา</Link></li>
+            <li><Link href="/register/pub" className="hover:text-[var(--color-text)] transition-colors">สำหรับพาร์ทเนอร์ร้านค้า</Link></li>
+            <li><Link href="/register/driver" className="hover:text-[var(--color-text)] transition-colors">สำหรับผู้ขับขี่แทน</Link></li>
+            <li><Link href="/help" className="hover:text-[var(--color-text)] transition-colors">ศูนย์ช่วยเหลือ &amp; SOS</Link></li>
+          </ul>
+        </div>
+        
+        {/* Emergency Contact */}
+        <div>
+          <h4 className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest mb-4 font-manrope">ติดต่อ &amp; ช่วยเหลือ</h4>
+          <div className="space-y-3 text-[var(--color-text-muted)] text-xs font-medium">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-text)]">
+              <Phone className="w-3.5 h-3.5 text-[#7C3AED]" />
+              <span>สายด่วน 24 ชั่วโมง: 02-123-4567</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-text)]">
+              <Mail className="w-3.5 h-3.5 text-[#7C3AED]" />
+              <span>contact@safeseat.app</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-text)]">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#7C3AED]" />
+              <span>ประกันภัยคุ้มครองยานพาหนะ</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      {/* ── Links นโยบาย ── */}
-      <span style={styles.footerLinks}>
-        <span style={styles.footerLink}>นโยบายความเป็นส่วนตัว</span>
-        <span style={{ color: '#818cf8', margin: '0 8px' }}>·</span>
-        <span style={styles.footerLink}>ข้อกำหนดการใช้บริการ</span>
-      </span>
+      {/* Giant Stroke SAFESEAT text — Hidden in Light Mode, shown subtly in Dark Mode only */}
+      <div className="hidden dark:flex justify-center items-center py-2 opacity-15 pointer-events-none">
+        <h1 className="text-[7vw] md:text-[6vw] leading-none font-extrabold font-manrope tracking-tighter text-stroke select-none">
+          SAFESEAT
+        </h1>
+      </div>
+
+      {/* Footer Bottom Legal Bar */}
+      <div className="max-w-7xl mx-auto px-6 border-t border-[var(--color-border)] pt-4 flex flex-col md:flex-row items-center justify-between text-[var(--color-text-muted)] text-[10px] tracking-widest gap-2">
+        <p>&copy; 2026 SafeSeat Platform Inc. สงวนลิขสิทธิ์ทั้งหมด</p>
+        <div className="flex gap-6 font-semibold">
+          <a href="#" className="hover:text-[var(--color-text)] transition-colors">นโยบายความเป็นส่วนตัว</a>
+          <a href="#" className="hover:text-[var(--color-text)] transition-colors">ข้อกำหนดการให้บริการ</a>
+          <a href="#" className="hover:text-[var(--color-text)] transition-colors">ประกันภัยสวัสดิภาพ</a>
+        </div>
+      </div>
     </footer>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  footer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '16px 40px',
-    backgroundColor: '#0b0f19', // สีพื้นหลังเข้มเหมือน Navbar เพื่อความเป็นเอกภาพ
-    borderTop: '1px solid #1e293b',
-    fontSize: 12.5,
-    position: 'relative',
-    zIndex: 5,
-  },
-  copyrightText: {
-    color: '#cbd5e1', // เปลี่ยนเป็นสี Slate-300 เพื่อให้อ่านง่าย ชัดเจน
-  },
-  footerLinks: { display: 'flex', alignItems: 'center' },
-  footerLink: {
-    color: '#cbd5e1', // เปลี่ยนเป็นสี Slate-300 อ่านง่ายขึ้น
-    cursor: 'pointer',
-    transition: 'color 0.2s',
-  },
 }

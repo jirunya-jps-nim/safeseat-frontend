@@ -11,8 +11,8 @@ interface StepDriverTrainingProps {
   files: {
     trainingCert1: File | null
     trainingCert2: File | null
-    trainingCert3: File | null
-    trainingCert4: File | null
+    trainingCert3?: File | null
+    trainingCert4?: File | null
   }
   onFileSelect: (fieldName: string, file: File | null) => void
 }
@@ -28,27 +28,11 @@ const TRAINING_COURSES = [
   },
   {
     id: 2,
-    title: '2. หลักสูตรจริยธรรมและการขับขี่อย่างปลอดภัยสำหรับผู้ให้บริการขนส่ง',
-    provider: 'ระบบอบรมวิชาชีพออนไลน์ TPQI e-Learning (สถาบันคุณวุฒิวิชาชีพ)',
-    link: 'https://e-learning.tpqi.go.th/',
+    title: '2. หลักสูตรการปฐมพยาบาลเบื้องต้นและการกู้ชีพขั้นพื้นฐาน (CPR & First Aid)',
+    provider: 'ระบบอบรมออนไลน์สภากาชาดไทย (Thai Red Cross e-Learning)',
+    link: 'https://learning.redcross.or.th/',
     fieldName: 'trainingCert2',
     hint: 'ใบเกียรติบัตรคอร์สที่ 2 (JPG/PNG)'
-  },
-  {
-    id: 3,
-    title: '3. หลักสูตรการปฐมพยาบาลเบื้องต้นและการกู้ชีพขั้นพื้นฐาน (CPR & First Aid)',
-    provider: 'ระบบอบรมออนไลน์สภากาชาดไทย (Thai Red Cross e-Learning)',
-    link: 'https://e-learning.redcross.or.th/',
-    fieldName: 'trainingCert3',
-    hint: 'ใบเกียรติบัตรคอร์สที่ 3 (JPG/PNG)'
-  },
-  {
-    id: 4,
-    title: '4. หลักสูตรการพัฒนาทักษะชีวิตและการยกระดับบริการขนส่งสาธารณะ',
-    provider: 'ระบบการเรียนรู้ออนไลน์แห่งชาติ Thai MOOC',
-    link: 'https://thaimooc.org/',
-    fieldName: 'trainingCert4',
-    hint: 'ใบเกียรติบัตรคอร์สที่ 4 (JPG/PNG)'
   }
 ]
 
@@ -65,11 +49,11 @@ export default function StepDriverTraining({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div>
-        <h3 style={styles.sectionHeader}>ส่วนที่ 5 : ประวัติการอบรมพนักงานขับรถ (4 หลักสูตรบังคับ)</h3>
+        <h3 style={styles.sectionHeader}>ส่วนที่ 5 : ประวัติการอบรมพนักงานขับรถ (2 หลักสูตรบังคับ)</h3>
         
         <div style={styles.infoBox}>
           <p style={styles.infoDesc}>
-            💡 ผู้สมัครจะต้องผ่านหลักสูตรการอบรมความปลอดภัยทั้ง 4 หลักสูตรด้านล่างนี้ โดยท่านสามารถเข้าอบรมนอกเว็บไซต์กับหน่วยงานที่ระบบกำหนดไว้ และแนบไฟล์เกียรติบัตรการอบรม (ครบถ้วนทั้ง 4 ไฟล์) เพื่อยืนยันการสมัครสมาชิก
+            💡 ผู้สมัครจะต้องผ่านหลักสูตรการอบรมความปลอดภัยทั้ง 2 หลักสูตรด้านล่างนี้ โดยท่านสามารถเข้าอบรมนอกเว็บไซต์กับหน่วยงานที่ระบบกำหนดไว้ และแนบไฟล์เกียรติบัตรการอบรม (ครบถ้วนทั้ง 2 ไฟล์) เพื่อยืนยันการสมัครสมาชิก
           </p>
         </div>
 

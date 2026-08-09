@@ -1,12 +1,14 @@
 'use client'
+
 // ═══════════════════════════════════════════════════════════════
 // app/register/documents/page.tsx
-// หน้าแสดงตัวอย่างเอกสารการสมัครสมาชิก (Example Documents Page - Cohesive Light Theme)
+// SafeSeat Example Documents Page — Royal Purple-Blue Edition
 // ═══════════════════════════════════════════════════════════════
 
 import { useState } from 'react'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
+import FloatingNav from '@/components/ui/FloatingNav'
 
 interface DocumentStep {
   title: string
@@ -19,9 +21,9 @@ interface DocumentStep {
 
 const DOCUMENT_STEPS: DocumentStep[] = [
   {
-    title: 'ขั้นตอนที่ 1 รูปโปรไฟล์',
-    detailsTitle: 'รูปโปรไฟล์',
-    intro: 'ลักษณะของรูปโปรไฟล์ที่ดี:',
+    title: '01 / รูปโปรไฟล์',
+    detailsTitle: '01 — PROFILE PHOTO REQUIREMENT',
+    intro: 'ลักษณะของรูปโปรไฟล์ที่ถูกต้อง:',
     requirements: [
       'รูปถ่ายหน้าตรง ใบหน้าชัดเจน',
       'ไม่มีบุคคล สัตว์ และ/หรือสิ่งของอยู่ในพื้นหลัง',
@@ -30,24 +32,24 @@ const DOCUMENT_STEPS: DocumentStep[] = [
       'เป็นรูปที่ไม่มีอายุเกิน 6 เดือน'
     ],
     imageSrc: '/images/profile_sample.png',
-    imageLabel: 'ตัวอย่างรูปโปรไฟล์ :'
+    imageLabel: 'ตัวอย่างรูปโปรไฟล์ที่ถูกต้อง :'
   },
   {
-    title: 'ขั้นตอนที่ 2 บัตรประจำตัวประชาชน',
-    detailsTitle: 'บัตรประจำตัวประชาชน',
+    title: '02 / บัตรประชาชน',
+    detailsTitle: '02 — NATIONAL ID CARD REQUIREMENT',
     intro: 'ลักษณะของบัตรประจำตัวประชาชนที่ถูกต้อง:',
     requirements: [
       'บัตรประจำตัวประชาชนอยู่ในสภาพสมบูรณ์และไม่หมดอายุ',
-      'ไม่แก้ไขและตกแต่งรูป',
+      'ไม่แก้ไขและตกแต่งรูปภาพ',
       'เห็นข้อมูลชัดเจนและครบถ้วน',
-      'หากท่านแนบสำเนาบัตรประชาชน กรุณาขีดฆ่าหรือปิดบังข้อมูลศาสนาหรือหมู่เลือด (ถ้ามี) หากท่านไม่ได้ขีดฆ่าหรือปิดบังข้อมูลดังกล่าว ขอสงวนสิทธิ์ดำเนินการขีดฆ่าแทน เพื่อความเป็นส่วนตัวทางข้อมูลบุคคล'
+      'หากแนบสำเนาบัตรประชาชน กรุณาปิดบังข้อมูลศาสนาหรือหมู่เลือดเพื่อความเป็นส่วนตัวของข้อมูลบุคคล'
     ],
     imageSrc: '/images/id_card_sample.png',
     imageLabel: 'ตัวอย่างรูปบัตรประจำตัวประชาชนที่ถูกต้อง :'
   },
   {
-    title: 'ขั้นตอนที่ 3 ใบขับขี่',
-    detailsTitle: 'ใบขับขี่',
+    title: '03 / ใบขับขี่',
+    detailsTitle: '03 — DRIVER LICENSE REQUIREMENT',
     intro: 'ลักษณะของใบขับขี่ที่ถูกต้อง:',
     requirements: [
       'ต้องเป็นใบขับขี่รถยนต์ส่วนบุคคลชั่วคราว (มีอายุมากกว่า 1 ปีขึ้นไป) หรือใบขับขี่ส่วนบุคคลตลอดชีพเท่านั้น',
@@ -60,11 +62,10 @@ const DOCUMENT_STEPS: DocumentStep[] = [
     imageLabel: 'ตัวอย่างรูปใบขับขี่ที่ถูกต้อง :'
   },
   {
-    title: 'ขั้นตอนที่ 4 ข้อมูลรถยนต์',
-    detailsTitle: 'ข้อมูลรถยนต์',
+    title: '04 / ข้อมูลรถยนต์',
+    detailsTitle: '04 — VEHICLE REGISTRATION REQUIREMENT',
     intro: 'ลักษณะของข้อมูลรถยนต์ที่ถูกต้อง:',
     requirements: [
-      'กรณีที่ผู้สมัครเป็นเจ้าของรถ ข้อมูลทะเบียนรถและเอกสารคู่มือจดทะเบียนรถยนต์ที่ถูกต้องควรมีลักษณะดังต่อไปนี้:',
       'ชื่อในเอกสารต้องตรงกับชื่อ-นามสกุลของผู้สมัคร',
       'ข้อมูลเลขตัวถัง เลขเครื่องยนต์ และป้ายทะเบียนตรงกับสภาพรถจริง',
       'รูปภาพเห็นหน้ารวมข้อมูลชัดเจน ครบถ้วน ไม่มีการตัดต่อตกแต่งรูป'
@@ -73,8 +74,8 @@ const DOCUMENT_STEPS: DocumentStep[] = [
     imageLabel: 'ตัวอย่างรูปเล่มทะเบียนรถยนต์ที่ถูกต้อง :'
   },
   {
-    title: 'ขั้นตอนที่ 5 พ.ร.บ. รถยนต์',
-    detailsTitle: 'พ.ร.บ. รถยนต์',
+    title: '05 / พ.ร.บ. รถยนต์',
+    detailsTitle: '05 — COMPULSORY INSURANCE (พ.ร.บ.)',
     intro: 'ลักษณะของข้อมูล พ.ร.บ. ที่ถูกต้อง:',
     requirements: [
       'พ.ร.บ. รถยนต์และเอกสารต่อภาษีประจำปีต้องอยู่ในสภาพสมบูรณ์และไม่หมดอายุการใช้งาน',
@@ -85,11 +86,10 @@ const DOCUMENT_STEPS: DocumentStep[] = [
     imageLabel: 'ตัวอย่างรูป พ.ร.บ. ที่ถูกต้อง :'
   },
   {
-    title: 'ขั้นตอนที่ 6 ข้อมูลบัญชีธนาคาร',
-    detailsTitle: 'ข้อมูลบัญชีธนาคาร',
+    title: '06 / บัญชีธนาคาร',
+    detailsTitle: '06 — BANK ACCOUNT BOOK REQUIREMENT',
     intro: 'รูปหน้าแรกของสมุดบัญชีธนาคาร:',
     requirements: [
-      'หากไม่ส่งข้อมูลบัญชีธนาคารจะไม่สามารถถอนเงินรายได้ออกจากระบบ SafeSeat ได้ โดยสมุดบัญชีที่ถูกต้องควรมีลักษณะดังต่อไปนี้:',
       'ชื่อเจ้าของบัญชีธนาคารต้องตรงกับชื่อผู้สมัครรับบริการอย่างถูกต้อง',
       'ต้องเป็นสมุดบัญชีธนาคารกสิกรไทย (KBank) เท่านั้น เพื่อความสะดวกในการโอนเงินรายได้เข้าระบบ',
       'ภาพถ่ายเห็นข้อมูลชัดเจน (ชื่อบัญชี และเลขบัญชีธนาคาร)',
@@ -105,24 +105,35 @@ export default function ExampleDocumentsPage() {
   const currentStep = DOCUMENT_STEPS[activeStepIndex]
 
   return (
-    <div style={styles.page}>
-      <Navbar />
+    <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
+      
+      {/* Background Glow */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
+      </div>
 
-      <main style={styles.main}>
+      <div className="gradient-blur"></div>
+      <Navbar />
+      <FloatingNav />
+
+      <main className="relative z-10 max-w-6xl mx-auto px-6 pt-44 pb-24 flex flex-col md:flex-row gap-8">
         {/* Left Sidebar */}
-        <aside style={styles.sidebar}>
-          <div style={styles.sidebarHeader}>ขั้นตอนการสมัคร</div>
-          <ul style={styles.sidebarList}>
+        <aside className="w-full md:w-72 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 shrink-0 h-fit shadow-xl">
+          <div className="text-xs font-bold tracking-widest text-[#7C3AED] border-b border-[var(--color-border)] pb-3 mb-4 font-manrope">
+            REGISTRATION STEPS
+          </div>
+          <ul className="flex flex-col gap-2">
             {DOCUMENT_STEPS.map((step, index) => {
               const isActive = index === activeStepIndex
               return (
                 <li
                   key={index}
                   onClick={() => setActiveStepIndex(index)}
-                  style={{
-                    ...styles.sidebarItem,
-                    ...(isActive ? styles.sidebarItemActive : styles.sidebarItemInactive)
-                  }}
+                  className={`px-4 py-3 rounded-xl text-xs font-bold tracking-wider cursor-pointer transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white shadow-md'
+                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]'
+                  }`}
                 >
                   {step.title}
                 </li>
@@ -132,15 +143,17 @@ export default function ExampleDocumentsPage() {
         </aside>
 
         {/* Right Content Area */}
-        <section style={styles.contentArea}>
-          <h1 style={styles.contentTitle}>{currentStep.detailsTitle}</h1>
+        <section className="flex-1 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-8 shadow-xl flex flex-col gap-6">
+          <h1 className="text-2xl font-bold font-manrope text-[var(--color-text)] tracking-tight">
+            {currentStep.detailsTitle}
+          </h1>
 
           {/* Description Box */}
-          <div style={styles.descriptionBox}>
-            <p style={styles.introText}>{currentStep.intro}</p>
-            <ul style={styles.requirementsList}>
+          <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-6">
+            <p className="text-sm font-bold text-[var(--color-text)] mb-3">{currentStep.intro}</p>
+            <ul className="pl-5 space-y-2 list-disc text-xs text-[var(--color-text-muted)] leading-relaxed">
               {currentStep.requirements.map((req, idx) => (
-                <li key={idx} style={styles.requirementItem}>
+                <li key={idx}>
                   {req}
                 </li>
               ))}
@@ -148,13 +161,13 @@ export default function ExampleDocumentsPage() {
           </div>
 
           {/* Image Display Area */}
-          <div style={styles.imageSection}>
-            <h2 style={styles.imageLabel}>{currentStep.imageLabel}</h2>
-            <div style={styles.imageContainer}>
+          <div className="flex flex-col gap-3">
+            <h2 className="text-sm font-bold text-[var(--color-text)]">{currentStep.imageLabel}</h2>
+            <div className="flex justify-center items-center border border-[var(--color-border)] rounded-xl p-6 bg-[var(--color-surface)] overflow-hidden">
               <img
                 src={currentStep.imageSrc}
                 alt={currentStep.detailsTitle}
-                style={styles.sampleImage}
+                className="max-w-full max-h-96 object-contain rounded-lg shadow-md"
               />
             </div>
           </div>
@@ -162,146 +175,6 @@ export default function ExampleDocumentsPage() {
       </main>
 
       <Footer />
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Prompt', sans-serif; }
-      `}</style>
     </div>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: '100vh',
-    background: '#f8fafc',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  main: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'row',
-    width: '100%',
-    maxWidth: '1200px',
-    margin: '30px auto 60px',
-    boxSizing: 'border-box',
-    gap: '24px',
-    padding: '0 20px',
-  },
-  sidebar: {
-    width: '280px',
-    backgroundColor: '#f1f5f9',
-    borderRadius: '16px',
-    padding: '24px 16px',
-    height: 'fit-content',
-    border: '1px solid #e2e8f0',
-    flexShrink: 0,
-  },
-  sidebarHeader: {
-    fontSize: '15px',
-    fontWeight: 600,
-    color: '#4f46e5',
-    borderBottom: '2px solid #e2e8f0',
-    paddingBottom: '12px',
-    marginBottom: '16px',
-  },
-  sidebarList: {
-    listStyle: 'none',
-    padding: 0,
-    margin: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  sidebarItem: {
-    padding: '12px 16px',
-    borderRadius: '10px',
-    fontSize: '13.5px',
-    fontWeight: 500,
-    cursor: 'pointer',
-    transition: 'all 0.25s ease',
-  },
-  sidebarItemActive: {
-    backgroundColor: '#ffffff',
-    color: '#22c55e', // เขียวสดใสตามต้นแบบ
-    fontWeight: 600,
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.03)',
-    border: '1px solid #e2e8f0',
-  },
-  sidebarItemInactive: {
-    color: '#4f46e5', // สีม่วง/น้ำเงินตามต้นแบบเมื่อไม่ได้เลือก
-    backgroundColor: 'transparent',
-    border: '1px solid transparent',
-  },
-  contentArea: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    borderRadius: '16px',
-    padding: '32px 40px',
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.02)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px',
-  },
-  contentTitle: {
-    fontSize: '24px',
-    fontWeight: 700,
-    color: '#22c55e', // สีเขียวเด่นชัด
-    margin: 0,
-  },
-  descriptionBox: {
-    backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '14px',
-    padding: '24px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.01)',
-  },
-  introText: {
-    fontSize: '14.5px',
-    fontWeight: 600,
-    color: '#0f172a',
-    margin: '0 0 12px',
-  },
-  requirementsList: {
-    paddingLeft: '20px',
-    margin: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-  },
-  requirementItem: {
-    fontSize: '13.5px',
-    color: '#475569',
-    lineHeight: 1.6,
-  },
-  imageSection: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-  },
-  imageLabel: {
-    fontSize: '14.5px',
-    fontWeight: 600,
-    color: '#0f172a',
-    margin: 0,
-  },
-  imageContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    border: '1px dashed #cbd5e1',
-    borderRadius: '16px',
-    padding: '20px',
-    backgroundColor: '#f8fafc',
-    overflow: 'hidden',
-  },
-  sampleImage: {
-    maxWidth: '100%',
-    maxHeight: '400px',
-    objectFit: 'contain',
-    borderRadius: '8px',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-  },
 }

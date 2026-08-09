@@ -104,9 +104,10 @@ interface RouteMapProps {
   dropoffLng: number
   driverLat?: number
   driverLng?: number
+  currentStep?: number
 }
 
-export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng, driverLat, driverLng }: RouteMapProps) {
+export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng, driverLat, driverLng, currentStep }: RouteMapProps) {
   const [routeCoords, setRouteCoords] = useState<[number, number][]>([])
 
   const defaultCenter: [number, number] = [
@@ -118,7 +119,27 @@ export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng,
     let active = true
     const fetchRoute = async () => {
       try {
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${pickupLng},${pickupLat};${dropoffLng},${dropoffLat}?overview=full&geometries=geojson`
+        let startLng = pickupLng
+        let startLat = pickupLat
+        let endLng = dropoffLng
+        let endLat = dropoffLat
+
+        // หากคนขับกำลังเดินทางไปรับที่ร้านค้า (Pub) ให้วาดเส้นจากตำแหน่งคนขับ ➔ ร้านค้า
+        if (currentStep === 1 && driverLat && driverLng) {
+          startLat = driverLat
+          startLng = driverLng
+          endLat = pickupLat
+          endLng = pickupLng
+        } 
+        // หากกำลังนำส่งผู้ใช้ไปยังจุดหมายปลายทาง ให้วาดเส้นจากตำแหน่งคนขับ ➔ จุดหมายปลายทาง
+        else if (currentStep === 3 && driverLat && driverLng) {
+          startLat = driverLat
+          startLng = driverLng
+          endLat = dropoffLat
+          endLng = dropoffLng
+        }
+
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`
         const response = await fetch(osrmUrl)
         if (response.ok) {
           const data = await response.json()
@@ -132,9 +153,15 @@ export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng,
       } catch (err) {
         console.warn('[RouteMap Warning] OSRM route fetch failed, using straight-line fallback:', err)
         if (active) {
+          let sLat = pickupLat, sLng = pickupLng, eLat = dropoffLat, eLng = dropoffLng
+          if (currentStep === 1 && driverLat && driverLng) {
+            sLat = driverLat; sLng = driverLng; eLat = pickupLat; eLng = pickupLng
+          } else if (currentStep === 3 && driverLat && driverLng) {
+            sLat = driverLat; sLng = driverLng; eLat = dropoffLat; eLng = dropoffLng
+          }
           setRouteCoords([
-            [pickupLat, pickupLng],
-            [dropoffLat, dropoffLng]
+            [sLat, sLng],
+            [eLat, eLng]
           ])
         }
       }
@@ -144,7 +171,7 @@ export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng,
     return () => {
       active = false
     }
-  }, [pickupLat, pickupLng, dropoffLat, dropoffLng])
+  }, [pickupLat, pickupLng, dropoffLat, dropoffLng, driverLat, driverLng, currentStep])
 
   return (
     <div style={{ width: '100%', height: '100%', minHeight: 250, borderRadius: 16, overflow: 'hidden' }}>

@@ -140,7 +140,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '0 16px',
     borderRadius: 10,
     border: 'none',
-    background: '#4f46e5',
+    backgroundColor: '#4f46e5',
     color: '#fff',
     cursor: 'pointer',
     fontWeight: 600,

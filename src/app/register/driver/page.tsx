@@ -137,6 +137,22 @@ export default function RegisterDriverPage() {
     setError('')
   }
 
+  const parseApiError = (err: unknown, defaultMsg: string): string => {
+    if (typeof err === 'object' && err !== null) {
+      if ('response' in err && (err as { response?: { data?: { error?: string; message?: string } } }).response?.data) {
+        const resData = (err as { response: { data: { error?: string; message?: string } } }).response.data
+        return resData.error || resData.message || defaultMsg
+      }
+      if ('message' in err && (err as { message?: string }).message === 'Network Error') {
+        return 'ไม่สามารถเชื่อมต่อเครื่องเซิร์ฟเวอร์ได้ (Network Error) กรุณาตรวจสอบว่า Backend ทำงานอยู่หรือไม่'
+      }
+      if ('message' in err && typeof (err as { message?: string }).message === 'string') {
+        return (err as { message: string }).message
+      }
+    }
+    return defaultMsg
+  }
+
   const handleToggleSkill = (skill: string): void => {
     const currentSkills = [...form.driverSkills]
     if (currentSkills.includes(skill)) {
@@ -183,7 +199,7 @@ export default function RegisterDriverPage() {
     setError('')
   }
 
-  const handleNext = (): void => {
+  const handleNext = async (): Promise<void> => {
     setError('')
 
     if (step === 1) {
@@ -204,6 +220,20 @@ export default function RegisterDriverPage() {
         setError('กรุณาเลือกความสามารถในการขับรถอย่างน้อย 1 ประเภท')
         return
       }
+
+      setLoading(true)
+      try {
+        await api.post('/auth/check-credentials', {
+          email: form.email,
+          phoneNo: form.phoneNo,
+          idCard: form.idCard,
+        })
+      } catch (err: unknown) {
+        setError(parseApiError(err, 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูลซ้ำ'))
+        setLoading(false)
+        return
+      }
+      setLoading(false)
     }
 
     if (step === 2) {
@@ -216,6 +246,18 @@ export default function RegisterDriverPage() {
         setError('กรุณายอมรับนโยบายข้อมูลส่วนตัวก่อนดำเนินการต่อ')
         return
       }
+
+      setLoading(true)
+      try {
+        await api.post('/auth/check-credentials', {
+          carPlate: form.carPlate,
+        })
+      } catch (err: unknown) {
+        setError(parseApiError(err, 'เกิดข้อผิดพลาดในการตรวจสอบทะเบียนรถยนต์'))
+        setLoading(false)
+        return
+      }
+      setLoading(false)
     }
 
     if (step === 3) {
@@ -264,14 +306,6 @@ export default function RegisterDriverPage() {
       setError('กรุณาแนบเกียรติบัตรการอบรม คอร์สที่ 2')
       return
     }
-    if (!files.trainingCert3) {
-      setError('กรุณาแนบเกียรติบัตรการอบรม คอร์สที่ 3')
-      return
-    }
-    if (!files.trainingCert4) {
-      setError('กรุณาแนบเกียรติบัตรการอบรม คอร์สที่ 4')
-      return
-    }
 
     setLoading(true)
     try {
@@ -303,8 +337,8 @@ export default function RegisterDriverPage() {
       fd.append('medicalCertificatePath', files.medicalCertificatePath!)
       fd.append('trainingCert1Path', files.trainingCert1!)
       fd.append('trainingCert2Path', files.trainingCert2!)
-      fd.append('trainingCert3Path', files.trainingCert3!)
-      fd.append('trainingCert4Path', files.trainingCert4!)
+      if (files.trainingCert3) fd.append('trainingCert3Path', files.trainingCert3!)
+      if (files.trainingCert4) fd.append('trainingCert4Path', files.trainingCert4!)
 
       const response = await api.post('/auth/register', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -316,15 +350,7 @@ export default function RegisterDriverPage() {
         setError(response.data?.message || 'เกิดข้อผิดพลาดในการลงทะเบียน')
       }
     } catch (err: unknown) {
-      const errorMessage =
-        typeof err === 'object' && err !== null && 'response' in err
-          ? (err as { response: { data?: { error?: string; message?: string } } }).response?.data?.error || 
-            (err as { response: { data?: { error?: string; message?: string } } }).response?.data?.message
-          : err instanceof Error
-          ? err.message
-          : undefined
-
-      setError(errorMessage || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์')
+      setError(parseApiError(err, 'เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง'))
     } finally {
       setLoading(false)
     }
@@ -530,14 +556,13 @@ export default function RegisterDriverPage() {
         {/* ─── Hero Panel (Left 40% - Driver Bright Vibe) ─── */}
         <div style={styles.heroPanel}>
           <img
-            src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=700&q=80"
-            alt="บริการขับรถยนต์ส่วนบุคคล"
-            style={styles.heroImage}
+            src="/images/safeseat_futuristic_dashboard_preview.png"
+            alt="Futuristic SafeSeat Dispatch System"
+            style={{ ...styles.heroImage, opacity: 0.65 }}
           />
-          {/* Overlay อ่อนโยนเพื่อให้เข้ากับภาพขับรถ */}
           <div style={{
             ...styles.heroOverlay,
-            background: 'linear-gradient(160deg, rgba(16,185,129,0.15) 0%, rgba(79,70,229,0.3) 100%)',
+            background: 'linear-gradient(160deg, rgba(5,7,20,0.85) 0%, rgba(124,58,237,0.4) 100%)',
           }} />
           <div style={styles.heroContent}>
             <div style={styles.heroBadge}>🚗 สมัครเป็นคนขับ SafeSeat</div>
@@ -686,14 +711,15 @@ export default function RegisterDriverPage() {
               )}
 
               {step < STEPS.length ? (
-                <button onClick={handleNext} style={{ ...styles.nextBtn, backgroundColor: '#10b981' }}>
+                <button onClick={handleNext} style={styles.nextBtn} className="btn-invert-hover">
                   ถัดไป →
                 </button>
               ) : (
                 <button
                   onClick={handleSubmit}
                   disabled={loading}
-                  style={{ ...styles.nextBtn, backgroundColor: '#10b981', opacity: loading ? 0.75 : 1 }}
+                  className="btn-invert-hover"
+                  style={{ ...styles.nextBtn, opacity: loading ? 0.75 : 1 }}
                 >
                   {loading ? 'กำลังบันทึก...' : 'สมัครสมาชิก ✓'}
                 </button>
@@ -707,13 +733,21 @@ export default function RegisterDriverPage() {
 
       <Footer />
 
+      <link
+        rel="stylesheet"
+        href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@700,500,400&display=swap"
+      />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Prompt', sans-serif; }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(14px); }
-          to   { opacity: 1; transform: translateY(0); }
+        input:focus {
+          border-color: #111111 !important;
+          box-shadow: 0 0 0 2px rgba(17, 17, 17, 0.1) !important;
+        }
+        .btn-invert-hover {
+          transition: all 0.2s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        .btn-invert-hover:hover {
+          background-color: #111111 !important;
+          color: #ffffff !important;
         }
       `}</style>
     </div>

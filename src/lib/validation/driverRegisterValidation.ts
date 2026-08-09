@@ -43,15 +43,15 @@ export function validateDriverStep1(
     return false
   }
 
-  // Bank Account: ตัวเลข 12 หลัก
-  if (!/^[0-9]{12}$/.test(bankAccountNo)) {
-    setError('เลขบัญชีธนาคาร (กสิกรไทย) ต้องเป็นตัวเลข 12 หลัก')
+  // Bank Account: ตัวเลข 10-12 หลัก (รองรับธนาคารทั่วไปในไทย)
+  if (!/^[0-9]{10,12}$/.test(bankAccountNo)) {
+    setError('เลขบัญชีธนาคารต้องเป็นตัวเลข 10 - 12 หลัก')
     return false
   }
 
-  // Phone No: ตัวเลข 10 หลัก
-  if (!/^[0-9]{10}$/.test(phoneNo)) {
-    setError('หมายเลขโทรศัพท์มือถือต้องเป็นตัวเลข 10 หลัก')
+  // Phone No: ตัวเลข 10 หลัก ขึ้นต้นด้วย 0
+  if (!/^0[0-9]{9}$/.test(phoneNo)) {
+    setError('หมายเลขโทรศัพท์มือถือต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0')
     return false
   }
 
@@ -75,108 +75,34 @@ export function validateDriverStep2(
     return false
   }
 
-  // Car Brand: ภาษาอังกฤษเท่านั้น ความยาว 2-50 ตัวอักษร ไม่มีช่องว่าง
-  if (!/^[a-zA-Z]{2,50}$/.test(carBrand)) {
-    setError('ยี่ห้อรถยนต์ต้องเป็นตัวอักษรภาษาอังกฤษ 2-50 ตัวอักษร')
+  // Car Brand: ภาษาอังกฤษ ช่องว่าง และเครื่องหมายขีด (-) ความยาว 2-50 ตัวอักษร
+  if (!/^[a-zA-Z\s-]{2,50}$/.test(carBrand)) {
+    setError('ยี่ห้อรถยนต์ต้องเป็นตัวอักษรภาษาอังกฤษ เครื่องหมายขีด (-) หรือช่องว่าง 2-50 ตัวอักษร')
     return false
   }
 
-  // Car Model: ภาษาอังกฤษและตัวเลขเท่านั้น ความยาว 2-50 ตัวอักษร ไม่มีช่องว่าง
-  if (!/^[a-zA-Z0-9]{2,50}$/.test(carModel)) {
-    setError('รุ่นรถยนต์ต้องเป็นภาษาอังกฤษหรือตัวเลข 2-50 ตัวอักษร')
+  // Car Model: ภาษาอังกฤษ ตัวเลข ช่องว่าง และเครื่องหมายขีด (-) ความยาว 1-50 ตัวอักษร
+  if (!/^[a-zA-Z0-9\s-]{1,50}$/.test(carModel)) {
+    setError('รุ่นรถยนต์ต้องเป็นภาษาอังกฤษ ตัวเลข เครื่องหมายขีด (-) หรือช่องว่าง 1-50 ตัวอักษร')
     return false
   }
 
-  // Car Color: ภาษาไทยเท่านั้น ความยาว 2-50 ตัวอักษร ไม่มีช่องว่าง
-  if (!/^[ก-๙]{2,50}$/.test(carColor)) {
+  // Car Color: ภาษาไทย ช่องว่าง และเครื่องหมายขีด (-) ความยาว 2-50 ตัวอักษร
+  if (!/^[ก-๙\s-]{2,50}$/.test(carColor)) {
     setError('สีรถยนต์ต้องเป็นภาษาไทย 2-50 ตัวอักษร')
     return false
   }
 
-  // Car Plate: ภาษาไทย ตัวเลข และขีด ความยาว 2-20 ตัวอักษร ไม่มีช่องว่าง
-  if (!/^[ก-๙0-9-]{2,20}$/.test(carPlate)) {
-    setError('ทะเบียนรถยนต์ต้องเป็นภาษาไทย ตัวเลข หรือเครื่องหมายขีด (-) ความยาว 2-20 ตัวอักษร')
+  // Car Plate: ภาษาไทย ตัวเลข ช่องว่าง และขีด ความยาว 2-20 ตัวอักษร
+  if (!/^[ก-๙0-9\s-]{2,20}$/.test(carPlate)) {
+    setError('ทะเบียนรถยนต์ต้องเป็นภาษาไทย ตัวเลข ช่องว่าง หรือเครื่องหมายขีด (-) ความยาว 2-20 ตัวอักษร')
     return false
   }
 
   return true
 }
 
-// STEP 3: ตรวจสอบรูปภาพเอกสารแนบ
-export function validateDriverStep3(
-  files: {
-    regisImagePath: File | null
-    carImagePath: File | null
-    driverLicensePath: File | null
-    criminalRecordPath: File | null
-    medicalCertificatePath: File | null
-  },
-  setError: (msg: string) => void
-): boolean {
-  const {
-    regisImagePath,
-    carImagePath,
-    driverLicensePath,
-    criminalRecordPath,
-    medicalCertificatePath,
-  } = files
 
-  if (!regisImagePath) {
-    setError('กรุณาแนบรูปภาพใบหน้าตนเอง')
-    return false
-  }
-  if (!carImagePath) {
-    setError('กรุณาแนบรูปภาพรถยนต์')
-    return false
-  }
-  if (!driverLicensePath) {
-    setError('กรุณาแนบรูปภาพใบขับขี่')
-    return false
-  }
-  if (!criminalRecordPath) {
-    setError('กรุณาแนบรูปภาพประวัติอาชญากรรม')
-    return false
-  }
-  if (!medicalCertificatePath) {
-    setError('กรุณาแนบใบรับรองแพทย์ตรวจสุขภาพ')
-    return false
-  }
-
-  return true
-}
-
-// STEP 4: ข้อมูลบัญชีและข้อตกลง
-export function validateDriverStep4(
-  form: DriverRegisterForm,
-  termsAccepted: boolean,
-  setError: (msg: string) => void
-): boolean {
-  const { username, password } = form
-
-  if (!termsAccepted) {
-    setError('กรุณายอมรับเงื่อนไขการให้บริการและนโยบายความเป็นส่วนตัว')
-    return false
-  }
-
-  if (!password) {
-    setError('กรุณากรอกรหัสผ่าน')
-    return false
-  }
-
-  // Password: a-zA-Z0-9 และอักขระพิเศษ [!#_.] เท่านั้น ความยาว 6-50 ตัว ไม่มีช่องว่าง
-  if (!/^[a-zA-Z0-9!#_.]{6,50}$/.test(password)) {
-    setError('รหัสผ่านต้องเป็นภาษาอังกฤษ ตัวเลข และอักขระพิเศษ [!#_.] เท่านั้น ความยาว 6 - 50 ตัวอักษร')
-    return false
-  }
-
-  // Username (ถ้ามี): a-zA-Z0-9_ 2-50 ตัว
-  if (username && !/^[a-zA-Z0-9_]{2,50}$/.test(username)) {
-    setError('ชื่อผู้ใช้ต้องเป็นตัวอักษรภาษาอังกฤษ ตัวเลข หรือขีดล่าง (_) ความยาว 2-50 ตัวอักษร')
-    return false
-  }
-
-  return true
-}
 
 // ฟังก์ชันสำหรับ validate แต่ละไฟล์
 export function validateDriverFile(

@@ -1,78 +1,63 @@
 'use client'
+
 // ═══════════════════════════════════════════════════════════════
-// app/login/page.tsx
-// หน้าเข้าสู่ระบบสำหรับเจ้าของสถานประกอบการ (Pub)
-//
-// การทำงาน:
-//  1. ผู้ใช้กรอก username + password
-//  2. กด "เข้าสู่ระบบ" หรือ Enter
-//  3. validate ข้อมูล → POST /pub/login
-//  4. เก็บข้อมูล user ลง localStorage → redirect ไป /dashboard
+// app/login/page.tsx — SafeSeat Login Page
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-
-// ── Shared Components ─────────────────────────────────────────
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
-
-// ── Services ──────────────────────────────────────────────────
-import api from '@/services/api' // Axios instance ชี้ไป localhost:5000/api
-
-// ── Styles & Validation ───────────────────────────────────────
+import FloatingNav from '@/components/ui/FloatingNav'
+import api from '@/services/api'
 import { loginStyles as styles } from '@/lib/styles/loginStyles'
 import { validateLogin } from '@/lib/validation/loginValidation'
-
-// ── Types ─────────────────────────────────────────────────────
 import { LoginForm } from '@/types'
 
-import { Suspense } from 'react'
-
 function LoginContent() {
-  // useRouter: ใช้ navigate ไปหน้าอื่นโดยไม่ reload
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // ── State ──────────────────────────────────────────────────
-  // form: เก็บค่าที่ผู้ใช้พิมพ์ใน input แบบ controlled component
   const [form, setForm] = useState<LoginForm>({ username: '', password: '' })
-  // error: ข้อความ error ที่แสดงใต้ form ('' = ไม่มี error)
   const [error, setError] = useState<string>('')
-  // loading: true ขณะรอ API ตอบกลับ (แสดง spinner + ปิด button)
   const [loading, setLoading] = useState<boolean>(false)
-  // showPassword: toggle แสดง/ซ่อนรหัสผ่าน
   const [showPassword, setShowPassword] = useState<boolean>(false)
-  // role: เลือกว่าจะเข้าสู่ระบบในฐานะ Pub, Driver หรือ Admin
   const [role, setRole] = useState<'pub' | 'driver' | 'admin'>('pub')
-
-  // ── Toast State ───────────────────────────────────────────
   const [toast, setToast] = useState<string>('')
+
   const showToast = (msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(''), 3500)
   }
 
   useEffect(() => {
-    // แสดง toast หากสมัครสำเร็จ
     if (searchParams.get('registered') === '1') {
       showToast('สมัครสำเร็จแล้ว! กรุณารอการตรวจสอบและอนุมัติจากทีม SafeSeat')
     }
-  }, [])
+    // Reset form fields on page mount and unmount
+    setForm({ username: '', password: '' })
+    setError('')
+    return () => {
+      setForm({ username: '', password: '' })
+      setError('')
+    }
+  }, [searchParams])
 
-  // ── Handler: เมื่อพิมพ์ใน input ───────────────────────────────
-  // ใช้ [e.target.name] เป็น key เพื่อ update field ที่ถูกต้องใน form object
+  const handleRoleChange = (newRole: 'pub' | 'driver' | 'admin') => {
+    setRole(newRole)
+    setForm({ username: '', password: '' })
+    setError('')
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setForm({ ...form, [e.target.name]: e.target.value })
-    setError('') // ล้าง error ทุกครั้งที่พิมพ์
+    setError('')
   }
 
-  // ── Handler: กด Enter ใน input ──────────────────────────────
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'Enter') handleSubmit() // submit เมื่อกด Enter
+    if (e.key === 'Enter') handleSubmit()
   }
 
-  // ── Handler: Submit Login ────────────────────────────────────
   const handleSubmit = async (): Promise<void> => {
     if (!validateLogin(form, setError, role)) return
 
@@ -82,30 +67,29 @@ function LoginContent() {
         const res = await api.post('/pub/login', form)
         const userData = res.data.data
         localStorage.setItem('pub_user', JSON.stringify(userData))
+        setForm({ username: '', password: '' })
 
-        if (userData.regisstatus === 'approved') {
+        if (userData.regisstatus === 'approved' || userData.regisstatus === 'อนุมัติแล้ว') {
           router.push('/pub/dashboard')
         } else {
           router.push('/status')
         }
       } else if (role === 'driver') {
-        // Driver login
         const res = await api.post('/auth/login', form)
-        // Data structure returned by driver login is direct user object
         const userData = res.data
         localStorage.setItem('driver_user', JSON.stringify(userData))
+        setForm({ username: '', password: '' })
 
         if (userData.registerstatus === 'อนุมัติแล้ว') {
-          // If approved, show alert (in a real app, might redirect to a specific page or show modal)
           showToast('คุณได้รับการอนุมัติแล้ว สามารถเริ่มงานได้ที่แอปพลิเคชันบนมือถือ (Mobile App)')
         } else {
           router.push('/driver-status')
         }
       } else if (role === 'admin') {
-        // Admin login
         const res = await api.post('/admin/login', form)
         const userData = res.data.data
         localStorage.setItem('admin_user', JSON.stringify(userData))
+        setForm({ username: '', password: '' })
         router.push('/admin/dashboard')
       }
     } catch (err: any) {
@@ -115,54 +99,44 @@ function LoginContent() {
     }
   }
 
-
-  // ── Render ──────────────────────────────────────────────────
   return (
     <div style={styles.page}>
-      {/* วงกลมตกแต่งพื้นหลัง — ใช้ radial-gradient สร้าง glow effect */}
-      <div style={styles.bgCircle1} />
-      <div style={styles.bgCircle2} />
+      <Navbar showLoginButton={false} />
+      <FloatingNav />
 
-      {/* Toast Notification */}
       {toast && (
         <div style={{
           position: 'fixed',
-          top: 24,
+          top: 84,
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 9999,
-          backgroundColor: '#059669',
+          background: 'linear-gradient(135deg, #7C3AED, #1D4ED8)',
           color: '#ffffff',
-          padding: '12px 24px',
-          borderRadius: 12,
-          fontSize: 14,
-          fontWeight: 600,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+          padding: '13px 28px',
+          borderRadius: 999,
+          fontSize: 13.5,
+          fontWeight: 700,
+          boxShadow: '0 8px 28px rgba(124, 58, 237, 0.40)',
           whiteSpace: 'nowrap',
         }}>
           ✅ {toast}
         </div>
       )}
 
-      {/* Navbar: ซ่อนปุ่ม "เข้าสู่ระบบ" เพราะอยู่ในหน้านี้แล้ว */}
-      <Navbar showLoginButton={false} />
-
-      {/* Main Layout: แบ่ง 2 คอลัมน์ — Hero ซ้าย + Form ขวา */}
+      {/* Main Layout */}
       <div style={styles.container}>
 
         {/* ─── Hero Panel (Left 45%) ─── */}
         <div style={styles.heroPanel}>
-          {/* Gradient overlay ทับรูปภาพเพื่อให้ข้อความอ่านออก */}
           <div style={styles.heroOverlay} />
-          {/* รูปภาพพื้นหลัง */}
           <img
-            src="/hero-login.png"
-            alt="บริการผู้ให้บริการขับขี่แทนและสถานประกอบการ"
-            style={styles.heroImage}
+            src="/images/safeseat_futuristic_dashboard_preview.png"
+            alt="Futuristic SafeSeat Dispatch System"
+            style={{ ...styles.heroImage, opacity: 0.65 }}
           />
-          {/* Content ทับบนรูป (position:absolute zIndex:2) */}
           <div style={styles.heroContent}>
-            <div style={styles.heroBadge}>🛡️ ปลอดภัยทุกเส้นทาง</div>
+            <div style={styles.heroBadge}>🛡️ SAFESEAT DISPATCH SYSTEM</div>
             <h1 style={styles.heroTitle}>
               ไม่ดื่มแล้วขับ<br />ให้เราพาคุณถึงบ้าน
             </h1>
@@ -170,7 +144,6 @@ function LoginContent() {
               บริการผู้ขับขี่แทน พร้อมรับทุกที่ทุกเวลา<br />
               ปลอดภัย — โปร่งใส — เชื่อถือได้
             </p>
-            {/* Stat bar แสดงตัวเลขน่าสนใจ */}
             <div style={styles.heroStats}>
               <div style={styles.statItem}>
                 <span style={styles.statNum}>50K+</span>
@@ -209,7 +182,7 @@ function LoginContent() {
             <div style={styles.roleToggleContainer}>
               <button
                 type="button"
-                onClick={() => setRole('pub')}
+                onClick={() => handleRoleChange('pub')}
                 style={{
                   ...styles.roleBtn,
                   ...(role === 'pub' ? styles.roleBtnActive : {}),
@@ -219,7 +192,7 @@ function LoginContent() {
               </button>
               <button
                 type="button"
-                onClick={() => setRole('driver')}
+                onClick={() => handleRoleChange('driver')}
                 style={{
                   ...styles.roleBtn,
                   ...(role === 'driver' ? styles.roleBtnActive : {}),
@@ -229,7 +202,7 @@ function LoginContent() {
               </button>
               <button
                 type="button"
-                onClick={() => setRole('admin')}
+                onClick={() => handleRoleChange('admin')}
                 style={{
                   ...styles.roleBtn,
                   ...(role === 'admin' ? styles.roleBtnActive : {}),
@@ -239,8 +212,8 @@ function LoginContent() {
               </button>
             </div>
 
-            {/* Input: ชื่อผู้ใช้ */}
-            <div style={styles.fieldGroup}>
+            {/* Input: Username */}
+            <div style={styles.fieldGroup} key={`username-${role}`}>
               <label style={styles.label}>
                 {role === 'driver' ? 'เบอร์โทรศัพท์ (ชื่อผู้ใช้งาน)' : role === 'admin' ? 'ชื่อผู้ดูแลระบบ (username)' : 'ชื่อผู้ใช้งาน'}
               </label>
@@ -259,17 +232,16 @@ function LoginContent() {
                   }
                   value={form.username}
                   onChange={handleChange}
-                  onKeyDown={handleKeyDown} // กด Enter = submit
+                  onKeyDown={handleKeyDown}
                   style={styles.input}
-                  autoComplete="username"
+                  autoComplete="off"
                   maxLength={role === 'driver' ? 10 : role === 'admin' ? 30 : 50}
                 />
               </div>
             </div>
 
-
-            {/* Input: รหัสผ่าน (พร้อมปุ่มตา) */}
-            <div style={styles.fieldGroup}>
+            {/* Input: Password */}
+            <div style={styles.fieldGroup} key={`password-${role}`}>
               <label style={styles.label}>รหัสผ่าน</label>
               <div style={styles.inputWrapper}>
                 <span style={styles.inputIcon}>🔒</span>
@@ -281,27 +253,24 @@ function LoginContent() {
                   onChange={handleChange}
                   onKeyDown={handleKeyDown}
                   style={{ ...styles.input, paddingRight: 44 }}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                 />
-                {/* ปุ่มตา toggle แสดง/ซ่อนรหัสผ่าน */}
                 <button
                   onClick={() => setShowPassword(!showPassword)}
                   style={styles.eyeBtn}
                   type="button"
-                  aria-label={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
                 >
                   {showPassword ? '🙈' : '👁️'}
                 </button>
               </div>
             </div>
-            {/* แสดง error box เมื่อมี error (short-circuit evaluation) */}
+
             {error && (
               <div style={styles.errorBox}>
                 <span>⚠️ {error}</span>
               </div>
             )}
 
-            {/* ปุ่ม Submit — disabled เมื่อ loading เพื่อป้องกันกด 2 ครั้ง */}
             <button
               onClick={handleSubmit}
               disabled={loading}
@@ -311,10 +280,9 @@ function LoginContent() {
                 cursor: loading ? 'not-allowed' : 'pointer',
               }}
             >
-              {/* แสดง spinner หรือข้อความตาม loading state */}
               {loading ? (
                 <>
-                  <span style={styles.spinner} /> {/* CSS animation spin */}
+                  <span style={styles.spinner} />
                   กำลังเข้าสู่ระบบ...
                 </>
               ) : (
@@ -322,14 +290,12 @@ function LoginContent() {
               )}
             </button>
 
-            {/* Divider ── หรือ ── */}
             <div style={styles.divider}>
               <div style={styles.dividerLine} />
               <span style={styles.dividerText}>หรือ</span>
               <div style={styles.dividerLine} />
             </div>
 
-            {/* ลิงก์สมัครสมาชิก */}
             <p style={styles.registerText}>
               ยังไม่มีบัญชี?{' '}
               <span
@@ -340,7 +306,6 @@ function LoginContent() {
               </span>
             </p>
 
-            {/* Trust badge */}
             <div style={styles.trustBadge}>
               <span>🔐 ข้อมูลของคุณถูกเข้ารหัสและปลอดภัย 100%</span>
             </div>
@@ -349,71 +314,9 @@ function LoginContent() {
       </div>
 
       <Footer />
-
-      {/* Inline CSS สำหรับ animation และ Google Fonts */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Prompt', sans-serif; }
-
-        input:focus {
-          border-color: #4f46e5 !important;
-          box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
-        }
-
-        /* animation สำหรับ spinner */
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        /* animation เมื่อ page โหลด */
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(12px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   )
 }
-
-// Add these styles to the bottom
-Object.assign(styles, {
-  formInner: {
-    width: '100%',
-    maxWidth: 480, // Expanded to give roles toggle room and look cleaner
-    padding: '32px 40px',
-  },
-  roleToggleContainer: {
-    display: 'flex',
-    backgroundColor: '#f1f5f9',
-    padding: '6px',
-    borderRadius: '14px',
-    marginBottom: '24px',
-    gap: '6px',
-    width: '100%',
-  },
-  roleBtn: {
-    flex: 1,
-    padding: '12px 14px',
-    border: 'none',
-    borderRadius: '10px',
-    backgroundColor: 'transparent',
-    color: '#64748b',
-    fontWeight: 600,
-    fontSize: '15px',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-    whiteSpace: 'nowrap',
-  },
-  roleBtnActive: {
-    backgroundColor: '#ffffff',
-    color: '#4f46e5',
-    boxShadow: '0 4px 12px rgba(79,70,229,0.12)',
-  }
-})
 
 export default function LoginPage() {
   return (

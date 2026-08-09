@@ -1,13 +1,24 @@
 'use client'
+
+// ═══════════════════════════════════════════════════════════════
+// app/pub/service-info/page.tsx — Service History (Royal Purple-Blue)
+// ═══════════════════════════════════════════════════════════════
+
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import api from '@/services/api'
+import Navbar from '@/components/ui/Navbar'
+import Footer from '@/components/ui/Footer'
+import FloatingNav from '@/components/ui/FloatingNav'
+import { Search, RefreshCw, Plus, FileText, ArrowRight } from 'lucide-react'
 
 interface RequestRecord {
   requestId?: number
   requestid?: number
   custname: string
   phoneno: string
+  carmodel?: string
+  carplate?: string
   requiredcartype: number
   requeststatus: string
   reqdatetime: string
@@ -17,14 +28,6 @@ interface RequestRecord {
   isladymode: boolean
   note?: string
 }
-
-const encodeId = (id: number | string | undefined) => {
-  if (!id) return '';
-  const offset = 100000000;
-  const num = Number(id);
-  if (isNaN(num)) return String(id);
-  return (offset + num).toString(36).toUpperCase();
-};
 
 export default function ServiceInfoPage() {
   const router = useRouter()
@@ -54,24 +57,23 @@ export default function ServiceInfoPage() {
     } finally { setLoading(false) }
   }
 
-  const statusConfig: { [k: string]: { label: string; color: string; bg: string; dot: string } } = {
-    pending:   { label: 'รอรับงาน',      color: '#92400e', bg: '#fffbeb', dot: '#f59e0b' },
-    accepted:  { label: 'กำลังเดินทาง', color: '#1e40af', bg: '#eff6ff', dot: '#3b82f6' },
-    completed: { label: 'เสร็จสิ้น',     color: '#065f46', bg: '#ecfdf5', dot: '#10b981' },
-    cancelled: { label: 'ยกเลิก',        color: '#991b1b', bg: '#fef2f2', dot: '#ef4444' },
-    // รองรับกรณีค่าภาษาไทยจาก database
-    'รอคนขับ': { label: 'รอรับงาน',      color: '#92400e', bg: '#fffbeb', dot: '#f59e0b' },
-    'กำลังไปรับ': { label: 'กำลังไปรับ',  color: '#2563eb', bg: '#eff6ff', dot: '#3b82f6' },
-    'ถึงจุดรับแล้ว': { label: 'ถึงจุดรับแล้ว', color: '#7c3aed', bg: '#f5f3ff', dot: '#8b5cf6' },
-    'ระหว่างเดินทาง': { label: 'ระหว่างเดินทาง', color: '#0891b2', bg: '#ecfeff', dot: '#06b6d4' },
-    'เสร็จสิ้น': { label: 'เสร็จสิ้น',     color: '#065f46', bg: '#ecfdf5', dot: '#10b981' },
-    'ยกเลิก': { label: 'ยกเลิก',        color: '#991b1b', bg: '#fef2f2', dot: '#ef4444' },
+  const statusConfig: { [k: string]: { label: string; color: string; bg: string } } = {
+    pending:   { label: 'รอรับงาน', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30' },
+    accepted:  { label: 'กำลังเดินทาง', color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/30' },
+    completed: { label: 'เสร็จสิ้น', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30' },
+    cancelled: { label: 'ยกเลิก', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30' },
+    'รอคนขับ': { label: 'รอรับงาน', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30' },
+    'กำลังไปรับ': { label: 'กำลังไปรับ', color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/30' },
+    'ถึงจุดรับแล้ว': { label: 'ถึงจุดรับแล้ว', color: 'text-[#7C3AED]', bg: 'bg-[#7C3AED]/10 border-[#7C3AED]/30' },
+    'ระหว่างเดินทาง': { label: 'ระหว่างเดินทาง', color: 'text-cyan-500', bg: 'bg-cyan-500/10 border-cyan-500/30' },
+    'เสร็จสิ้น': { label: 'เสร็จสิ้น', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30' },
+    'ยกเลิก': { label: 'ยกเลิก', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30' },
   }
 
   const getStatus = (status: string) => {
-    if (!status) return { label: 'รอรับงาน', color: '#92400e', bg: '#fffbeb', dot: '#f59e0b' }
+    if (!status) return { label: 'รอรับงาน', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30' }
     const s = status.toLowerCase()
-    return statusConfig[status] || statusConfig[s] || { label: status, color: '#92400e', bg: '#fffbeb', dot: '#f59e0b' }
+    return statusConfig[status] || statusConfig[s] || { label: status, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30' }
   }
 
   const paymentLabel = (m: number) => m === 1 ? '💵 เงินสด' : '📲 โอนเงิน'
@@ -103,18 +105,11 @@ export default function ServiceInfoPage() {
 
   const filtered = records.filter(r => {
     const matchSearch = !searchQuery || r.custname?.toLowerCase().includes(searchQuery.toLowerCase()) || r.phoneno?.includes(searchQuery)
-    
     let matchStatus = false
-    if (statusFilter === 'all') {
-      matchStatus = true
-    } else if (statusFilter === 'pending') {
-      matchStatus = isPending(r.requeststatus)
-    } else if (statusFilter === 'completed') {
-      matchStatus = isCompleted(r.requeststatus)
-    } else if (statusFilter === 'cancelled') {
-      matchStatus = isCancelled(r.requeststatus)
-    }
-    
+    if (statusFilter === 'all') matchStatus = true
+    else if (statusFilter === 'pending') matchStatus = isPending(r.requeststatus)
+    else if (statusFilter === 'completed') matchStatus = isCompleted(r.requeststatus)
+    else if (statusFilter === 'cancelled') matchStatus = isCancelled(r.requeststatus)
     return matchSearch && matchStatus
   })
 
@@ -135,193 +130,171 @@ export default function ServiceInfoPage() {
   if (!pubUser) return null
 
   return (
-    <div style={s.page}>
-      {/* ── Navbar ── */}
-      <nav style={s.navbar}>
-        <div style={s.navLeft}>
-          <div style={s.logoCircle}>🛡️</div>
-          <span style={s.logoText}>Safe<span style={s.logoAccent}>Seat</span></span>
-        </div>
-        <button onClick={() => router.push('/pub/dashboard')} style={s.backBtn}>
-          ← กลับ Dashboard
-        </button>
-      </nav>
+    <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
+      
+      {/* Background Glow */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
+      </div>
 
-      <main style={s.main}>
+      <div className="gradient-blur"></div>
+      <Navbar />
+      <FloatingNav />
+
+      <main className="relative z-10 max-w-7xl mx-auto px-6 pt-48 pb-24 flex flex-col gap-8">
+        
         {/* Page Header */}
-        <div style={s.pageHeader}>
-          <div style={s.headerBadge}>📋 ประวัติการเรียกรถ</div>
-          <div style={s.headerRow}>
-            <div>
-              <h1 style={s.pageTitle}>ประวัติการเรียกใช้บริการ</h1>
-              <p style={s.pageSubtitle}>รายการเรียกรถทั้งหมดที่ร้านของคุณดำเนินการ</p>
-            </div>
-            <div style={s.headerActions}>
-              <button onClick={() => pubUser && fetchRecords(pubUser.username)} style={s.refreshBtn}>
-                🔄 รีเฟรช
-              </button>
-              <button onClick={() => router.push('/pub/request-driver')} style={s.newBtn}>
-                + เรียกรถใหม่
-              </button>
-            </div>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--color-card)] border border-[var(--color-border)] p-6 rounded-2xl shadow-xl">
+          <div>
+            <span className="text-xs font-bold text-[#7C3AED] tracking-wider uppercase font-manrope">SERVICE HISTORY</span>
+            <h1 className="text-2xl sm:text-3xl font-bold font-manrope text-[var(--color-text)] mt-1">ประวัติการเรียกใช้บริการ (Service History)</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => pubUser && fetchRecords(pubUser.username)}
+              className="px-4 py-2 border border-[var(--color-border)] bg-[var(--color-surface)] rounded-full text-xs font-bold text-[var(--color-text)] hover:border-[#7C3AED] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-[#7C3AED]" /> รีเฟรช
+            </button>
+            <button 
+              onClick={() => router.push('/pub/request-driver')}
+              className="px-5 py-2 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] rounded-full text-xs font-bold text-white shadow-md hover:from-[#6D28D9] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4" /> เรียกรถใหม่
+            </button>
           </div>
         </div>
 
         {/* Stats row */}
-        <div style={s.statsRow}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'คำขอทั้งหมด', value: counts.all, color: '#4f46e5', bg: '#eef2ff' },
-            { label: 'รอรับงาน', value: counts.pending, color: '#d97706', bg: '#fffbeb' },
-            { label: 'เสร็จสิ้น', value: counts.completed, color: '#059669', bg: '#ecfdf5' },
-            { label: 'ยกเลิก', value: counts.cancelled, color: '#dc2626', bg: '#fef2f2' },
+            { label: 'คำขอทั้งหมด', value: counts.all, color: 'text-[#7C3AED]' },
+            { label: 'รอรับงาน', value: counts.pending, color: 'text-amber-500' },
+            { label: 'เสร็จสิ้น', value: counts.completed, color: 'text-emerald-500' },
+            { label: 'ยกเลิก', value: counts.cancelled, color: 'text-red-500' },
           ].map((stat, i) => (
-            <div key={i} style={{ ...s.statCard, backgroundColor: stat.bg }}>
-              <div style={{ ...s.statNum, color: stat.color }}>{stat.value}</div>
-              <div style={s.statLabel}>{stat.label}</div>
+            <div key={i} className="p-5 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-md flex flex-col">
+              <span className={`text-3xl font-extrabold font-manrope ${stat.color}`}>{stat.value}</span>
+              <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mt-1">{stat.label}</span>
             </div>
           ))}
         </div>
 
         {/* Controls */}
-        <div style={s.controls}>
-          {/* Filter tabs */}
-          <div style={s.tabs}>
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-[var(--color-card)] border border-[var(--color-border)] p-4 rounded-2xl shadow-md">
+          <div className="flex flex-wrap gap-2 w-full md:w-auto">
             {tabDefs.map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setStatusFilter(tab.key)}
-                style={{
-                  ...s.tab,
-                  ...(statusFilter === tab.key ? s.tabActive : {}),
-                }}
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                  statusFilter === tab.key
+                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white shadow-md'
+                    : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#7C3AED]'
+                }`}
               >
                 {tab.label}
-                <span style={{
-                  ...s.tabBadge,
-                  backgroundColor: statusFilter === tab.key ? '#4f46e5' : '#e2e8f0',
-                  color: statusFilter === tab.key ? '#fff' : '#64748b',
-                }}>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] ${statusFilter === tab.key ? 'bg-white/20 text-white' : 'bg-[var(--color-card)] text-[var(--color-text)]'}`}>
                   {tab.count}
                 </span>
               </button>
             ))}
           </div>
-          {/* Search */}
-          <div style={s.searchBox}>
-            <span style={{ fontSize: 16 }}>🔍</span>
+
+          <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full w-full md:w-72">
+            <Search className="w-4 h-4 text-[#7C3AED]" />
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              style={s.searchInput}
-              placeholder="ค้นหาชื่อลูกค้า หรือเบอร์โทรศัพท์..."
+              className="bg-transparent border-none outline-none text-xs text-[var(--color-text)] placeholder-[var(--color-text-muted)] w-full font-semibold"
+              placeholder="ค้นหาชื่อ หรือเบอร์โทรศัพท์..."
             />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} style={s.clearBtn}>✕</button>
-            )}
           </div>
         </div>
 
-        {/* Error */}
-        {error && <div style={s.errorBox}>⚠️ {error}</div>}
+        {error && <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-semibold">{error}</div>}
 
-        {/* Content */}
+        {/* Table Content */}
         {loading ? (
-          <div style={s.loadingBox}>
-            <div style={s.loadingDots}>
-              <span />
-              <span />
-              <span />
-            </div>
-            <p style={{ color: '#94a3b8', margin: 0 }}>กำลังโหลดข้อมูล...</p>
+          <div className="p-16 text-center bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-3">
+            <RefreshCw className="w-8 h-8 text-[#7C3AED] animate-spin" />
+            <p className="text-sm font-bold text-[var(--color-text-muted)]">กำลังโหลดข้อมูลประวัติการเรียกรถ...</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div style={s.emptyBox}>
-            <span style={{ fontSize: 48 }}>📭</span>
-            <h3 style={{ margin: '16px 0 8px', color: '#334155', fontWeight: 600 }}>
-              {searchQuery ? 'ไม่พบรายการที่ค้นหา' : 'ยังไม่มีประวัติการเรียกรถ'}
+          <div className="p-16 text-center bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-3 shadow-md">
+            <FileText className="w-12 h-12 text-[#7C3AED]" />
+            <h3 className="text-base font-bold text-[var(--color-text)]">
+              {searchQuery ? 'ไม่พบรายการที่ตรงกับการค้นหา' : 'ยังไม่มีประวัติการเรียกรถ'}
             </h3>
-            <p style={{ color: '#94a3b8', margin: '0 0 24px' }}>
-              {searchQuery ? 'ลองเปลี่ยนคำค้นหาดูครับ' : 'เริ่มต้นเรียกรถให้ลูกค้าได้เลย'}
+            <p className="text-xs text-[var(--color-text-muted)]">
+              {searchQuery ? 'ลองค้นหาด้วยชื่อหรือเบอร์โทรศัพท์อื่น' : 'กดปุ่มเรียกรถใหม่เพื่อเรียกรถให้ลูกค้าของร้านได้เลย'}
             </p>
-            {!searchQuery && (
-              <button onClick={() => router.push('/pub/request-driver')} style={s.callBtn}>
-                🚗 เรียกรถเดี๋ยวนี้
-              </button>
-            )}
           </div>
         ) : (
-          <div style={s.table}>
-            <table style={s.tableEl}>
+          <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl overflow-x-auto shadow-xl">
+            <table className="w-full text-left border-collapse min-w-[750px]">
               <thead>
-                <tr>
-                  {['วันที่/เวลา', 'ชื่อลูกค้า', 'เบอร์โทร', 'ประเภทรถ', 'ชำระเงิน', 'สถานะ', 'รายละเอียด'].map(h => (
-                    <th key={h} style={s.th}>{h}</th>
-                  ))}
+                <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] text-[11px] font-bold uppercase tracking-wider">
+                  <th className="p-4">วันที่/เวลา</th>
+                  <th className="p-4">ชื่อลูกค้า</th>
+                  <th className="p-4">เบอร์โทรศัพท์</th>
+                  <th className="p-4">ประเภทรถ</th>
+                  <th className="p-4">การชำระเงิน</th>
+                  <th className="p-4">สถานะ</th>
+                  <th className="p-4 text-right">รายละเอียด</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-[var(--color-border)] text-xs text-[var(--color-text)] font-medium">
                 {filtered.map((item, idx) => {
                   const st = getStatus(item.requeststatus)
                   const recordId = item.requestid || item.requestId
                   return (
-                    <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={s.td}>
-                        <div style={{ fontSize: 13, color: '#0f172a', fontWeight: 500 }}>
+                    <tr key={idx} className="hover:bg-[var(--color-card-hover)] transition-colors">
+                      <td className="p-4">
+                        <div className="font-bold text-[var(--color-text)]">
                           {item.reqdatetime
                             ? new Date(item.reqdatetime).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
                             : '—'}
                         </div>
-                        <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                        <div className="text-[11px] text-[var(--color-text-muted)]">
                           {item.reqdatetime
                             ? new Date(item.reqdatetime).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
                             : ''}
                         </div>
                       </td>
-                      <td style={s.td}>
-                        <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>
-                          {item.custname}
-                        </div>
+                      <td className="p-4">
+                        <div className="font-bold text-[var(--color-text)]">{item.custname}</div>
                         {item.isladymode && (
-                          <span style={s.ladyTag}>👩 Lady Mode</span>
+                          <span className="inline-block mt-1 px-2 py-0.5 bg-purple-500/15 border border-purple-500/30 text-purple-400 text-[10px] font-bold rounded-full">
+                            👩 Lady Mode
+                          </span>
                         )}
                       </td>
-                      <td style={{ ...s.td, color: '#475569', fontFamily: 'monospace', fontSize: 13 }}>
-                        {item.phoneno}
+                      <td className="p-4 font-mono font-semibold text-[var(--color-text-muted)]">{item.phoneno}</td>
+                      <td className="p-4">
+                        <span className="px-2.5 py-1 bg-blue-500/15 border border-blue-500/30 text-blue-400 font-bold rounded-md text-[11px]">
+                          {carTypeLabel(item.requiredcartype)}
+                        </span>
+                        {(item.carmodel || item.carplate) && (
+                          <div className="text-[11px] text-[var(--color-text-muted)] mt-1 font-semibold">
+                            {item.carmodel ? item.carmodel : ''}{item.carmodel && item.carplate ? ' • ' : ''}{item.carplate ? item.carplate : ''}
+                          </div>
+                        )}
                       </td>
-                      <td style={s.td}>
-                        <span style={s.carTag}>{carTypeLabel(item.requiredcartype)}</span>
-                      </td>
-                      <td style={{ ...s.td, color: '#475569', fontSize: 13 }}>
-                        {paymentLabel(item.paymentmethod)}
-                      </td>
-                      <td style={s.td}>
-                        <span style={{
-                          ...s.statusBadge,
-                          color: st.color,
-                          backgroundColor: st.bg,
-                        }}>
-                          <span style={{ ...s.statusDot, backgroundColor: st.dot }} />
+                      <td className="p-4 font-semibold">{paymentLabel(item.paymentmethod)}</td>
+                      <td className="p-4">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${st.bg} ${st.color}`}>
+                          <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
                           {st.label}
                         </span>
                       </td>
-                      <td style={s.td}>
+                      <td className="p-4 text-right">
                         <button
                           type="button"
                           onClick={() => router.push(`/pub/tracking?id=${recordId}`)}
-                          style={{
-                            backgroundColor: '#4f46e5',
-                            color: '#ffffff',
-                            border: 'none',
-                            borderRadius: 8,
-                            padding: '6px 14px',
-                            fontSize: 12,
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            fontFamily: "'Prompt', sans-serif",
-                            transition: 'all 0.2s',
-                          }}
+                          className="px-4 py-1.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white rounded-full text-xs font-bold shadow-md cursor-pointer transition-all inline-flex items-center gap-1"
                         >
-                          ดูรายละเอียด
+                          ดูรายละเอียด <ArrowRight className="w-3 h-3" />
                         </button>
                       </td>
                     </tr>
@@ -333,169 +306,7 @@ export default function ServiceInfoPage() {
         )}
       </main>
 
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        * { box-sizing: border-box; font-family: 'Prompt', sans-serif; }
-        tr:hover td { background-color: #f8fafc; }
-        @keyframes bounce { 0%,80%,100% { transform: scale(0); } 40% { transform: scale(1); } }
-      `}</style>
+      <Footer />
     </div>
   )
-}
-
-const s: { [k: string]: React.CSSProperties } = {
-  page: { minHeight: '100vh', backgroundColor: '#f8fafc', fontFamily: "'Prompt', sans-serif" },
-  navbar: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '0 48px', height: 64,
-    backgroundColor: '#ffffff', borderBottom: '1px solid #e2e8f0',
-    position: 'sticky', top: 0, zIndex: 100,
-  },
-  navLeft: { display: 'flex', alignItems: 'center', gap: 10 },
-  logoCircle: {
-    width: 36, height: 36, borderRadius: '50%',
-    backgroundColor: '#eef2ff',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 18, border: '1.5px solid #c7d2fe',
-  },
-  logoText: { fontSize: 20, fontWeight: 700, color: '#1e293b' },
-  logoAccent: { color: '#4f46e5' },
-  backBtn: {
-    background: 'none', border: '1px solid #e2e8f0',
-    borderRadius: 8, padding: '7px 16px',
-    fontSize: 13, color: '#4f46e5', fontWeight: 600,
-    cursor: 'pointer', fontFamily: "'Prompt', sans-serif",
-  },
-  main: { maxWidth: 1100, margin: '0 auto', padding: '40px 24px 60px' },
-  pageHeader: { marginBottom: 28 },
-  headerBadge: {
-    display: 'inline-block', padding: '5px 14px',
-    backgroundColor: '#eef2ff', border: '1px solid #c7d2fe',
-    borderRadius: 20, fontSize: 12, color: '#4f46e5',
-    fontWeight: 600, marginBottom: 12,
-  },
-  headerRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' },
-  pageTitle: { fontSize: 28, fontWeight: 700, color: '#0f172a', margin: '0 0 6px' },
-  pageSubtitle: { fontSize: 14, color: '#64748b', margin: 0 },
-  headerActions: { display: 'flex', gap: 10 },
-  refreshBtn: {
-    border: '1px solid #e2e8f0', background: '#fff',
-    borderRadius: 8, padding: '8px 16px',
-    fontSize: 13, color: '#475569', cursor: 'pointer',
-    fontFamily: "'Prompt', sans-serif",
-  },
-  newBtn: {
-    backgroundColor: '#4f46e5', border: 'none',
-    borderRadius: 8, padding: '8px 18px',
-    fontSize: 13, color: '#fff', fontWeight: 600,
-    cursor: 'pointer', fontFamily: "'Prompt', sans-serif",
-  },
-  statsRow: {
-    display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: 16, marginBottom: 24,
-  },
-  statCard: {
-    borderRadius: 12, padding: '18px 20px',
-    border: '1px solid transparent',
-  },
-  statNum: { fontSize: 28, fontWeight: 700, lineHeight: 1 },
-  statLabel: { fontSize: 12, color: '#64748b', marginTop: 4 },
-  controls: {
-    display: 'flex', justifyContent: 'space-between',
-    alignItems: 'center', gap: 16, marginBottom: 20,
-  },
-  tabs: { display: 'flex', gap: 4 },
-  tab: {
-    background: 'none', border: 'none',
-    padding: '8px 14px', borderRadius: 8,
-    fontSize: 13, color: '#64748b',
-    cursor: 'pointer', display: 'flex',
-    alignItems: 'center', gap: 6,
-    fontFamily: "'Prompt', sans-serif",
-    transition: 'all 0.15s',
-  },
-  tabActive: {
-    backgroundColor: '#eef2ff',
-    color: '#4f46e5', fontWeight: 600,
-  },
-  tabBadge: {
-    padding: '1px 7px', borderRadius: 10,
-    fontSize: 11, fontWeight: 700,
-    transition: 'all 0.15s',
-  },
-  searchBox: {
-    display: 'flex', alignItems: 'center',
-    gap: 10, backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: 10, padding: '8px 16px',
-    minWidth: 280,
-  },
-  searchInput: {
-    flex: 1, border: 'none', outline: 'none',
-    fontSize: 14, color: '#0f172a',
-    fontFamily: "'Prompt', sans-serif",
-    backgroundColor: 'transparent',
-  } as React.CSSProperties,
-  clearBtn: {
-    background: 'none', border: 'none',
-    color: '#94a3b8', cursor: 'pointer', fontSize: 14,
-  },
-  errorBox: {
-    backgroundColor: '#fef2f2', border: '1px solid #fecaca',
-    color: '#dc2626', borderRadius: 10,
-    padding: '12px 18px', fontSize: 14, marginBottom: 20,
-  },
-  loadingBox: {
-    display: 'flex', flexDirection: 'column',
-    alignItems: 'center', padding: '80px 0', gap: 16,
-  },
-  loadingDots: { display: 'flex', gap: 8 },
-  emptyBox: {
-    display: 'flex', flexDirection: 'column',
-    alignItems: 'center', textAlign: 'center' as const,
-    padding: '80px 0', backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0', borderRadius: 16,
-  },
-  callBtn: {
-    backgroundColor: '#4f46e5', border: 'none',
-    borderRadius: 10, padding: '12px 24px',
-    color: '#fff', fontSize: 14, fontWeight: 600,
-    cursor: 'pointer', fontFamily: "'Prompt', sans-serif",
-  },
-  table: {
-    backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: 16, overflow: 'hidden',
-  },
-  tableEl: { width: '100%', borderCollapse: 'collapse' },
-  th: {
-    padding: '14px 20px',
-    fontSize: 12, fontWeight: 600,
-    color: '#64748b', textAlign: 'left' as const,
-    backgroundColor: '#f8fafc',
-    borderBottom: '1px solid #e2e8f0',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
-  },
-  td: { padding: '14px 20px', verticalAlign: 'middle' as const },
-  ladyTag: {
-    display: 'inline-block',
-    backgroundColor: '#fdf2f8',
-    border: '1px solid #fbcfe8',
-    color: '#9d174d',
-    borderRadius: 8, padding: '2px 8px',
-    fontSize: 11, fontWeight: 600, marginTop: 4,
-  },
-  carTag: {
-    backgroundColor: '#eef2ff',
-    color: '#4f46e5',
-    borderRadius: 6, padding: '4px 10px',
-    fontSize: 12, fontWeight: 600,
-  },
-  statusBadge: {
-    display: 'inline-flex', alignItems: 'center', gap: 6,
-    padding: '5px 12px', borderRadius: 20,
-    fontSize: 12, fontWeight: 600,
-  },
-  statusDot: { width: 7, height: 7, borderRadius: '50%', flexShrink: 0 },
 }

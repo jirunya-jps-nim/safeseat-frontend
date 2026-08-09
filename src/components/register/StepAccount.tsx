@@ -91,7 +91,7 @@ export default function StepAccount({
         style={{
           ...styles.trustBadge,
           color: labelColor ? '#cbd5e1' : '#475569',
-          background: labelColor ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc',
+          backgroundColor: labelColor ? 'rgba(255, 255, 255, 0.05)' : '#f8fafc',
           border: labelColor ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0',
         }}
       >
@@ -107,7 +107,7 @@ const styles: Record<string, React.CSSProperties> = {
     right: 10,
     top: '50%',
     transform: 'translateY(-50%)',
-    background: 'none',
+    backgroundColor: 'transparent',
     border: 'none',
     cursor: 'pointer',
     fontSize: 16,

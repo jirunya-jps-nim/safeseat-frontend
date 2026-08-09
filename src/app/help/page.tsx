@@ -1,13 +1,15 @@
 'use client'
+
 // ═══════════════════════════════════════════════════════════════
-// app/help/page.tsx
-// หน้า "ศูนย์ช่วยเหลือ" (Help Center Page - Cohesive Light Theme)
+// app/help/page.tsx — SafeSeat Help Center (Thai Language)
 // ═══════════════════════════════════════════════════════════════
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
+import FloatingNav from '@/components/ui/FloatingNav'
+import { Search, ChevronDown, MessageSquare, Phone, Mail } from 'lucide-react'
 
 interface FAQItem {
   question: string
@@ -21,7 +23,6 @@ export default function HelpCenterPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null)
 
-  // รายการคำถามพบบ่อย (FAQs)
   const faqs: FAQItem[] = [
     {
       category: 'pub',
@@ -55,7 +56,6 @@ export default function HelpCenterPage() {
     }
   ]
 
-  // จัดกลุ่มและคัดกรองคำถามตามหมวดหมู่และช่องค้นหา
   const filteredFaqs = faqs.filter(faq => {
     const matchesCategory = activeCategory === 'all' || faq.category === activeCategory
     const matchesSearch = faq.question.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -68,23 +68,42 @@ export default function HelpCenterPage() {
   }
 
   return (
-    <div style={styles.page}>
-      {/* วงกลมพื้นหลังตกแต่ง */}
-      <div style={styles.bgCircle1} />
-      <div style={styles.bgCircle2} />
+    <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
+      
+      {/* Background Glow */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
+      </div>
 
+      <div className="gradient-blur"></div>
       <Navbar />
+      <FloatingNav />
 
-      <main style={styles.main}>
-        {/* ── ส่วนที่ 1: ส่วนค้นหาและหัวข้อใหญ่ ── */}
-        <section style={styles.heroSection}>
-          <div style={styles.badge}>💡 ศูนย์ช่วยเหลือ & บริการลูกค้า</div>
-          <h1 style={styles.title}>เราพร้อมช่วยเหลือคุณ</h1>
-          <p style={styles.subtitle}>ค้นหาคำถามที่คุณสงสัย หรือเลือกดูข้อมูลตามหัวข้อด้านล่าง</p>
-          
-          {/* แถบค้นหา */}
-          <div style={styles.searchWrapper}>
-            <span style={styles.searchIcon}>🔍</span>
+      <main className="relative z-10 max-w-5xl mx-auto px-6 pt-44 pb-24 flex flex-col gap-16">
+        
+        {/* ── Hero Section ── */}
+        <section className="text-center flex flex-col items-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] backdrop-blur-md mb-6">
+            <span className="w-2 h-2 rounded-full bg-[#7C3AED] animate-pulse"></span>
+            <span className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest font-manrope">
+              ศูนย์ช่วยเหลือ &amp; ความปลอดภัย
+            </span>
+          </div>
+
+          <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold font-manrope tracking-tight leading-tight mb-6 text-[var(--color-text)] max-w-5xl mx-auto whitespace-nowrap">
+            คำถามที่พบบ่อย &amp;{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8]">
+              ฝ่ายสนับสนุนลูกค้า
+            </span>
+          </h1>
+
+          <p className="text-base sm:text-lg text-[var(--color-text-muted)] leading-relaxed max-w-2xl font-light mb-8">
+            ค้นหาข้อมูลการใช้งาน คำถามที่พบบ่อย และคู่มือขั้นตอนการให้บริการสำหรับลูกค้า ร้านค้าพาร์ทเนอร์ และผู้ขับขี่แทน
+          </p>
+
+          {/* Search Input Box */}
+          <div className="w-full max-w-xl flex items-center gap-3 px-6 py-4 bg-[var(--color-card)] border border-[var(--color-border)] rounded-full shadow-lg">
+            <Search className="w-5 h-5 text-[#7C3AED]" />
             <input 
               type="text" 
               placeholder="พิมพ์คำถาม หรือหัวข้อที่ต้องการค้นหา..." 
@@ -93,361 +112,127 @@ export default function HelpCenterPage() {
                 setSearchQuery(e.target.value)
                 setOpenFaqIndex(null)
               }}
-              style={styles.searchInput}
+              className="w-full bg-transparent border-none outline-none text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)]"
             />
           </div>
         </section>
 
-        {/* ── ส่วนที่ 2: แท็บฟิลเตอร์แบ่งหมวดหมู่ ── */}
-        <div style={styles.tabContainer}>
+        {/* ── Filter Tabs ── */}
+        <div className="flex justify-center flex-wrap gap-3">
           <button 
             onClick={() => { setActiveCategory('all'); setOpenFaqIndex(null); }}
-            style={{...styles.tabBtn, ...(activeCategory === 'all' ? styles.tabBtnActive : {})}}
+            className={`px-5 py-2 rounded-full text-xs font-bold tracking-wider transition-all cursor-pointer ${
+              activeCategory === 'all' 
+                ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white shadow-md' 
+                : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#7C3AED]'
+            }`}
           >
-            📋 ทั้งหมด
+            หมวดหมู่ทั้งหมด
           </button>
           <button 
             onClick={() => { setActiveCategory('general'); setOpenFaqIndex(null); }}
-            style={{...styles.tabBtn, ...(activeCategory === 'general' ? styles.tabBtnActive : {})}}
+            className={`px-5 py-2 rounded-full text-xs font-bold tracking-wider transition-all cursor-pointer ${
+              activeCategory === 'general' 
+                ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white shadow-md' 
+                : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#7C3AED]'
+            }`}
           >
-            👤 สำหรับลูกค้าทั่วไป
+            ผู้ใช้บริการทั่วไป
           </button>
           <button 
             onClick={() => { setActiveCategory('pub'); setOpenFaqIndex(null); }}
-            style={{...styles.tabBtn, ...(activeCategory === 'pub' ? styles.tabBtnActive : {})}}
+            className={`px-5 py-2 rounded-full text-xs font-bold tracking-wider transition-all cursor-pointer ${
+              activeCategory === 'pub' 
+                ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white shadow-md' 
+                : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#7C3AED]'
+            }`}
           >
-            🏪 สำหรับร้านค้า / ผับ
+            พาร์ทเนอร์ร้านค้า
           </button>
           <button 
             onClick={() => { setActiveCategory('driver'); setOpenFaqIndex(null); }}
-            style={{...styles.tabBtn, ...(activeCategory === 'driver' ? styles.tabBtnActive : {})}}
+            className={`px-5 py-2 rounded-full text-xs font-bold tracking-wider transition-all cursor-pointer ${
+              activeCategory === 'driver' 
+                ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white shadow-md' 
+                : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#7C3AED]'
+            }`}
           >
-            🚗 สำหรับพนักงานขับรถ
+            ผู้ขับขี่แทน
           </button>
         </div>
 
-        {/* ── ส่วนที่ 3: รายการ FAQ แบบ Accordion ── */}
-        <section style={styles.faqSection}>
+        {/* ── FAQ Accordion List ── */}
+        <section className="flex flex-col gap-4">
           {filteredFaqs.length > 0 ? (
             filteredFaqs.map((faq, index) => {
               const isOpen = openFaqIndex === index
               return (
-                <div key={index} style={{...styles.faqItem, borderColor: isOpen ? '#818cf8' : '#e2e8f0'}}>
-                  <div style={styles.faqHeader} onClick={() => toggleFaq(index)}>
-                    <span style={styles.faqQuestion}>
-                      <span style={{ color: '#4f46e5', marginRight: '8px' }}>Q:</span>
+                <div key={index} className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl overflow-hidden transition-all shadow-md">
+                  <div 
+                    onClick={() => toggleFaq(index)}
+                    className="p-6 flex justify-between items-center cursor-pointer hover:bg-[var(--color-card-hover)] transition-colors"
+                  >
+                    <span className="font-bold text-base text-[var(--color-text)] font-manrope">
                       {faq.question}
                     </span>
-                    <span style={{
-                      ...styles.arrowIcon,
-                      transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-                    }}>
-                      ▼
-                    </span>
+                    <ChevronDown className={`w-5 h-5 text-[#7C3AED] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                   </div>
                   {isOpen && (
-                    <div style={styles.faqContent}>
-                      <p style={styles.faqAnswer}>{faq.answer}</p>
+                    <div className="px-6 pb-6 pt-2 border-t border-[var(--color-border)] text-sm text-[var(--color-text-muted)] leading-relaxed font-light">
+                      {faq.answer}
                     </div>
                   )}
                 </div>
               )
             })
           ) : (
-            <div style={styles.noResults}>
-              <span>📭</span>
-              <p>ไม่พบหัวข้อคำถามที่ตรงกับข้อมูลค้นหาของคุณ</p>
+            <div className="text-center py-12 text-[var(--color-text-muted)] text-sm">
+              📭 ไม่พบหัวข้อคำถามที่ตรงกับข้อมูลค้นหาของคุณ
             </div>
           )}
         </section>
 
-        {/* ── ส่วนที่ 4: ช่องทางการติดต่อทีมงาน ── */}
-        <section style={styles.contactSection}>
-          <h2 style={styles.contactHeading}>หากยังไม่พบคำตอบที่คุณต้องการ?</h2>
-          <p style={styles.contactSub}>คุณสามารถติดต่อเจ้าหน้าที่ฝ่ายดูแลลูกค้าได้โดยตรงตามช่องทางดังนี้</p>
-          
-          <div style={styles.contactGrid}>
-            <div style={styles.contactCard}>
-              <span style={styles.contactCardIcon}>💚</span>
-              <h3 style={styles.contactCardTitle}>LINE Official Account</h3>
-              <p style={styles.contactCardText}>แอดไลน์เพื่อแชทถามฝ่ายดูแลลูกค้า</p>
-              <span style={styles.contactValue}>@safeseat_support</span>
+        {/* ── Direct Contact Section ── */}
+        <section className="flex flex-col gap-8 pt-8 border-t border-[var(--color-border)]">
+          <div className="text-center">
+            <span className="text-xs font-bold tracking-widest text-[#7C3AED] uppercase">ช่องทางติดต่อโดยตรง</span>
+            <h2 className="text-3xl font-bold font-manrope text-[var(--color-text)] mt-2">ต้องการความช่วยเหลือเพิ่มเติม?</h2>
+            <p className="text-sm text-[var(--color-text-muted)] mt-1">เจ้าหน้าที่ฝ่ายสนับสนุนลูกค้าพร้อมดูแลและตอบข้อสงสัยของคุณตลอด 24 ชั่วโมง</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center text-center gap-3 shadow-md hover:border-[#7C3AED]/50 transition-all">
+              <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400">
+                <MessageSquare className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">LINE Official</h3>
+              <p className="text-xs text-[var(--color-text-muted)]">แชทสอบถามฝ่ายสนับสนุนลูกค้า</p>
+              <span className="text-xs font-bold text-[#7C3AED]">@safeseat_support</span>
             </div>
 
-            <div style={styles.contactCard}>
-              <span style={styles.contactCardIcon}>📞</span>
-              <h3 style={styles.contactCardTitle}>ฝ่ายบริการด่วน (Hotline)</h3>
-              <p style={styles.contactCardText}>โทรสอบถามข้อมูลการเดินทางหรือปัญหาการใช้งาน</p>
-              <span style={styles.contactValue}>02-123-4567 (18:00 - 04:00 น.)</span>
+            <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center text-center gap-3 shadow-md hover:border-[#7C3AED]/50 transition-all">
+              <div className="p-3 bg-[#7C3AED]/10 border border-[#7C3AED]/30 rounded-xl text-[#7C3AED]">
+                <Phone className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">สายด่วนฉุกเฉิน</h3>
+              <p className="text-xs text-[var(--color-text-muted)]">สายด่วนดูแลการเดินทางเรียลไทม์</p>
+              <span className="text-xs font-bold text-[#7C3AED]">02-123-4567</span>
             </div>
 
-            <div style={styles.contactCard}>
-              <span style={styles.contactCardIcon}>✉️</span>
-              <h3 style={styles.contactCardTitle}>ติดต่อทางอีเมล</h3>
-              <p style={styles.contactCardText}>ส่งเอกสารแจ้งปัญหาระบบเพิ่มเติม</p>
-              <span style={styles.contactValue}>support@safeseat.com</span>
+            <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center text-center gap-3 shadow-md hover:border-[#7C3AED]/50 transition-all">
+              <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-400">
+                <Mail className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">อีเมลฝ่ายสนับสนุน</h3>
+              <p className="text-xs text-[var(--color-text-muted)]">แจ้งปัญหาระบบและส่งเอกสาร</p>
+              <span className="text-xs font-bold text-[#7C3AED]">support@safeseat.app</span>
             </div>
           </div>
         </section>
+
       </main>
 
       <Footer />
-
-      {/* CSS Styles & Micro-Animations */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Prompt', sans-serif; }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e0e7ff 100%)',
-    display: 'flex',
-    flexDirection: 'column',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  bgCircle1: {
-    position: 'absolute',
-    top: '-180px',
-    right: '-120px',
-    width: '480px',
-    height: '480px',
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)',
-    pointerEvents: 'none',
-  },
-  bgCircle2: {
-    position: 'absolute',
-    bottom: '-120px',
-    left: '-160px',
-    width: '400px',
-    height: '400px',
-    borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(124,58,237,0.05) 0%, transparent 70%)',
-    pointerEvents: 'none',
-  },
-  main: {
-    flex: 1,
-    maxWidth: '920px',
-    width: '100%',
-    margin: '0 auto',
-    padding: '50px 24px 70px',
-    zIndex: 5,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '40px',
-  },
-
-  // ── Hero Section ──
-  heroSection: {
-    textAlign: 'center',
-    animation: 'fadeUp 0.4s ease both',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  badge: {
-    display: 'inline-block',
-    background: '#e0e7ff',
-    color: '#4f46e5',
-    fontSize: '13px',
-    fontWeight: 600,
-    padding: '6px 16px',
-    borderRadius: '20px',
-    border: '1px solid rgba(79,70,229,0.2)',
-    marginBottom: '18px',
-  },
-  title: {
-    fontSize: '34px',
-    fontWeight: 700,
-    color: '#0f172a',
-    marginBottom: '12px',
-  },
-  subtitle: {
-    fontSize: '15px',
-    color: '#475569',
-    marginBottom: '24px',
-  },
-  searchWrapper: {
-    position: 'relative',
-    maxWidth: '560px',
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    boxShadow: '0 8px 30px rgba(0, 0, 0, 0.03)',
-    borderRadius: '14px',
-    overflow: 'hidden',
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: '18px',
-    fontSize: '18px',
-    color: '#94a3b8',
-  },
-  searchInput: {
-    width: '100%',
-    padding: '16px 20px 16px 50px',
-    borderRadius: '14px',
-    border: '1.5px solid #cbd5e1',
-    fontSize: '14.5px',
-    color: '#0f172a',
-    backgroundColor: '#ffffff',
-    outline: 'none',
-    boxSizing: 'border-box',
-    fontFamily: "'Prompt', sans-serif",
-    transition: 'border-color 0.2s',
-  },
-
-  // ── Tab Filters ──
-  tabContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: '12px',
-    animation: 'fadeUp 0.5s ease both',
-  },
-  tabBtn: {
-    background: '#ffffff',
-    borderWidth: '1px',
-    borderStyle: 'solid',
-    borderColor: '#e2e8f0',
-    borderRadius: '12px',
-    padding: '10px 18px',
-    fontSize: '14px',
-    fontWeight: 500,
-    color: '#64748b',
-    cursor: 'pointer',
-    fontFamily: "'Prompt', sans-serif",
-    transition: 'all 0.2s',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.01)',
-  },
-  tabBtnActive: {
-    background: '#4f46e5',
-    color: '#ffffff',
-    borderColor: '#4f46e5',
-    boxShadow: '0 4px 12px rgba(79,70,229,0.15)',
-  },
-
-  // ── FAQ Items ──
-  faqSection: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '14px',
-    animation: 'fadeUp 0.6s ease both',
-  },
-  faqItem: {
-    background: '#ffffff',
-    borderWidth: '1px',
-    borderStyle: 'solid',
-    borderColor: '#e2e8f0',
-    borderRadius: '16px',
-    overflow: 'hidden',
-    boxShadow: '0 4px 16px rgba(0,0,0,0.01)',
-    transition: 'border-color 0.2s',
-  },
-  faqHeader: {
-    padding: '20px 24px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    cursor: 'pointer',
-    userSelect: 'none',
-  },
-  faqQuestion: {
-    fontSize: '15px',
-    fontWeight: 600,
-    color: '#0f172a',
-    display: 'flex',
-    alignItems: 'center',
-  },
-  arrowIcon: {
-    fontSize: '12px',
-    color: '#94a3b8',
-    transition: 'transform 0.25s ease',
-  },
-  faqContent: {
-    padding: '0 24px 20px',
-    borderTop: '1px solid #f1f5f9',
-    background: '#fafbfd',
-  },
-  faqAnswer: {
-    fontSize: '14px',
-    color: '#475569',
-    lineHeight: 1.6,
-    margin: '16px 0 0',
-  },
-  noResults: {
-    textAlign: 'center',
-    padding: '40px 20px',
-    color: '#94a3b8',
-    fontSize: '15px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-  },
-
-  // ── Contact Section ──
-  contactSection: {
-    textAlign: 'center',
-    marginTop: '20px',
-    animation: 'fadeUp 0.7s ease both',
-  },
-  contactHeading: {
-    fontSize: '20px',
-    fontWeight: 700,
-    color: '#0f172a',
-    marginBottom: '8px',
-  },
-  contactSub: {
-    fontSize: '14px',
-    color: '#64748b',
-    marginBottom: '32px',
-  },
-  contactGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr',
-    gap: '24px',
-  },
-  contactCard: {
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '20px',
-    padding: '28px 12px',
-    boxShadow: '0 10px 24px rgba(0,0,0,0.02)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  contactCardIcon: {
-    fontSize: '28px',
-    marginBottom: '14px',
-  },
-  contactCardTitle: {
-    fontSize: '15px',
-    fontWeight: 600,
-    color: '#0f172a',
-    marginBottom: '8px',
-  },
-  contactCardText: {
-    fontSize: '11px',
-    color: '#64748b',
-    marginBottom: '16px',
-    lineHeight: 1.4,
-    whiteSpace: 'nowrap',
-  },
-  contactValue: {
-    fontSize: '13.5px',
-    fontWeight: 700,
-    color: '#4f46e5',
-  },
 }

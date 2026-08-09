@@ -1298,24 +1298,24 @@ export default function AdminDashboard() {
       {/* Confirm Reject Modal */}
       {confirmRejectModal.isOpen && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-[var(--color-card)] border border-red-500/30 rounded-2xl p-6 max-w-lg w-full shadow-2xl flex flex-col gap-4 text-center">
+          <div className="bg-[var(--color-card)] border border-red-500/30 rounded-2xl p-6 max-w-2xl w-full shadow-2xl flex flex-col gap-5 text-center">
+            <div className="w-14 h-14 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center mx-auto text-red-500 text-2xl">
+              ⚠️
+            </div>
             
-            {/* Warning Icon and Title on the same line */}
-            <div className="flex items-center justify-center gap-2.5">
-              <span className="text-2xl leading-none">⚠️</span>
-              <h3 className="text-base sm:text-lg font-bold text-[var(--color-text)] leading-snug whitespace-nowrap">
-                {confirmRejectModal.title}
+            <div>
+              <h3 className="text-lg font-bold text-[var(--color-text)] mb-2 flex items-center justify-center gap-2">
+                <span>⚠️</span> {confirmRejectModal.title}
               </h3>
+              <p className="text-xs text-[var(--color-text-muted)] font-medium whitespace-nowrap overflow-x-auto px-2">
+                {confirmRejectModal.message}
+              </p>
             </div>
 
-            <p className="text-xs text-[var(--color-text-muted)] leading-relaxed font-medium px-2">
-              {confirmRejectModal.message}
-            </p>
-
-            <div className="flex items-center gap-3 justify-center pt-2 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center gap-3 justify-center pt-2">
               <button
                 onClick={() => setConfirmRejectModal({ isOpen: false, title: '', message: '', onConfirm: () => {} })}
-                className="px-5 py-2.5 rounded-full border border-[var(--color-border)] text-xs font-bold text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] cursor-pointer transition-colors whitespace-nowrap"
+                className="px-5 py-2.5 rounded-full border border-[var(--color-border)] text-xs font-bold text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] cursor-pointer transition-colors"
               >
                 ยกเลิก (Cancel)
               </button>
@@ -1325,7 +1325,7 @@ export default function AdminDashboard() {
                   setConfirmRejectModal({ isOpen: false, title: '', message: '', onConfirm: () => {} })
                   action()
                 }}
-                className="px-6 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-lg shadow-red-600/30 cursor-pointer transition-all whitespace-nowrap"
+                className="px-6 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-lg shadow-red-600/30 cursor-pointer transition-all"
               >
                 ยืนยันการปฏิเสธ (Confirm Reject)
               </button>

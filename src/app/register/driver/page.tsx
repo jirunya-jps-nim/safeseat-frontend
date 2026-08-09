@@ -649,6 +649,41 @@ export default function RegisterDriverPage() {
         <div style={styles.formPanel}>
           <div style={styles.formInner}>
 
+            {/* 📱 Advice Box: Recommend Mobile App */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(29, 78, 216, 0.08))',
+              border: '1px solid rgba(124, 58, 237, 0.25)',
+              borderRadius: '16px',
+              padding: '14px 18px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              boxShadow: '0 4px 12px rgba(124, 58, 237, 0.05)'
+            }}>
+              <div style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '12px',
+                background: 'rgba(124, 58, 237, 0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '22px',
+                flexShrink: 0
+              }}>
+                📱
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: '11px', fontWeight: 700, color: '#7C3AED', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  💡 คำแนะนำในการสมัคร
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--color-text)', marginTop: '2px', lineHeight: 1.5, fontWeight: 500 }}>
+                  แนะนำให้ทำรายการสมัครผ่าน <strong style={{ color: '#7C3AED' }}>มือถือ (Mobile Application หรือ Mobile Browser)</strong> เพื่อความสะดวกในการถ่ายรูปโปรไฟล์ ใบขับขี่ และแนบภาพถ่ายเอกสารผ่านกล้องได้ทันที
+                </div>
+              </div>
+            </div>
+
             {/* Header ฟอร์ม */}
             <div style={styles.formHeader}>
               <div style={styles.formIconWrap}>

@@ -95,6 +95,11 @@ export default function RegisterSelectorPage() {
               สำหรับพนักงานขับรถมืออาชีพที่ต้องการสร้างรายได้เสริมที่มั่นคง ปลอดภัย พร้อมเลือกเวลาและพื้นที่ในการรับงานได้อย่างอิสระ
             </p>
 
+            <div className="p-2.5 bg-[#7C3AED]/10 border border-[#7C3AED]/30 rounded-xl text-[11px] font-bold text-[#7C3AED] flex items-center gap-2">
+              <span>📱</span>
+              <span>แนะนำให้ทำรายการสมัครผ่านมือถือเพื่อความสะดวกในการถ่ายรูปถ่ายเอกสาร</span>
+            </div>
+
             <button className="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
               JOIN AS DRIVER <ArrowRight className="w-4 h-4" />
             </button>

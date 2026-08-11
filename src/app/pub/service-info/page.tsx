@@ -87,7 +87,7 @@ export default function ServiceInfoPage() {
 
   const pendingStatuses = ['pending', 'รอคนขับ', 'กำลังไปรับ', 'ถึงจุดรับแล้ว', 'ระหว่างเดินทาง', 'accepted']
   const completedStatuses = ['completed', 'เสร็จสิ้น']
-  const cancelledStatuses = ['cancelled', 'ยกเลิก']
+  const cancelledStatuses = ['cancelled', 'ยกเลิก', 'ปฏิเสธ', 'rejected']
 
   const isPending = (status: string) => {
     if (!status) return true

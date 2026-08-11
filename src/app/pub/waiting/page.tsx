@@ -85,6 +85,14 @@ function WaitingContent() {
           const req = res.data.data
           if (req.requeststatus === 'กำลังไปรับ' || req.requeststatus === 'accepted' || req.driverid) {
             router.push(`/pub/tracking?id=${trackingParam}`)
+          } else if (
+            req.requeststatus === 'ปฏิเสธ' ||
+            req.requeststatus === 'rejected' ||
+            req.requeststatus === 'cancelled' ||
+            req.requeststatus === 'ยกเลิก'
+          ) {
+            // เมื่อคนขับกดปฏิเสธ ทำการยกเลิกการค้นหาและให้ผู้ใช้ลองเรียกใหม่ทันที
+            handleCancelSearch(req, 'คนขับได้ปฏิเสธรายการเรียกรถ กรุณาตรวจสอบข้อมูลแล้วลองเรียกรถใหม่อีกครั้ง')
           }
         }
       } catch (err) {
@@ -96,32 +104,38 @@ function WaitingContent() {
     return () => clearInterval(interval)
   }, [requestId, isTimeout, router, trackingParam])
 
-  const handleCancelSearch = () => {
+  const handleCancelSearch = (targetData?: any, reason?: string) => {
     const pubUserStr = localStorage.getItem('pub_user')
     const pubUser = pubUserStr ? JSON.parse(pubUserStr) : null
+    const dataToUse = targetData || reqData
 
-    if (reqData) {
-      const dropLat = Number(reqData.dropofflatitude) || 0
-      const dropLng = Number(reqData.dropofflongitude) || 0
+    if (dataToUse) {
+      const dropLat = Number(dataToUse.dropofflatitude) || 0
+      const dropLng = Number(dataToUse.dropofflongitude) || 0
       const formData = {
-        pubId: pubUser?.pubid || reqData.pubid || 1,
-        custName: reqData.custname || '',
-        phoneNo: reqData.phoneno || '',
-        phoneEmer: reqData.phoneemer || '',
-        carModel: reqData.carmodel || '',
-        licensePlate: reqData.carplate || '',
-        carType: reqData.requiredcartype === 1 ? 'Electric' : (reqData.requiredcartype === 2 ? 'Manual' : 'Autometric'),
+        pubId: pubUser?.pubid || dataToUse.pubid || 1,
+        custName: dataToUse.custname || '',
+        phoneNo: dataToUse.phoneno || '',
+        phoneEmer: dataToUse.phoneemer || '',
+        carModel: dataToUse.carmodel || '',
+        licensePlate: dataToUse.carplate || '',
+        carType: dataToUse.requiredcartype === 1 ? 'Electric' : (dataToUse.requiredcartype === 2 ? 'Manual' : 'Autometric'),
         destination: (dropLat && dropLng) ? {
           lat: dropLat,
           lng: dropLng,
-          label: reqData.destination_name || `พิกัด: ${dropLat.toFixed(5)}, ${dropLng.toFixed(5)}`
+          label: dataToUse.destination_name || `พิกัด: ${dropLat.toFixed(5)}, ${dropLng.toFixed(5)}`
         } : null,
-        isLadyMode: reqData.isladymode || false,
-        paymentMethod: reqData.paymentmethod === 1 ? 1 : 2,
-        note: reqData.note || '',
+        isLadyMode: dataToUse.isladymode || false,
+        paymentMethod: dataToUse.paymentmethod === 1 ? 1 : 2,
+        note: dataToUse.note || '',
       }
       localStorage.setItem('safeseat_request_form', JSON.stringify(formData))
     }
+
+    if (reason && typeof window !== 'undefined') {
+      sessionStorage.setItem('safeseat_reject_notice', reason)
+    }
+
     router.push('/pub/request-driver?step=1')
   }
 
@@ -148,7 +162,7 @@ function WaitingContent() {
               ขณะนี้ยังไม่มีคนขับอยู่ในพื้นที่หรือสะดวกรับงานภายในเวลา 5 นาทีที่กำหนด <br/>กรุณากดปุ่มย้อนกลับเพื่อลองเรียกรถใหม่อีกครั้ง
             </p>
             <button 
-              onClick={handleCancelSearch}
+              onClick={() => handleCancelSearch()}
               className="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md cursor-pointer transition-all"
             >
               กลับไปหน้าเรียกรถ
@@ -200,7 +214,7 @@ function WaitingContent() {
             </div>
 
             <button 
-              onClick={handleCancelSearch}
+              onClick={() => handleCancelSearch()}
               className="mt-6 w-full py-3 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all cursor-pointer"
             >
               ยกเลิกการค้นหา

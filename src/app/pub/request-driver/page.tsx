@@ -58,9 +58,20 @@ function RequestDriverContent() {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [rejectNotice, setRejectNotice] = useState('')
   const [distance, setDistance] = useState<number>(0)
   const [loadingRoute, setLoadingRoute] = useState<boolean>(false)
   const [isFormLoaded, setIsFormLoaded] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const notice = sessionStorage.getItem('safeseat_reject_notice')
+      if (notice) {
+        setRejectNotice(notice)
+        sessionStorage.removeItem('safeseat_reject_notice')
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const userStr = localStorage.getItem('pub_user')
@@ -290,6 +301,13 @@ function RequestDriverContent() {
             🏪 ร้านค้า: <span className="text-[var(--color-text)] font-bold">{pubName}</span>
           </div>
         </div>
+
+        {rejectNotice && (
+          <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center gap-3 text-amber-500 font-bold text-xs shadow-md">
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-amber-500" />
+            <span>{rejectNotice}</span>
+          </div>
+        )}
 
         {/* Main Card */}
         <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-8 shadow-xl flex flex-col gap-8">

@@ -10,7 +10,7 @@ export const statusStyles: Record<string, React.CSSProperties> = {
     minHeight: '100vh',
     backgroundColor: 'var(--color-bg)',
     color: 'var(--color-text)',
-    fontFamily: "'Inter', sans-serif",
+    fontFamily: "'Inter', 'Kanit', sans-serif",
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
@@ -53,9 +53,10 @@ export const statusStyles: Record<string, React.CSSProperties> = {
     marginBottom: '16px',
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
+    fontFamily: "'Manrope', 'Kanit', sans-serif",
   },
   pageTitle: {
-    fontFamily: "'Manrope', sans-serif",
+    fontFamily: "'Manrope', 'Kanit', sans-serif",
     fontSize: '32px',
     fontWeight: 700,
     color: 'var(--color-text)',
@@ -67,6 +68,7 @@ export const statusStyles: Record<string, React.CSSProperties> = {
     color: 'var(--color-text-muted)',
     margin: 0,
     lineHeight: 1.6,
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
   // ── Card container ────────────────────────────────────────────
@@ -83,7 +85,7 @@ export const statusStyles: Record<string, React.CSSProperties> = {
 
   // ── Hello greeting ────────────────────────────────────────────
   greeting: {
-    fontFamily: "'Manrope', sans-serif",
+    fontFamily: "'Manrope', 'Kanit', sans-serif",
     fontSize: '22px',
     fontWeight: 700,
     color: 'var(--color-text)',
@@ -91,95 +93,59 @@ export const statusStyles: Record<string, React.CSSProperties> = {
   },
   greetingSub: {
     fontSize: '14px',
-    color: 'var(--color-text-muted)',
+    color: '#cbd5e1',
     marginBottom: '28px',
     lineHeight: 1.6,
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
   // ── Stepper ───────────────────────────────────────────────────
   stepper: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 0,
+    justifyContent: 'space-between',
     marginBottom: '36px',
+    position: 'relative',
   },
   stepItem: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     gap: '8px',
+    zIndex: 2,
     flex: 1,
   },
-  stepDotWrapper: {
-    display: 'flex',
-    alignItems: 'center',
-    width: '100%',
-    position: 'relative',
-  },
-  stepDot: {
-    width: '36px',
-    height: '36px',
+  stepCircle: {
+    width: '40px',
+    height: '40px',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '13px',
     fontWeight: 700,
-    flexShrink: 0,
-    zIndex: 1,
+    fontSize: '14px',
     transition: 'all 0.25s ease',
+    border: '2px solid transparent',
+    fontFamily: "'Manrope', 'Kanit', sans-serif",
+  },
+  stepLabel: {
+    fontSize: '12px',
+    fontWeight: 600,
+    color: 'var(--color-text-muted)',
+    textAlign: 'center',
+    whiteSpace: 'nowrap',
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
   stepLine: {
     flex: 1,
     height: '2px',
-    borderRadius: '2px',
-    transition: 'background 0.25s ease',
-  },
-  stepLabel: {
-    fontSize: '11.5px',
-    fontWeight: 700,
-    letterSpacing: '0.04em',
-    textAlign: 'center',
-    paddingTop: '4px',
-    lineHeight: 1.4,
-    maxWidth: '96px',
-    color: 'var(--color-text-muted)',
+    backgroundColor: 'var(--color-border)',
+    margin: '0 -8px 24px',
+    zIndex: 1,
+    transition: 'background-color 0.25s ease',
   },
 
-  // ── Status banner ─────────────────────────────────────────────
-  statusBanner: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    padding: '20px 24px',
-    borderRadius: '16px',
-    marginBottom: '24px',
-    border: '1px solid var(--color-border)',
-    backgroundColor: 'var(--color-surface)',
-  },
-  statusIcon: {
-    fontSize: '28px',
-    flexShrink: 0,
-    lineHeight: 1,
-  },
-  statusTextWrap: {
-    flex: 1,
-  },
-  statusTitle: {
-    fontFamily: "'Manrope', sans-serif",
-    fontSize: '16px',
-    fontWeight: 700,
-    marginBottom: '4px',
-    color: 'var(--color-text)',
-  },
-  statusDesc: {
-    fontSize: '13.5px',
-    lineHeight: 1.55,
-    color: 'var(--color-text-muted)',
-  },
-
-  // ── Info grid ─────────────────────────────────────────────────
+  // ── Info Grid ────────────────────────────────────────────────
   infoGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
@@ -189,100 +155,124 @@ export const statusStyles: Record<string, React.CSSProperties> = {
   infoItem: {
     backgroundColor: 'var(--color-surface)',
     border: '1px solid var(--color-border)',
-    borderRadius: '12px',
+    borderRadius: '14px',
     padding: '14px 16px',
   },
   infoLabel: {
-    fontSize: '10.5px',
-    color: 'var(--color-text-muted)',
-    fontWeight: 700,
+    fontSize: '11px',
+    color: '#94a3b8',
+    fontWeight: 600,
+    letterSpacing: '0.06em',
     textTransform: 'uppercase',
-    letterSpacing: '0.08em',
     marginBottom: '4px',
+    display: 'block',
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
   infoValue: {
     fontSize: '14px',
-    color: 'var(--color-text)',
-    fontWeight: 700,
-    wordBreak: 'break-word',
-    lineHeight: 1.4,
+    color: '#ffffff',
+    fontWeight: 600,
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
-  // ── Divider ───────────────────────────────────────────────────
-  divider: {
-    height: '1px',
-    backgroundColor: 'var(--color-border)',
-    margin: '0 0 24px',
-  },
-
-  // ── Action buttons ────────────────────────────────────────────
-  btnRow: {
+  // ── Status Messages Box ───────────────────────────────────────
+  statusBox: {
+    borderRadius: '16px',
+    padding: '24px',
+    marginBottom: '28px',
     display: 'flex',
-    gap: '12px',
-    justifyContent: 'flex-end',
+    gap: '16px',
+    alignItems: 'flex-start',
   },
-  logoutBtn: {
-    padding: '11px 22px',
-    borderRadius: '9999px',
-    border: '1px solid var(--color-border)',
-    backgroundColor: 'transparent',
-    color: 'var(--color-text-muted)',
-    fontSize: '13px',
+
+  // Pending Box
+  pendingBox: {
+    backgroundColor: 'rgba(234, 179, 8, 0.1)',
+    border: '1px solid rgba(234, 179, 8, 0.3)',
+    color: '#eab308',
+  },
+  // Approved Box
+  approvedBox: {
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    border: '1px solid rgba(34, 197, 94, 0.3)',
+    color: '#22c55e',
+  },
+  // Rejected Box
+  rejectedBox: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    border: '1px solid rgba(239, 68, 68, 0.3)',
+    color: '#ef4444',
+  },
+
+  statusBoxIcon: {
+    fontSize: '28px',
+    lineHeight: 1,
+    flexShrink: 0,
+    marginTop: '2px',
+  },
+  statusBoxTitle: {
+    fontFamily: "'Manrope', 'Kanit', sans-serif",
+    fontSize: '16px',
     fontWeight: 700,
-    fontFamily: "'Inter', sans-serif",
-    cursor: 'pointer',
-    transition: 'all 0.15s',
+    margin: '0 0 6px',
   },
-  refreshBtn: {
-    padding: '12px 24px',
-    borderRadius: '9999px',
-    border: 'none',
+  statusBoxDesc: {
+    fontSize: '13.5px',
+    lineHeight: 1.65,
+    margin: 0,
+    opacity: 0.9,
+    fontFamily: "'Inter', 'Kanit', sans-serif",
+  },
+
+  // ── Action Buttons ───────────────────────────────────────────
+  actionArea: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  loginBtn: {
+    width: '100%',
     backgroundImage: 'linear-gradient(135deg, #7C3AED 0%, #1D4ED8 100%)',
     backgroundColor: 'transparent',
     color: '#ffffff',
-    fontSize: '13px',
+    border: 'none',
+    borderRadius: '9999px',
+    padding: '14px',
+    fontSize: '14px',
     fontWeight: 700,
-    letterSpacing: '0.06em',
-    fontFamily: "'Inter', sans-serif",
+    letterSpacing: '0.04em',
     cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-    whiteSpace: 'nowrap',
-    transition: 'all 0.2s ease',
-    boxShadow: '0 4px 15px rgba(124, 58, 237, 0.4)',
-  },
-
-  // ── Loading skeleton ─────────────────────────────────────────
-  skeletonLine: {
-    borderRadius: '6px',
-    backgroundColor: 'var(--color-surface)',
-  },
-
-  // ── Error box ────────────────────────────────────────────────
-  errorBox: {
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
-    border: '1px solid #ef4444',
-    borderRadius: '12px',
-    padding: '14px 18px',
-    color: '#f87171',
-    fontSize: '13.5px',
     textAlign: 'center',
-    marginBottom: '20px',
-    lineHeight: 1.5,
-    fontWeight: 500,
+    boxShadow: '0 4px 16px rgba(124, 58, 237, 0.4)',
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
-
-  // ── Loading spinner ───────────────────────────────────────────
-  spinner: {
-    display: 'inline-block',
-    width: '15px',
-    height: '15px',
-    border: '2px solid rgba(255,255,255,0.3)',
-    borderTop: '2px solid #ffffff',
-    borderRadius: '50%',
-    animation: 'spin 0.7s linear infinite',
-    marginRight: '4px',
+  reapplyBtn: {
+    width: '100%',
+    backgroundImage: 'linear-gradient(135deg, #7C3AED 0%, #1D4ED8 100%)',
+    backgroundColor: 'transparent',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '9999px',
+    padding: '14px',
+    fontSize: '14px',
+    fontWeight: 700,
+    letterSpacing: '0.04em',
+    cursor: 'pointer',
+    textAlign: 'center',
+    boxShadow: '0 4px 16px rgba(124, 58, 237, 0.4)',
+    fontFamily: "'Inter', 'Kanit', sans-serif",
+  },
+  contactBtn: {
+    width: '100%',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    color: 'var(--color-text)',
+    borderRadius: '9999px',
+    padding: '13px',
+    fontSize: '13.5px',
+    fontWeight: 600,
+    cursor: 'pointer',
+    textAlign: 'center',
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 }

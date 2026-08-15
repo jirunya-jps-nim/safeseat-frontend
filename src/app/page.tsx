@@ -10,23 +10,14 @@ import { ArrowRight, Search, Shield, Zap, Car, Star, Bot, Code, Layers, Check, U
 
 const encodeId = (id: number | string | undefined) => {
   if (!id) return '';
-  const offset = 100000000;
-  const num = Number(id);
-  if (isNaN(num)) return String(id);
-  return (offset + num).toString(36).toUpperCase();
+  return String(id);
 };
 
 const decodeId = (input: string) => {
   const clean = input.replace('#', '').trim();
   if (!clean) return null;
-  if (/^\d+$/.test(clean) && clean.length < 6) {
-    return parseInt(clean, 10);
-  }
-  const offset = 100000000;
-  const num = parseInt(clean.toLowerCase(), 36);
-  if (isNaN(num)) return null;
-  const decoded = num - offset;
-  return decoded > 0 ? decoded : null;
+  const num = parseInt(clean, 10);
+  return isNaN(num) ? null : num;
 };
 
 export default function HomePage() {
@@ -36,6 +27,7 @@ export default function HomePage() {
   const [searchCode, setSearchCode] = useState('')
   const [searchError, setSearchError] = useState('')
   const [searching, setSearching] = useState(false)
+  const [multipleMatches, setMultipleMatches] = useState<any[] | null>(null)
 
   const handleSearchCode = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
@@ -43,6 +35,7 @@ export default function HomePage() {
     if (!cleanInput) return
     setSearchError('')
     setSearching(true)
+    setMultipleMatches(null)
 
     const decodedId = decodeId(cleanInput)
     if (!decodedId) {
@@ -53,12 +46,17 @@ export default function HomePage() {
 
     try {
       const res = await api.get(`/pub/service-request/${decodedId}`)
-      if (res.data.success && res.data.data) {
-        if (res.data.data.requestType === 'user') {
-          router.push(`/trip?id=${decodedId}`)
+      if (res.data.success) {
+        if (res.data.isMultiple && res.data.matches && res.data.matches.length > 0) {
+          setMultipleMatches(res.data.matches)
+        } else if (res.data.data) {
+          if (res.data.data.requestType === 'user') {
+            router.push(`/trip?id=${decodedId}`)
+          } else {
+            router.push(`/tracking?id=${decodedId}`)
+          }
         } else {
-          const alphaCode = encodeId(decodedId)
-          router.push(`/tracking?id=${alphaCode}`)
+          setSearchError('❌ ไม่พบข้อมูลบริการสำหรับรหัสนี้')
         }
       } else {
         setSearchError('❌ ไม่พบข้อมูลบริการสำหรับรหัสนี้')
@@ -135,7 +133,7 @@ export default function HomePage() {
                   <Search className="w-5 h-5 text-[#7C3AED]" />
                   <input
                     type="text"
-                    placeholder="ป้อนรหัสติดตามบริการ (เช่น #55 หรือ 55)..."
+                    placeholder="ป้อนรหัสติดตามบริการ..."
                     value={searchCode}
                     onChange={(e) => setSearchCode(e.target.value)}
                     className="w-full bg-transparent text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none font-semibold"
@@ -150,6 +148,15 @@ export default function HomePage() {
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </form>
+
+              {/* Helper text / Code format guidelines outside placeholder */}
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-[var(--color-text-muted)]">
+                <span className="font-medium">💡 ตัวอย่างรหัสบริการ:</span>
+                <span className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[#7C3AED] font-medium font-mono">
+                  ป้อนรหัสตัวเลขจากระบบ เช่น <strong className="font-bold">79</strong> หรือ <strong className="font-bold">#79</strong>
+                </span>
+              </div>
+
               {searchError && <p className="mt-3 text-xs text-red-500 font-bold">{searchError}</p>}
             </div>
 
@@ -396,6 +403,77 @@ export default function HomePage() {
         </section>
 
       </main>
+
+      {/* ── Selection Modal for Duplicate IDs ── */}
+      {multipleMatches && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+          <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden">
+            <div className="flex justify-between items-center pb-4 border-b border-[var(--color-border)] mb-6">
+              <div className="flex items-center gap-2 text-lg font-bold text-[var(--color-text)] font-manrope">
+                <span className="p-2 bg-purple-500/10 text-[#7C3AED] rounded-xl"><Layers className="w-5 h-5" /></span>
+                พบข้อมูล 2 รายการซ้ำกัน (#{multipleMatches[0]?.requestid})
+              </div>
+              <button 
+                onClick={() => setMultipleMatches(null)}
+                className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-bold text-sm px-2.5 py-1 rounded-full bg-[var(--color-surface)] cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-[var(--color-text-muted)] mb-6 leading-relaxed">
+              เนื่องจากรหัสหมายเลข <span className="font-bold text-[#7C3AED]">#{multipleMatches[0]?.requestid}</span> มีบันทึกอยู่ทั้งในระบบเรียกรถของผู้ใช้บริการ และระบบพาร์ทเนอร์ร้านค้า กรุณาเลือกรายการที่คุณต้องการติดตาม:
+            </p>
+
+            <div className="flex flex-col gap-4 mb-6">
+              {multipleMatches.map((item, idx) => {
+                const isUser = item.requestType === 'user'
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      const reqId = item.requestid
+                      setMultipleMatches(null)
+                      if (isUser) {
+                        router.push(`/trip?id=${reqId}`)
+                      } else {
+                        router.push(`/tracking?id=${reqId}`)
+                      }
+                    }}
+                    className={`p-4 rounded-2xl border text-left transition-all hover:scale-[1.01] flex items-center justify-between gap-4 cursor-pointer shadow-sm ${
+                      isUser 
+                        ? 'bg-purple-500/5 border-purple-500/30 hover:border-purple-500 hover:bg-purple-500/10'
+                        : 'bg-blue-500/5 border-blue-500/30 hover:border-blue-500 hover:bg-blue-500/10'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div className={`p-3 rounded-xl text-white shadow-md ${isUser ? 'bg-gradient-to-r from-purple-600 to-indigo-600' : 'bg-gradient-to-r from-blue-600 to-cyan-600'}`}>
+                        {isUser ? <User className="w-5 h-5" /> : <Shield className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-[var(--color-text)]">
+                          {isUser ? 'รายการของผู้ใช้บริการ (User Trip)' : 'รายการของร้านค้า / ผับ (Pub Order)'}
+                        </div>
+                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5 font-medium">
+                          ลูกค้า: <span className="font-semibold text-[var(--color-text)]">{item.custname || '—'}</span> • สถานะ: <span className="font-semibold text-[#7C3AED]">{item.requeststatus}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <ArrowRight className={`w-5 h-5 ${isUser ? 'text-purple-400' : 'text-blue-400'}`} />
+                  </button>
+                )
+              })}
+            </div>
+
+            <button
+              onClick={() => setMultipleMatches(null)}
+              className="w-full py-3 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] font-bold text-xs rounded-full hover:bg-[var(--color-card-hover)] transition-colors cursor-pointer"
+            >
+              ปิดหน้าต่าง
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <Footer />

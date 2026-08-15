@@ -18,7 +18,12 @@ export default function PubDashboardPage() {
   useEffect(() => {
     const userStr = localStorage.getItem('pub_user')
     if (!userStr) { router.push('/login'); return }
-    setPubUser(JSON.parse(userStr))
+    const parsed = JSON.parse(userStr)
+    if (parsed.regisstatus !== 'approved' && parsed.regisstatus !== 'อนุมัติแล้ว') {
+      router.push('/status')
+      return
+    }
+    setPubUser(parsed)
     localStorage.removeItem('safeseat_request_form')
   }, [router])
 

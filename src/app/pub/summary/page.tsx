@@ -53,6 +53,10 @@ export default function SummaryPage() {
       return
     }
     const user = JSON.parse(userStr)
+    if (user.regisstatus !== 'approved' && user.regisstatus !== 'อนุมัติแล้ว') {
+      router.push('/status')
+      return
+    }
     setPubUser(user)
     fetchRecords(user.username)
   }, [router])

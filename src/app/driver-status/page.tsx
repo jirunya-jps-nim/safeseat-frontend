@@ -18,6 +18,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTheme } from '@/components/ThemeContext'
 
 // ── Shared Components ─────────────────────────────────────────
 import Navbar from '@/components/ui/Navbar'
@@ -63,18 +64,22 @@ function getActiveStep(status: string | undefined): number {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Helper: config สีและข้อความตาม status
+// Helper: config สีและข้อความตาม status (รองรับทั้ง Dark Mode & Light Mode)
 // ─────────────────────────────────────────────────────────────
-function getStatusConfig(status: string | undefined) {
+function getStatusConfig(status: string | undefined, isDark: boolean = true) {
   switch (status) {
     case 'อนุมัติแล้ว':
       return {
         icon: '🎉',
         title: 'ยินดีด้วย! คุณได้รับการอนุมัติแล้ว',
         desc: 'คุณสามารถเริ่มใช้งานระบบ SafeSeat ได้ที่แอปพลิเคชันบนมือถือ',
-        bannerBg: 'rgba(16,185,129,0.12)',
-        bannerBorder: 'rgba(16,185,129,0.35)',
-        titleColor: '#34d399',
+        bannerBg: isDark
+          ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.20) 0%, rgba(5, 150, 105, 0.12) 100%)'
+          : 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
+        bannerBorder: isDark ? 'rgba(52, 211, 153, 0.5)' : '#10B981',
+        iconBg: isDark ? 'rgba(52, 211, 153, 0.25)' : '#D1FAE5',
+        titleColor: isDark ? '#34D399' : '#065F46',
+        descColor: isDark ? '#A7F3D0' : '#047857',
         dotActive: '#10b981',
         dotDone: '#10b981',
         lineDone: '#10b981',
@@ -84,9 +89,13 @@ function getStatusConfig(status: string | undefined) {
         icon: '❌',
         title: 'ขออภัย — คำขอลงทะเบียนไม่ผ่านการพิจารณา',
         desc: 'กรุณาตรวจสอบเอกสารให้ครบถ้วนและถูกต้อง แล้วสมัครใหม่อีกครั้ง หรือติดต่อทีมงาน',
-        bannerBg: 'rgba(239,68,68,0.12)',
-        bannerBorder: 'rgba(239,68,68,0.35)',
-        titleColor: '#f87171',
+        bannerBg: isDark
+          ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.20) 0%, rgba(185, 28, 28, 0.12) 100%)'
+          : 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)',
+        bannerBorder: isDark ? 'rgba(248, 113, 113, 0.5)' : '#EF4444',
+        iconBg: isDark ? 'rgba(248, 113, 113, 0.25)' : '#FEE2E2',
+        titleColor: isDark ? '#F87171' : '#991B1B',
+        descColor: isDark ? '#FCA5A5' : '#B91C1C',
         dotActive: '#ef4444',
         dotDone: '#ef4444',
         lineDone: '#ef4444',
@@ -97,9 +106,13 @@ function getStatusConfig(status: string | undefined) {
         icon: '⏳',
         title: 'อยู่ระหว่างการพิจารณา',
         desc: 'ทีมงานกำลังตรวจสอบเอกสารของคุณ โดยปกติใช้เวลา 1–3 วันทำการ กรุณารอสักครู่',
-        bannerBg: 'rgba(245,158,11,0.12)',
-        bannerBorder: 'rgba(245,158,11,0.35)',
-        titleColor: '#fbbf24',
+        bannerBg: isDark
+          ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.14) 100%)'
+          : 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+        bannerBorder: isDark ? 'rgba(251, 191, 36, 0.5)' : '#F59E0B',
+        iconBg: isDark ? 'rgba(251, 191, 36, 0.25)' : '#FDE68A',
+        titleColor: isDark ? '#FDE047' : '#92400E',
+        descColor: isDark ? '#FEF08A' : '#78350F',
         dotActive: '#f59e0b',
         dotDone: '#6366f1',
         lineDone: '#6366f1',
@@ -198,9 +211,11 @@ export default function StatusPage() {
     }
   }
 
-  // ── Helpers ──────────────────────────────────────────────
+  // ── Theme & Status Config ─────────────────────────────────
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
   const activeStep  = getActiveStep(statusData?.registerstatus)
-  const statusCfg   = getStatusConfig(statusData?.registerstatus)
+  const statusCfg   = getStatusConfig(statusData?.registerstatus, isDark)
 
   // ─────────────────────────────────────────────────────────
   // Render
@@ -236,7 +251,10 @@ export default function StatusPage() {
           <p style={styles.greeting}>
             สวัสดี {loading ? '...' : (statusData?.firstname ? `${statusData.firstname} ${statusData.lastname}` : username)} 👋
           </p>
-          <p style={styles.greetingSub}>
+          <p style={{
+            ...styles.greetingSub,
+            color: isDark ? '#cbd5e1' : '#334155',
+          }}>
             {loading
               ? 'กำลังโหลดข้อมูล...'
               : `@${username} · ตรวจสอบสถานะการสมัครด้านล่าง`}
@@ -252,16 +270,16 @@ export default function StatusPage() {
               const dotBg =
                 isDone    ? statusCfg.dotDone
                 : isActive ? statusCfg.dotActive
-                : 'rgba(51,65,85,0.8)'
-              const dotColor  = isDone || isActive ? '#fff' : '#475569'
+                : isDark ? 'rgba(51,65,85,0.8)' : '#E2E8F0'
+              const dotColor  = isDone || isActive ? '#fff' : (isDark ? '#cbd5e1' : '#64748B')
               const dotBorder = isActive
                 ? `2px solid ${statusCfg.dotActive}`
                 : isDone
                 ? 'none'
-                : '2px solid rgba(71,85,105,0.6)'
+                : `2px solid ${isDark ? 'rgba(71,85,105,0.6)' : '#CBD5E1'}`
 
               // สี line ถัดไป
-              const nextLineBg = activeStep > i ? statusCfg.lineDone : 'rgba(51,65,85,0.6)'
+              const nextLineBg = activeStep > i ? statusCfg.lineDone : (isDark ? 'rgba(51,65,85,0.6)' : '#E2E8F0')
 
               return (
                 <div key={i} style={styles.stepItem}>
@@ -272,7 +290,7 @@ export default function StatusPage() {
                       <div
                         style={{
                           ...styles.stepLine,
-                          backgroundColor: activeStep >= i ? statusCfg.lineDone : 'rgba(51,65,85,0.6)',
+                          backgroundColor: activeStep >= i ? statusCfg.lineDone : (isDark ? 'rgba(51,65,85,0.6)' : '#E2E8F0'),
                         }}
                       />
                     )}
@@ -310,11 +328,11 @@ export default function StatusPage() {
                     style={{
                       ...styles.stepLabel,
                       color: isActive
-                        ? '#0f172a'
+                        ? (isDark ? '#ffffff' : '#0F172A')
                         : isDone
-                        ? '#475569'
-                        : '#94a3b8',
-                      fontWeight: isActive ? 600 : 500,
+                        ? (isDark ? '#a7f3d0' : '#047857')
+                        : (isDark ? '#cbd5e1' : '#475569'),
+                      fontWeight: isActive ? 700 : 500,
                       whiteSpace: 'nowrap',
                     }}
                   >
@@ -361,15 +379,39 @@ export default function StatusPage() {
             <>
               <div style={{
                 ...styles.statusBanner,
-                backgroundColor: statusCfg.bannerBg,
-                borderColor: statusCfg.bannerBorder,
+                background: statusCfg.bannerBg,
+                border: `1px solid ${statusCfg.bannerBorder}`,
+                boxShadow: isDark
+                  ? '0 8px 24px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
+                  : '0 4px 16px rgba(0, 0, 0, 0.05)',
+                borderRadius: 16,
+                padding: '22px 26px',
+                backdropFilter: 'blur(12px)',
+                display: 'flex',
+                gap: 18,
+                alignItems: 'center',
+                marginBottom: '32px', // <--- EXPLICIT MARGIN BETWEEN BANNER AND INFO GRID
               }}>
-                <span style={styles.statusIcon}>{statusCfg.icon}</span>
+                <div style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 14,
+                  backgroundColor: statusCfg.iconBg,
+                  border: `1px solid ${statusCfg.bannerBorder}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 26,
+                  flexShrink: 0,
+                  boxShadow: isDark ? '0 0 16px rgba(245, 158, 11, 0.3)' : 'none',
+                }}>
+                  {statusCfg.icon}
+                </div>
                 <div style={styles.statusTextWrap}>
-                  <div style={{ ...styles.statusTitle, color: statusCfg.titleColor }}>
+                  <div style={{ ...styles.statusTitle, color: statusCfg.titleColor, fontSize: 17, fontWeight: 700, marginBottom: 4 }}>
                     {statusCfg.title}
                   </div>
-                  <div style={{ ...styles.statusDesc, color: statusCfg.titleColor }}>
+                  <div style={{ ...styles.statusDesc, color: statusCfg.descColor, fontSize: 13.5, lineHeight: 1.6, opacity: 1, fontWeight: 500 }}>
                     {statusCfg.desc}
                   </div>
                 </div>
@@ -377,26 +419,63 @@ export default function StatusPage() {
 
               {/* ── Info grid ─────────────────────────────── */}
               <div style={styles.infoGrid}>
-                <div style={styles.infoItem}>
-                  <div style={styles.infoLabel}>ชื่อ - นามสกุล</div>
-                  <div style={styles.infoValue}>{statusData.firstname ? `${statusData.firstname} ${statusData.lastname}` : '—'}</div>
+                <div style={{
+                  ...styles.infoItem,
+                  backgroundColor: isDark ? 'var(--color-surface)' : '#F8FAFC',
+                  border: `1px solid ${isDark ? 'var(--color-border)' : '#E2E8F0'}`,
+                }}>
+                  <div style={{ ...styles.infoLabel, color: isDark ? '#94a3b8' : '#475569' }}>
+                    ชื่อ - นามสกุล
+                  </div>
+                  <div style={{ ...styles.infoValue, color: isDark ? '#ffffff' : '#0F172A' }}>
+                    {statusData.firstname ? `${statusData.firstname} ${statusData.lastname}` : '—'}
+                  </div>
                 </div>
-                <div style={styles.infoItem}>
-                  <div style={styles.infoLabel}>อีเมล</div>
-                  <div style={styles.infoValue}>{statusData.email || '—'}</div>
+                <div style={{
+                  ...styles.infoItem,
+                  backgroundColor: isDark ? 'var(--color-surface)' : '#F8FAFC',
+                  border: `1px solid ${isDark ? 'var(--color-border)' : '#E2E8F0'}`,
+                }}>
+                  <div style={{ ...styles.infoLabel, color: isDark ? '#94a3b8' : '#475569' }}>
+                    อีเมล
+                  </div>
+                  <div style={{ ...styles.infoValue, color: isDark ? '#ffffff' : '#0F172A' }}>
+                    {statusData.email || '—'}
+                  </div>
                 </div>
-                <div style={styles.infoItem}>
-                  <div style={styles.infoLabel}>เบอร์โทรศัพท์</div>
-                  <div style={styles.infoValue}>{statusData.phoneno || '—'}</div>
+                <div style={{
+                  ...styles.infoItem,
+                  backgroundColor: isDark ? 'var(--color-surface)' : '#F8FAFC',
+                  border: `1px solid ${isDark ? 'var(--color-border)' : '#E2E8F0'}`,
+                }}>
+                  <div style={{ ...styles.infoLabel, color: isDark ? '#94a3b8' : '#475569' }}>
+                    เบอร์โทรศัพท์
+                  </div>
+                  <div style={{ ...styles.infoValue, color: isDark ? '#ffffff' : '#0F172A' }}>
+                    {statusData.phoneno || '—'}
+                  </div>
                 </div>
-                <div style={styles.infoItem}>
-                  <div style={styles.infoLabel}>วันที่สมัคร</div>
-                  <div style={styles.infoValue}>
+                <div style={{
+                  ...styles.infoItem,
+                  backgroundColor: isDark ? 'var(--color-surface)' : '#F8FAFC',
+                  border: `1px solid ${isDark ? 'var(--color-border)' : '#E2E8F0'}`,
+                }}>
+                  <div style={{ ...styles.infoLabel, color: isDark ? '#94a3b8' : '#475569' }}>
+                    วันที่สมัคร
+                  </div>
+                  <div style={{ ...styles.infoValue, color: isDark ? '#ffffff' : '#0F172A' }}>
                     {statusData.regisdate ? formatDateThai(statusData.regisdate) : '—'}
                   </div>
                 </div>
-                <div style={{ ...styles.infoItem, gridColumn: '1 / -1' }}>
-                  <div style={styles.infoLabel}>สถานะปัจจุบัน</div>
+                <div style={{
+                  ...styles.infoItem,
+                  gridColumn: '1 / -1',
+                  backgroundColor: isDark ? 'var(--color-surface)' : '#F8FAFC',
+                  border: `1px solid ${isDark ? 'var(--color-border)' : '#E2E8F0'}`,
+                }}>
+                  <div style={{ ...styles.infoLabel, color: isDark ? '#94a3b8' : '#475569' }}>
+                    สถานะปัจจุบัน
+                  </div>
                   <div style={{
                     ...styles.infoValue,
                     color: statusCfg.titleColor,
@@ -415,52 +494,34 @@ export default function StatusPage() {
           )}
 
           {/* ── Action Buttons ───────────────────────────── */}
-          {!loading && (
+          {!loading && (statusData?.registerstatus === 'ปฏิเสธ' || (statusData as any)?.registerstatus === 'rejected') && (
             <div style={{ ...styles.btnRow, justifyContent: 'center', flexWrap: 'wrap', gap: 16 }}>
               <button
-                id="btn-refresh"
-                onClick={() => fetchStatus(username, true)}
-                disabled={refreshing}
+                onClick={() => {
+                  if (statusData) {
+                    const draft = {
+                      firstName: statusData.firstname || '',
+                      lastName: statusData.lastname || '',
+                      email: statusData.email || '',
+                      phoneNo: statusData.phoneno || '',
+                      username: username,
+                    }
+                    localStorage.setItem('driver_draft_form', JSON.stringify(draft))
+                  }
+                  router.push('/register/driver')
+                }}
                 style={{
                   ...styles.refreshBtn,
-                  opacity: refreshing ? 0.75 : 1,
-                  cursor: refreshing ? 'not-allowed' : 'pointer',
+                  background: 'linear-gradient(135deg, #7C3AED, #1D4ED8)',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontWeight: 700,
                   whiteSpace: 'nowrap',
                   padding: '12px 24px',
                 }}
               >
-                {refreshing && <span style={styles.spinner} />}
-                {refreshing ? 'กำลังโหลด...' : '🔄 รีเฟรช'}
+                ✏️ แก้ไขข้อมูลและยื่นสมัครใหม่
               </button>
-
-              {(statusData?.registerstatus === 'ปฏิเสธ' || (statusData as any)?.registerstatus === 'rejected') && (
-                <button
-                  onClick={() => {
-                    if (statusData) {
-                      const draft = {
-                        firstName: statusData.firstname || '',
-                        lastName: statusData.lastname || '',
-                        email: statusData.email || '',
-                        phoneNo: statusData.phoneno || '',
-                        username: username,
-                      }
-                      localStorage.setItem('driver_draft_form', JSON.stringify(draft))
-                    }
-                    router.push('/register/driver')
-                  }}
-                  style={{
-                    ...styles.refreshBtn,
-                    background: 'linear-gradient(135deg, #7C3AED, #1D4ED8)',
-                    color: '#ffffff',
-                    border: 'none',
-                    fontWeight: 700,
-                    whiteSpace: 'nowrap',
-                    padding: '12px 24px',
-                  }}
-                >
-                  ✏️ แก้ไขข้อมูลและยื่นสมัครใหม่
-                </button>
-              )}
             </div>
           )}
 

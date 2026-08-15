@@ -10,7 +10,7 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     minHeight: '100vh',
     backgroundColor: 'var(--color-bg)',
     color: 'var(--color-text)',
-    fontFamily: "'Inter', sans-serif",
+    fontFamily: "'Inter', 'Kanit', sans-serif",
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
@@ -79,6 +79,7 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     width: 'fit-content',
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
+    fontFamily: "'Manrope', 'Kanit', sans-serif",
   },
   heroTitle: {
     color: '#ffffff',
@@ -86,7 +87,7 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     lineHeight: 1.2,
     margin: '0 0 10px',
-    fontFamily: "'Manrope', sans-serif",
+    fontFamily: "'Manrope', 'Kanit', sans-serif",
     letterSpacing: '-0.03em',
   },
   heroDesc: {
@@ -95,6 +96,7 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     lineHeight: 1.65,
     margin: '0 0 24px',
     fontWeight: 400,
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
   heroStats: {
     display: 'flex',
@@ -117,12 +119,13 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     fontSize: '18px',
     fontWeight: 700,
     lineHeight: 1.2,
-    fontFamily: "'Manrope', sans-serif",
+    fontFamily: "'Manrope', 'Kanit', sans-serif",
   },
   statLabel: {
     color: 'rgba(255,255,255,0.60)',
     fontSize: '11px',
     fontWeight: 500,
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
   statDivider: {
     width: '1px',
@@ -171,7 +174,7 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     color: 'var(--color-text)',
     margin: '0 0 4px',
-    fontFamily: "'Manrope', sans-serif",
+    fontFamily: "'Manrope', 'Kanit', sans-serif",
     letterSpacing: '-0.03em',
   },
   formSubtitle: {
@@ -179,6 +182,7 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     color: 'var(--color-text-muted)',
     margin: 0,
     fontWeight: 500,
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
   // ── Role Toggle ──
@@ -208,7 +212,7 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     gap: '5px',
     whiteSpace: 'nowrap',
-    fontFamily: "'Inter', sans-serif",
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
   roleBtnActive: {
     backgroundImage: 'linear-gradient(135deg, #7C3AED 0%, #1D4ED8 100%)',
@@ -229,6 +233,7 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     marginBottom: '6px',
     letterSpacing: '0.06em',
     textTransform: 'uppercase',
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
   inputWrapper: {
     position: 'relative',
@@ -255,7 +260,7 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     boxSizing: 'border-box',
     transition: 'border-color 0.18s',
     lineHeight: 1.5,
-    fontFamily: "'Inter', sans-serif",
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
   eyeBtn: {
     position: 'absolute',
@@ -284,6 +289,7 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     gap: '8px',
     lineHeight: 1.5,
     fontWeight: 500,
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
   // ── Submit ──
@@ -305,7 +311,7 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     gap: '8px',
     transition: 'all 0.2s ease',
     marginBottom: '18px',
-    fontFamily: "'Inter', sans-serif",
+    fontFamily: "'Inter', 'Kanit', sans-serif",
     boxShadow: '0 4px 15px rgba(124, 58, 237, 0.4)',
   },
   spinner: {
@@ -335,6 +341,7 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     color: 'var(--color-text-muted)',
     fontWeight: 700,
     letterSpacing: '0.08em',
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
   // ── Register Link ──
@@ -343,12 +350,14 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     fontSize: '13.5px',
     color: 'var(--color-text-muted)',
     margin: '0 0 16px',
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
   registerLink: {
     color: '#7C3AED',
     cursor: 'pointer',
     fontWeight: 700,
     textDecoration: 'underline',
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
   // ── Trust Badge ──
@@ -361,5 +370,6 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     borderRadius: '10px',
     padding: '8px 12px',
     fontWeight: 500,
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 }

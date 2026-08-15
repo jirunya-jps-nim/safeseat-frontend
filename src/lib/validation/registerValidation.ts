@@ -44,10 +44,9 @@ export function validateStep1(
     return false
   }
 
-  // Rule 4: รูปแบบอีเมลต้องถูกต้อง (มี @ และ . )
-  // [^\s@]+ = ตัวอักษรที่ไม่ใช่ space หรือ @
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.pubEmail)) {
-    setError('รูปแบบอีเมลไม่ถูกต้อง')
+  // Rule 4: รูปแบบอีเมลต้องถูกต้อง (ตัวพิมพ์เล็กภาษาอังกฤษ ตัวเลข และห้ามมีอักษรพิเศษอื่นนอกจาก _ .)
+  if (!/^[a-z0-9_.]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(form.pubEmail)) {
+    setError('อีเมลต้องเป็นรูปแบบมาตรฐานสากลเท่านั้น')
     return false
   }
 
@@ -95,9 +94,9 @@ export function validateStep2(
     return false
   }
 
-  // Rule 5: เลขที่บัญชีต้องเป็นตัวเลข 1-150 หลัก
-  if (!form.bankAccountNo.trim() || !/^[0-9]{1,150}$/.test(form.bankAccountNo)) {
-    setError('เลขที่บัญชีต้องเป็นตัวเลขเท่านั้น และมีความยาว 1–150 ตัวอักษร')
+  // Rule 5: เลขที่บัญชีต้องเป็นตัวเลข 10-12 หลัก
+  if (!form.bankAccountNo.trim() || !/^[0-9]{10,12}$/.test(form.bankAccountNo)) {
+    setError('เลขที่บัญชีต้องเป็นตัวเลข 10–12 หลักเท่านั้น')
     return false
   }
 

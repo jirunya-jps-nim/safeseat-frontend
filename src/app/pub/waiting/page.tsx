@@ -14,10 +14,7 @@ import { Car, Copy, Check, RefreshCw, AlertTriangle, FileText } from 'lucide-rea
 
 const encodeId = (id: number | string | undefined) => {
   if (!id) return '';
-  const offset = 100000000;
-  const num = Number(id);
-  if (isNaN(num)) return String(id);
-  return (offset + num).toString(36).toUpperCase();
+  return String(id);
 };
 
 function WaitingContent() {
@@ -83,7 +80,7 @@ function WaitingContent() {
         const res = await api.get(`/pub/service-request/${requestId}`)
         if (res.data.success) {
           const req = res.data.data
-          if (req.requeststatus === 'กำลังไปรับ' || req.requeststatus === 'accepted' || req.driverid) {
+          if (req.requeststatus === 'กำลังไปรับ' || req.requeststatus === 'accepted' || req.driverid || req.buddy_team_id) {
             router.push(`/pub/tracking?id=${trackingParam}`)
           } else if (
             req.requeststatus === 'ปฏิเสธ' ||
@@ -92,7 +89,7 @@ function WaitingContent() {
             req.requeststatus === 'ยกเลิก'
           ) {
             // เมื่อคนขับกดปฏิเสธ ทำการยกเลิกการค้นหาและให้ผู้ใช้ลองเรียกใหม่ทันที
-            handleCancelSearch(req, 'คนขับได้ปฏิเสธรายการเรียกรถ กรุณาตรวจสอบข้อมูลแล้วลองเรียกรถใหม่อีกครั้ง')
+            handleCancelSearch(req, 'คนขับได้ปฏิเสธรายการเรียกรถ กรุณาให้ผู้ใช้เรียกใช้บริการใหม่อีกครั้ง')
           }
         }
       } catch (err) {
@@ -227,7 +224,7 @@ function WaitingContent() {
               <div className="p-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col gap-4">
                 <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-3">
                   <span className="text-sm font-bold text-[var(--color-text)] flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#7C3AED]" /> สรุปข้อมูลการเรียกรถ
+                    <FileText className="w-4 h-4 text-[#7C3AED]" /> สรุปข้อมูลการเรียกรถ <span className="text-xs font-mono font-bold text-[#7C3AED] px-2 py-0.5 rounded bg-[#7C3AED]/10 font-mono">#{reqData.requestid || requestId}</span>
                   </span>
                   {reqData.isladymode && (
                     <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-400">

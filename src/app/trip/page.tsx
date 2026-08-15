@@ -23,6 +23,30 @@ function TripTrackingContent() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
   const [shareUrl, setShareUrl] = useState('')
+  const prevStatusRef = React.useRef<string | null>(null)
+
+  useEffect(() => {
+    if (reqData && reqData.requeststatus) {
+      const currentStatus = reqData.requeststatus
+      if (prevStatusRef.current && prevStatusRef.current !== currentStatus) {
+        // เมื่อมีการเปลี่ยนสถานะ ให้รีเฟรชหน้าจอทันทีเพื่ออัปเดตสถานะการทำงานสดใหม่
+        window.location.reload()
+        return
+      }
+      prevStatusRef.current = currentStatus
+    }
+  }, [reqData])
+
+  const getNumericId = (rawId: string | null) => {
+    if (!rawId) return null;
+    const clean = rawId.replace('#', '').trim().toLowerCase();
+    if (clean.startsWith('u') || clean.startsWith('p')) {
+      return clean.substring(1);
+    }
+    return clean;
+  };
+
+  const numericId = getNumericId(requestId);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && requestId) {
@@ -31,9 +55,9 @@ function TripTrackingContent() {
   }, [requestId])
 
   const fetchTripData = async () => {
-    if (!requestId) return
+    if (!numericId) return
     try {
-      const res = await api.get(`/user/request/${requestId}`)
+      const res = await api.get(`/user/request/${numericId}`)
       if (res.data && res.data.request) {
         setReqData(res.data.request)
         setError('')
@@ -49,7 +73,7 @@ function TripTrackingContent() {
   }
 
   useEffect(() => {
-    if (!requestId) {
+    if (!numericId) {
       setError('กรุณาระบุรหัสการเดินทาง (id)')
       setLoading(false)
       return
@@ -216,10 +240,14 @@ function TripTrackingContent() {
         <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col gap-8">
           
           {/* Metadata Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 border-b border-[var(--color-border)] pb-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 border-b border-[var(--color-border)] pb-6">
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">รหัสการเรียก</span>
               <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">#{requestid}</span>
+            </div>
+            <div>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ผู้ใช้บริการ</span>
+              <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">{reqData?.custname || 'ผู้ใช้บริการ SafeSeat'}</span>
             </div>
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ระยะทาง</span>

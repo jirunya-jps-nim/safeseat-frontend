@@ -66,6 +66,8 @@ function LoginContent() {
       if (role === 'pub') {
         const res = await api.post('/pub/login', form)
         const userData = res.data.data
+        const token = res.data.token || userData?.token
+        if (token) localStorage.setItem('token', token)
         localStorage.setItem('pub_user', JSON.stringify(userData))
         setForm({ username: '', password: '' })
 
@@ -77,6 +79,8 @@ function LoginContent() {
       } else if (role === 'driver') {
         const res = await api.post('/auth/login', form)
         const userData = res.data
+        const token = res.data.token || userData?.token
+        if (token) localStorage.setItem('token', token)
         localStorage.setItem('driver_user', JSON.stringify(userData))
         setForm({ username: '', password: '' })
 
@@ -88,6 +92,8 @@ function LoginContent() {
       } else if (role === 'admin') {
         const res = await api.post('/admin/login', form)
         const userData = res.data.data
+        const token = res.data.token
+        if (token) localStorage.setItem('token', token)
         localStorage.setItem('admin_user', JSON.stringify(userData))
         setForm({ username: '', password: '' })
         router.push('/admin/dashboard')

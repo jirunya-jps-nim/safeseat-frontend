@@ -12,7 +12,7 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     minHeight: '100vh',
     backgroundColor: 'var(--color-bg)',
     color: 'var(--color-text)',
-    fontFamily: "'Inter', sans-serif",
+    fontFamily: "'Inter', 'Kanit', sans-serif",
     display: 'flex',
     flexDirection: 'column',
     position: 'relative',
@@ -84,6 +84,7 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     width: 'fit-content',
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
+    fontFamily: "'Manrope', 'Kanit', sans-serif",
   },
   heroTitle: {
     color: '#ffffff',
@@ -91,7 +92,7 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     lineHeight: 1.25,
     margin: '0 0 10px',
-    fontFamily: "'Manrope', sans-serif",
+    fontFamily: "'Manrope', 'Kanit', sans-serif",
     letterSpacing: '-0.03em',
   },
   heroDesc: {
@@ -99,6 +100,7 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     fontSize: '13.5px',
     lineHeight: 1.65,
     margin: '0 0 24px',
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
   heroSteps: {
     display: 'flex',
@@ -131,6 +133,7 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     lineHeight: 1.3,
     color: '#ffffff',
     fontWeight: 700,
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
   heroStepNum: {
     fontSize: '10.5px',
@@ -179,7 +182,7 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     color: '#7C3AED',
   },
   formTitle: {
-    fontFamily: "'Manrope', sans-serif",
+    fontFamily: "'Manrope', 'Kanit', sans-serif",
     fontSize: '24px',
     fontWeight: 700,
     color: 'var(--color-text)',
@@ -190,6 +193,7 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     fontSize: '13px',
     color: 'var(--color-text-muted)',
     margin: 0,
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
   // ── Progress Bar ──────────────────────────────────────────────
@@ -222,7 +226,7 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     marginBottom: 0,
     transition: 'border-color 0.15s',
     lineHeight: 1.5,
-    fontFamily: "'Inter', sans-serif",
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
   // ── Feedback ─────────────────────────────────────────────────
@@ -236,6 +240,7 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     marginBottom: '14px',
     lineHeight: 1.5,
     fontWeight: 500,
+    fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
   // ── Navigation Buttons ────────────────────────────────────────
@@ -255,7 +260,7 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     fontSize: '13px',
     fontWeight: 700,
-    fontFamily: "'Inter', sans-serif",
+    fontFamily: "'Inter', 'Kanit', sans-serif",
     transition: 'all 0.15s',
   },
   nextBtn: {
@@ -270,7 +275,7 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     fontSize: '13px',
     fontWeight: 700,
     letterSpacing: '0.06em',
-    fontFamily: "'Inter', sans-serif",
+    fontFamily: "'Inter', 'Kanit', sans-serif",
     transition: 'all 0.2s ease',
     boxShadow: '0 4px 15px rgba(124, 58, 237, 0.4)',
   },

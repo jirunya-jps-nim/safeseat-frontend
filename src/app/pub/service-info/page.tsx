@@ -44,38 +44,51 @@ export default function ServiceInfoPage() {
     const userStr = localStorage.getItem('pub_user')
     if (!userStr) { router.push('/login'); return }
     const user = JSON.parse(userStr)
+    if (user.regisstatus !== 'approved' && user.regisstatus !== 'อนุมัติแล้ว') {
+      router.push('/status')
+      return
+    }
     setPubUser(user)
-    fetchRecords(user.username)
+    fetchRecords(user.username, true)
+
+    const interval = setInterval(() => {
+      fetchRecords(user.username, false)
+    }, 5000)
+    return () => clearInterval(interval)
   }, [router])
 
-  const fetchRecords = async (username: string) => {
-    setLoading(true); setError('')
+  const fetchRecords = async (username: string, showSpinner = true) => {
+    if (showSpinner) setLoading(true)
+    setError('')
     try {
       const res = await api.get(`/pub/service-info/${username}`)
       if (res.data.success) setRecords(res.data.data || [])
       else setError(res.data.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล')
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'ไม่สามารถโหลดข้อมูลได้')
-    } finally { setLoading(false) }
+      if (showSpinner) setError(err.response?.data?.message || err.message || 'ไม่สามารถโหลดข้อมูลได้')
+    } finally { 
+      if (showSpinner) setLoading(false) 
+    }
   }
 
-  const statusConfig: { [k: string]: { label: string; color: string; bg: string } } = {
-    pending:   { label: 'รอรับงาน', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30' },
-    accepted:  { label: 'กำลังเดินทาง', color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/30' },
-    completed: { label: 'เสร็จสิ้น', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30' },
-    cancelled: { label: 'ยกเลิก', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30' },
-    'รอคนขับ': { label: 'รอรับงาน', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30' },
-    'กำลังไปรับ': { label: 'กำลังไปรับ', color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/30' },
-    'ถึงจุดรับแล้ว': { label: 'ถึงจุดรับแล้ว', color: 'text-[#7C3AED]', bg: 'bg-[#7C3AED]/10 border-[#7C3AED]/30' },
-    'ระหว่างเดินทาง': { label: 'ระหว่างเดินทาง', color: 'text-cyan-500', bg: 'bg-cyan-500/10 border-cyan-500/30' },
-    'เสร็จสิ้น': { label: 'เสร็จสิ้น', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30' },
-    'ยกเลิก': { label: 'ยกเลิก', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30' },
+  const statusConfig: { [k: string]: { label: string; color: string; bg: string; step: number } } = {
+    pending:          { label: 'รอรับงาน', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', step: 0 },
+    'รอคนขับ':        { label: 'รอรับงาน', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', step: 0 },
+    accepted:         { label: 'คนขับรับงาน', color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/30', step: 1 },
+    'กำลังไปรับ':     { label: 'คนขับรับงาน', color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/30', step: 1 },
+    'ถึงจุดรับแล้ว':   { label: 'ถึงจุดรับ', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/30', step: 2 },
+    'ระหว่างเดินทาง': { label: 'กำลังเดินทาง', color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/30', step: 3 },
+    completed:        { label: 'ถึงจุดหมายปลายทาง', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', step: 4 },
+    'เสร็จสิ้น':       { label: 'ถึงจุดหมายปลายทาง', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', step: 4 },
+    cancelled:        { label: 'ยกเลิก', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', step: -1 },
+    'ยกเลิก':         { label: 'ยกเลิก', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', step: -1 },
+    'ปฏิเสธ':         { label: 'ปฏิเสธ/เรียกรถใหม่', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', step: -1 },
   }
 
   const getStatus = (status: string) => {
-    if (!status) return { label: 'รอรับงาน', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30' }
+    if (!status) return { label: 'รอรับงาน', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', step: 0 }
     const s = status.toLowerCase()
-    return statusConfig[status] || statusConfig[s] || { label: status, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30' }
+    return statusConfig[status] || statusConfig[s] || { label: status, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', step: 0 }
   }
 
   const paymentLabel = (m: number) => m === 1 ? '💵 เงินสด' : '📲 โอนเงิน'
@@ -105,15 +118,36 @@ export default function ServiceInfoPage() {
     return cancelledStatuses.includes(s) || cancelledStatuses.includes(status)
   }
 
-  const filtered = records.filter(r => {
-    const matchSearch = !searchQuery || r.custname?.toLowerCase().includes(searchQuery.toLowerCase()) || r.phoneno?.includes(searchQuery)
-    let matchStatus = false
-    if (statusFilter === 'all') matchStatus = true
-    else if (statusFilter === 'pending') matchStatus = isPending(r.requeststatus)
-    else if (statusFilter === 'completed') matchStatus = isCompleted(r.requeststatus)
-    else if (statusFilter === 'cancelled') matchStatus = isCancelled(r.requeststatus)
-    return matchSearch && matchStatus
-  })
+  const getPriorityRank = (status: string) => {
+    if (!status) return 1
+    const s = status.toLowerCase()
+    if (s === 'รอคนขับ' || s === 'pending') return 1 // 🥇 Rank 1: รอรับงานเท่านั้น อยู่บนสุด
+    if (['กำลังไปรับ', 'ถึงจุดรับแล้ว', 'ระหว่างเดินทาง', 'accepted', 'คนขับรับงาน'].includes(s) || ['กำลังไปรับ', 'ถึงจุดรับแล้ว', 'ระหว่างเดินทาง', 'accepted', 'คนขับรับงาน'].includes(status)) {
+      return 2 // 🥈 Rank 2: กำลังดำเนินการ (คนขับรับงานแล้ว)
+    }
+    return 3 // 🥉 Rank 3: เสร็จสิ้น / ยกเลิก
+  }
+
+  const filtered = records
+    .filter(r => {
+      const matchSearch = !searchQuery || r.custname?.toLowerCase().includes(searchQuery.toLowerCase()) || r.phoneno?.includes(searchQuery)
+      let matchStatus = false
+      if (statusFilter === 'all') matchStatus = true
+      else if (statusFilter === 'pending') matchStatus = isPending(r.requeststatus)
+      else if (statusFilter === 'completed') matchStatus = isCompleted(r.requeststatus)
+      else if (statusFilter === 'cancelled') matchStatus = isCancelled(r.requeststatus)
+      return matchSearch && matchStatus
+    })
+    .sort((a, b) => {
+      const aRank = getPriorityRank(a.requeststatus)
+      const bRank = getPriorityRank(b.requeststatus)
+      if (aRank !== bRank) {
+        return aRank - bRank // 1 (รอรับงาน) -> 2 (กำลังดำเนินการ) -> 3 (เสร็จสิ้น/ยกเลิก)
+      }
+      const aId = Number(a.requestid || a.requestId || 0)
+      const bId = Number(b.requestid || b.requestId || 0)
+      return bId - aId // เรียงตาม ID ล่าสุดจากมากไปน้อย
+    })
 
   const counts = {
     all: records.length,
@@ -286,9 +320,19 @@ export default function ServiceInfoPage() {
                       <td className="p-4 font-semibold">{paymentLabel(item.paymentmethod)}</td>
                       <td className="p-4">
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${st.bg} ${st.color}`}>
-                          <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
                           {st.label}
                         </span>
+                        {st.step > 0 && (
+                          <div className="flex items-center gap-1 mt-2 w-28" title={`สถานะการเดินทาง: ขั้นที่ ${st.step}/4 (${st.label})`}>
+                            {[1, 2, 3, 4].map(sNum => (
+                              <div 
+                                key={sNum} 
+                                className={`h-1.5 flex-1 rounded-full transition-colors ${sNum <= st.step ? 'bg-[#7C3AED]' : 'bg-[var(--color-border)]'}`}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2">

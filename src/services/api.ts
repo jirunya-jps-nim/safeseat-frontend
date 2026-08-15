@@ -18,6 +18,20 @@ const getBaseURL = () => {
 
 const api = axios.create({
   baseURL: getBaseURL(),
+  validateStatus: (status) => status < 500, // Handle 4xx responses (404, 400) gracefully in components without uncaught Axios errors
 })
+
+// Attach Bearer Token automatically if stored in localStorage
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token') || localStorage.getItem('safeseat_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
 
 export default api

@@ -19,9 +19,8 @@ export default function AdminLayout({
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&display=swap');
 
-        /* Reset ทุก element ใน admin section ให้ใช้ Kanit */
+        /* Standardize layout sizing */
         *, *::before, *::after {
-          font-family: 'Kanit', sans-serif !important;
           box-sizing: border-box;
         }
 

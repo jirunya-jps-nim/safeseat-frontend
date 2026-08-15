@@ -20,10 +20,7 @@ type Step = 1 | 2 | 3 | 4
 
 const encodeId = (id: number | string | undefined) => {
   if (!id) return '';
-  const offset = 100000000;
-  const num = Number(id);
-  if (isNaN(num)) return String(id);
-  return (offset + num).toString(36).toUpperCase();
+  return 'P' + id;
 };
 
 function RequestDriverContent() {
@@ -47,6 +44,7 @@ function RequestDriverContent() {
   const [phoneNo, setPhoneNo] = useState('')
   const [phoneEmer, setPhoneEmer] = useState('')
   const [carType, setCarType] = useState('Autometric')
+  const [carBrand, setCarBrand] = useState('')
   const [carModel, setCarModel] = useState('')
   const [licensePlate, setLicensePlate] = useState('')
   const [note, setNote] = useState('')
@@ -76,7 +74,12 @@ function RequestDriverContent() {
   useEffect(() => {
     const userStr = localStorage.getItem('pub_user')
     if (!userStr) { router.push('/login'); return }
-    setPubUser(JSON.parse(userStr))
+    const parsed = JSON.parse(userStr)
+    if (parsed.regisstatus !== 'approved' && parsed.regisstatus !== 'อนุมัติแล้ว') {
+      router.push('/status')
+      return
+    }
+    setPubUser(parsed)
   }, [router])
 
   useEffect(() => {
@@ -89,6 +92,7 @@ function RequestDriverContent() {
           if (parsed.phoneNo) setPhoneNo(parsed.phoneNo)
           if (parsed.phoneEmer) setPhoneEmer(parsed.phoneEmer)
           if (parsed.carType) setCarType(parsed.carType)
+          if (parsed.carBrand) setCarBrand(parsed.carBrand)
           if (parsed.carModel) setCarModel(parsed.carModel)
           if (parsed.licensePlate) setLicensePlate(parsed.licensePlate)
           if (parsed.note) setNote(parsed.note)
@@ -110,6 +114,7 @@ function RequestDriverContent() {
         phoneNo,
         phoneEmer,
         carType,
+        carBrand,
         carModel,
         licensePlate,
         note,
@@ -119,7 +124,7 @@ function RequestDriverContent() {
       }
       localStorage.setItem('safeseat_request_form', JSON.stringify(formData))
     }
-  }, [isFormLoaded, custName, phoneNo, phoneEmer, carType, carModel, licensePlate, note, isLadyMode, paymentMethod, destination])
+  }, [isFormLoaded, custName, phoneNo, phoneEmer, carType, carBrand, carModel, licensePlate, note, isLadyMode, paymentMethod, destination])
 
   const pubName = pubUser?.pubname || pubUser?.username || 'PUB'
   const pickupLat = parseFloat(pubUser?.pubaddresslat || '18.7883')
@@ -187,6 +192,7 @@ function RequestDriverContent() {
     if (!phoneNo.trim() || phoneNo.length !== 10) return 'กรุณากรอกเบอร์โทรศัพท์ 10 หลัก'
     if (!phoneEmer.trim() || phoneEmer.length !== 10) return 'กรุณากรอกเบอร์โทรฉุกเฉิน 10 หลัก'
     if (phoneNo.trim() === phoneEmer.trim()) return 'เบอร์โทรศัพท์ของลูกค้าและเบอร์โทรฉุกเฉินต้องห้ามซ้ำกัน'
+    if (!carBrand.trim()) return 'กรุณากรอกยี่ห้อรถยนต์ของลูกค้า'
     if (!carModel.trim()) return 'กรุณากรอกรุ่นรถยนต์ของลูกค้า'
     if (!licensePlate.trim()) return 'กรุณากรอกทะเบียนรถยนต์ของลูกค้า'
     return ''
@@ -208,12 +214,13 @@ function RequestDriverContent() {
 
   const handleSubmit = async (simulatedPaymentStatus?: 'paid' | 'unpaid') => {
     setLoading(true); setError('')
+    const fullCarModel = `${carBrand.trim()} ${carModel.trim()}`.trim()
     try {
       const res = await api.post('/pub/request-driver', {
         pubUsername: pubUser.username,
         custName, phoneNo, phoneEmer,
         carType,
-        carModel,
+        carModel: fullCarModel,
         licensePlate,
         isLadyMode,
         note,
@@ -317,6 +324,19 @@ function RequestDriverContent() {
           {step === 1 && (
             <div className="flex flex-col gap-6">
               <h2 className="text-xl font-bold font-manrope text-[var(--color-text)]">กรุณากรอกข้อมูลส่วนตัวของลูกค้า</h2>
+
+              {rejectNotice && (
+                <div className="p-4 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-500 text-sm font-semibold flex items-center justify-between shadow-md animate-fade-in">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">⚠️</span>
+                    <span>{rejectNotice}</span>
+                  </div>
+                  <button type="button" onClick={() => setRejectNotice('')} className="text-xs text-amber-400 hover:underline ml-2 cursor-pointer font-bold">
+                    ปิด
+                  </button>
+                </div>
+              )}
+
               {error && <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-semibold">{error}</div>}
 
               <div className="flex flex-col gap-2">
@@ -352,14 +372,23 @@ function RequestDriverContent() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text)]">ยี่ห้อ / รุ่นรถยนต์ *</label>
+                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text)]">ยี่ห้อรถยนต์ *</label>
+                  <input 
+                    value={carBrand} 
+                    onChange={e => setCarBrand(e.target.value)}
+                    className="w-full px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:outline-none focus:border-[#7C3AED] transition-colors"
+                    placeholder="เช่น Honda, Toyota, BYD" 
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text)]">รุ่นรถยนต์ *</label>
                   <input 
                     value={carModel} 
                     onChange={e => setCarModel(e.target.value)}
                     className="w-full px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:outline-none focus:border-[#7C3AED] transition-colors"
-                    placeholder="เช่น Honda Civic / BYD Atto 3" 
+                    placeholder="เช่น Civic, Camry, Atto 3" 
                   />
                 </div>
                 <div className="flex flex-col gap-2">

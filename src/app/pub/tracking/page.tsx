@@ -16,30 +16,23 @@ import { Car, Phone, Copy, Check, Clock, ShieldCheck, MapPin, RefreshCw, AlertCi
 const RouteMap = dynamic(() => import('@/components/ui/RouteMap'), { ssr: false })
 
 const decodeId = (input: string) => {
-  const clean = input.replace('#', '').trim();
+  const clean = input.replace('#', '').trim().toLowerCase();
   if (!clean) return null;
-  if (/^\d+$/.test(clean) && clean.length < 6) {
-    return parseInt(clean, 10);
+  if (clean.startsWith('p') || clean.startsWith('u')) {
+    const num = parseInt(clean.substring(1), 10);
+    if (!isNaN(num)) return num;
   }
-  const offset = 100000000;
-  const num = parseInt(clean.toLowerCase(), 36);
-  if (isNaN(num)) return null;
-  const decoded = num - offset;
-  return decoded > 0 ? decoded : null;
+  const num = parseInt(clean, 10);
+  if (!isNaN(num)) return num;
+  return null;
 };
 
 function TrackingContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const trackingParam = searchParams.get('id')
-  const requestId = (() => {
-    if (!trackingParam) return null;
-    if (/^\d+$/.test(trackingParam)) {
-      return parseInt(trackingParam, 10);
-    }
-    return decodeId(trackingParam);
-  })();
-  const alphaCode = requestId ? String(requestId) : ''
+  const requestId = trackingParam ? decodeId(trackingParam) : null;
+  const alphaCode = trackingParam || ''
 
   const [reqData, setReqData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -49,6 +42,31 @@ function TrackingContent() {
   const [trackingUrl, setTrackingUrl] = useState('')
   const [isPubLoggedIn, setIsPubLoggedIn] = useState(false)
   const [isRequestTimeout, setIsRequestTimeout] = useState(false)
+  const prevStatusRef = React.useRef<string | null>(null)
+
+  useEffect(() => {
+    if (reqData && reqData.requeststatus) {
+      const currentStatus = reqData.requeststatus
+      if (prevStatusRef.current && prevStatusRef.current !== currentStatus) {
+        // เมื่อมีการเปลี่ยนสถานะ ให้รีเฟรชหน้าจอทันทีเพื่ออัปเดตสถานะการทำงานสดใหม่
+        window.location.reload()
+        return
+      }
+      prevStatusRef.current = currentStatus
+
+      if (
+        currentStatus === 'ปฏิเสธ' ||
+        currentStatus === 'rejected' ||
+        currentStatus === 'cancelled' ||
+        currentStatus === 'ยกเลิก'
+      ) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('safeseat_reject_notice', 'รายการเรียกรถถูกยกเลิกหรือปฏิเสธ กรุณาเริ่มเรียกรถใหม่อีกครั้ง')
+        }
+        router.push('/pub/request-driver?step=1')
+      }
+    }
+  }, [reqData, router])
 
   useEffect(() => {
     if (!reqData || reqData.requeststatus !== 'รอคนขับ') {
@@ -68,10 +86,18 @@ function TrackingContent() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setIsPubLoggedIn(!!localStorage.getItem('pub_user'))
+      const userStr = localStorage.getItem('pub_user')
+      setIsPubLoggedIn(!!userStr)
+      if (userStr) {
+        const parsed = JSON.parse(userStr)
+        if (parsed.regisstatus !== 'approved' && parsed.regisstatus !== 'อนุมัติแล้ว') {
+          router.push('/status')
+          return
+        }
+      }
       localStorage.removeItem('safeseat_request_form')
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
     if (typeof window !== 'undefined' && trackingParam) {
@@ -82,11 +108,12 @@ function TrackingContent() {
   const fetchRequestData = async () => {
     if (!requestId) return
     try {
-      const res = await api.get(`/pub/service-request/${requestId}`)
-      if (res.data.success) {
+      const res = await api.get(`/pub/service-request/${requestId}?type=pub`)
+      if (res.status === 200 && res.data?.success && res.data?.data) {
         setReqData(res.data.data)
+        setError('')
       } else {
-        setError(res.data.message || 'ไม่พบข้อมูลการบริการ')
+        setError(res.data?.message || 'ไม่พบข้อมูลการบริการ')
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'เกิดข้อผิดพลาดในการโหลดข้อมูล')
@@ -187,6 +214,13 @@ function TrackingContent() {
 
   const isCompleted = requeststatus === 'เสร็จสิ้น' || requeststatus === 'completed'
 
+  const stepsList = [
+    { label: 'คนขับรับงาน', step: 1 },
+    { label: 'ถึงจุดรับ', step: 2 },
+    { label: 'กำลังเดินทาง', step: 3 },
+    { label: 'ถึงจุดหมายปลายทาง', step: 4 },
+  ]
+
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
@@ -221,6 +255,23 @@ function TrackingContent() {
         {/* Info Card */}
         <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col gap-8">
           
+          {/* Stepper Progress Bar */}
+          <div className="grid grid-cols-4 gap-3 pb-6 border-b border-[var(--color-border)]">
+            {stepsList.map(s => {
+              const active = currentStep >= s.step
+              return (
+                <div key={s.step} className="flex flex-col items-center gap-2">
+                  <div className={`w-full h-2.5 rounded-full transition-all ${
+                    active ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] shadow-sm' : 'bg-[var(--color-surface)] border border-[var(--color-border)]'
+                  }`} />
+                  <span className={`text-[11px] font-bold text-center ${active ? 'text-[#7C3AED]' : 'text-[var(--color-text-muted)]'}`}>
+                    {s.label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+
           {/* Metadata Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 border-b border-[var(--color-border)] pb-6">
             <div>
@@ -241,7 +292,42 @@ function TrackingContent() {
             </div>
           </div>
 
-          {/* Combined Share Link & QR Code Button */}
+          {/* Partner Pub Info Section */}
+          {(reqData?.pub_id || reqData?.pub) && (
+            <div className="p-5 bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-500/20 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="p-3 bg-blue-500/10 text-blue-500 rounded-xl text-xl font-bold">
+                  🏪
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ร้านค้า / ผับผู้เรียกใช้บริการ</span>
+                  <div className="text-sm font-bold text-[var(--color-text)]">
+                    {reqData?.pub?.pubname || reqData?.pub_id || 'ร้านค้าพาร์ทเนอร์ SafeSeat'}
+                  </div>
+                  {reqData?.pub?.pubemail && (
+                    <div className="text-xs text-[var(--color-text-muted)] mt-0.5 font-mono">
+                      {reqData.pub.pubemail}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {reqData?.pub?.pubphone && (
+                <div className="flex items-center gap-3 border-t sm:border-t-0 sm:border-l border-[var(--color-border)] pt-3 sm:pt-0 sm:pl-6">
+                  <div>
+                    <span className="text-[10px] font-mono text-[var(--color-text-muted)] block">เบอร์โทรศัพท์ร้านค้า</span>
+                    <span className="text-xs font-bold font-mono text-[var(--color-text)]">{reqData.pub.pubphone}</span>
+                  </div>
+                  <a
+                    href={`tel:${reqData.pub.pubphone}`}
+                    className="ml-1 px-3.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 border border-blue-500/30 rounded-full text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    📞 โทรออก
+                  </a>
+                </div>
+              )}
+            </div>
+          )}
           {trackingUrl && (
             <div className="flex justify-end">
               <button

@@ -64,7 +64,7 @@ html.light {
   inherits: false; 
 }
 
-body {
+body, input, button, select, textarea {
   font-family: 'Inter', 'Kanit', sans-serif;
   background-color: var(--color-bg);
   color: var(--color-text);

@@ -42,8 +42,8 @@ function WaitingContent() {
     if (!requestId) return
     const fetchRequestInfo = async () => {
       try {
-        const res = await api.get(`/pub/service-request/${requestId}`)
-        if (res.data.success) {
+        const res = await api.get(`/pub/service-request/${requestId}?type=pub`)
+        if (res.data.success && res.data.data) {
           setReqData(res.data.data)
         }
       } catch (err) {
@@ -77,8 +77,8 @@ function WaitingContent() {
 
     const checkStatus = async () => {
       try {
-        const res = await api.get(`/pub/service-request/${requestId}`)
-        if (res.data.success) {
+        const res = await api.get(`/pub/service-request/${requestId}?type=pub`)
+        if (res.data.success && res.data.data) {
           const req = res.data.data
           if (req.requeststatus === 'กำลังไปรับ' || req.requeststatus === 'accepted' || req.driverid || req.buddy_team_id) {
             router.push(`/pub/tracking?id=${trackingParam}`)

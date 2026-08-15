@@ -158,12 +158,25 @@ function TripTrackingContent() {
   const driver1Name = leader
     ? `คุณ${leader.firstname} ${leader.lastname || ''}`
     : 'ผู้ให้บริการ SafeSeat'
-  const driver1Phone = leader?.phone_no || leader?.phoneno || ''
+  const rawDriver1Phone = leader?.phone_no || leader?.phoneno || ''
 
   const driver2Name = follower
     ? `คุณ${follower.firstname} ${follower.lastname || ''}`
     : 'ผู้ช่วยคนขับ SafeSeat (บัดดี้)'
-  const driver2Phone = follower?.phone_no || follower?.phoneno || ''
+  const rawDriver2Phone = follower?.phone_no || follower?.phoneno || ''
+
+  const getPhoneDisplay = (phone: string) => {
+    if (phone) return phone
+    if (normalizedStatus === 'กำลังค้นหาคนขับ' || normalizedStatus === 'รอคนขับ' || normalizedStatus === 'pending') {
+      return 'กำลังจับคู่คนขับ...'
+    }
+    if (normalizedStatus === 'ยกเลิก' || normalizedStatus === 'cancelled') {
+      return 'คำขอถูกยกเลิกแล้ว'
+    }
+    return 'กำลังจัดทีมคนขับ'
+  }
+  const driver1PhoneDisplay = getPhoneDisplay(rawDriver1Phone)
+  const driver2PhoneDisplay = getPhoneDisplay(rawDriver2Phone)
 
   const isCompleted = normalizedStatus === 'เสร็จสิ้น' || normalizedStatus === 'completed'
 
@@ -282,10 +295,10 @@ function TripTrackingContent() {
           {/* Contact Details Section Grid */}
           <div className="flex flex-col gap-6">
             <h3 className="text-xl font-bold font-manrope text-[var(--color-text)] flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-[#7C3AED]" /> ข้อมูลการติดต่อทีมงานคนขับ & เบอร์ฉุกเฉิน
+              <UserCheck className="w-5 h-5 text-[#7C3AED]" /> ข้อมูลการติดต่อทีมงานคนขับ
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               {/* Driver 1: Leader */}
               <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col justify-between gap-4">
@@ -300,11 +313,11 @@ function TripTrackingContent() {
                 <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3 mt-1">
                   <div>
                     <span className="text-[10px] font-mono text-[var(--color-text-muted)] block">เบอร์โทรติดต่อ</span>
-                    <span className="text-xs font-bold font-mono text-[var(--color-text)]">{driver1Phone || 'ไม่ได้ระบุ'}</span>
+                    <span className="text-xs font-bold font-mono text-[var(--color-text)]">{driver1PhoneDisplay}</span>
                   </div>
-                  {driver1Phone && (
+                  {rawDriver1Phone && (
                     <a 
-                      href={`tel:${driver1Phone}`}
+                      href={`tel:${rawDriver1Phone}`}
                       className="px-4 py-2 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:opacity-90 transition-opacity"
                     >
                       <PhoneCall className="w-3.5 h-3.5" /> โทรหาคนขับ
@@ -326,40 +339,14 @@ function TripTrackingContent() {
                 <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3 mt-1">
                   <div>
                     <span className="text-[10px] font-mono text-[var(--color-text-muted)] block">เบอร์โทรติดต่อ</span>
-                    <span className="text-xs font-bold font-mono text-[var(--color-text)]">{driver2Phone || 'ไม่ได้ระบุ'}</span>
+                    <span className="text-xs font-bold font-mono text-[var(--color-text)]">{driver2PhoneDisplay}</span>
                   </div>
-                  {driver2Phone && (
+                  {rawDriver2Phone && (
                     <a 
-                      href={`tel:${driver2Phone}`}
+                      href={`tel:${rawDriver2Phone}`}
                       className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:opacity-90 transition-opacity"
                     >
                       <PhoneCall className="w-3.5 h-3.5" /> โทรหาบัดดี้
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              {/* Emergency Contact */}
-              <div className="p-5 bg-red-500/10 border border-red-500/30 rounded-2xl flex flex-col justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-red-500/20 rounded-xl text-red-500 text-xl">🚨</div>
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-red-400 block">เบอร์โทรฉุกเฉิน (Emergency Contact)</span>
-                    <div className="text-sm font-bold text-[var(--color-text)]">{phoneemer || phoneno || 'ไม่ได้ระบุ'}</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between border-t border-red-500/20 pt-3 mt-1">
-                  <div>
-                    <span className="text-[10px] font-mono text-[var(--color-text-muted)] block">โทรแจ้งเหตุฉุกเฉิน</span>
-                    <span className="text-xs font-bold font-mono text-red-400">{phoneemer || phoneno || '-'}</span>
-                  </div>
-                  {(phoneemer || phoneno) && (
-                    <a 
-                      href={`tel:${phoneemer || phoneno}`}
-                      className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:bg-red-700 transition-colors"
-                    >
-                      <PhoneCall className="w-3.5 h-3.5" /> โทรเบอร์ฉุกเฉิน
                     </a>
                   )}
                 </div>

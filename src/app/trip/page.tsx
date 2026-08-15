@@ -121,12 +121,6 @@ function TripTrackingContent() {
     follower
   } = reqData
 
-  const driverLat = (buddyteam && buddyteam.currentloclat !== 0 && buddyteam.currentloclat !== null) ? buddyteam.currentloclat : undefined
-  const driverLng = (buddyteam && buddyteam.currentloclng !== 0 && buddyteam.currentloclng !== null) ? buddyteam.currentloclng : undefined
-
-  let statusText = 'กำลังดำเนินการ'
-  let statusBadgeBg = 'bg-[#7C3AED]/15 text-[#7C3AED] border-[#7C3AED]/30'
-
   const normalizedStatus = requeststatus ? requeststatus.trim() : ''
 
   const currentStep = (normalizedStatus === 'กำลังไปรับ') ? 1
@@ -134,6 +128,37 @@ function TripTrackingContent() {
                     : (normalizedStatus === 'กำลังเดินทาง' || normalizedStatus === 'ระหว่างเดินทาง' || normalizedStatus === 'accepted') ? 3
                     : (normalizedStatus === 'เสร็จสิ้น' || normalizedStatus === 'completed') ? 4
                     : 0;
+
+  // Real-time GPS tracking from driver team
+  const realLat = buddyteam?.currentloclat
+  const realLng = buddyteam?.currentloclng
+  const hasRealGps = realLat && realLng && Number(realLat) !== 0 && Number(realLng) !== 0
+
+  let driverLat: number | undefined = undefined
+  let driverLng: number | undefined = undefined
+
+  if (currentStep === 2) {
+    // 📍 ถึงจุดรับ/ร้านค้าแล้ว -> ปักหมุดคนขับที่ตำแหน่งร้านค้า/จุดรับทันที
+    driverLat = pickuplatitude
+    driverLng = pickuplongitude
+  } else if (currentStep === 4) {
+    // 🏁 ถึงจุดหมายปลายทางแล้ว -> ปักหมุดคนขับที่ตำแหน่งจุดส่งทันที
+    driverLat = dropofflatitude
+    driverLng = dropofflongitude
+  } else if (hasRealGps) {
+    // 🛰️ ใช้พิกัด GPS จริงจากคนขับตามเรียลไทม์ระหว่างเดินทาง
+    driverLat = Number(realLat)
+    driverLng = Number(realLng)
+  } else if (currentStep === 1) {
+    driverLat = pickuplatitude ? pickuplatitude + 0.003 : undefined
+    driverLng = pickuplongitude ? pickuplongitude - 0.003 : undefined
+  } else if (currentStep === 3 && pickuplatitude && dropofflatitude) {
+    driverLat = (pickuplatitude + dropofflatitude) / 2
+    driverLng = (pickuplongitude + dropofflongitude) / 2
+  }
+
+  let statusText = 'กำลังดำเนินการ'
+  let statusBadgeBg = 'bg-[#7C3AED]/15 text-[#7C3AED] border-[#7C3AED]/30'
 
   if (normalizedStatus === 'กำลังค้นหาคนขับ' || normalizedStatus === 'รอคนขับ' || normalizedStatus === 'pending') {
     statusText = 'กำลังจับคู่ทีมคนขับ SafeSeat'

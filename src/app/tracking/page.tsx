@@ -185,20 +185,32 @@ function TrackingContent() {
     : 'ผู้ช่วยคนขับ SafeSeat (บัดดี้)'
   const driver2Phone = reqData.follower?.phone_no || reqData.follower?.phoneno || reqData.follower_phone || ''
 
+  // Real-time GPS tracking from driver team
+  const realLat = reqData.buddyteam?.currentloclat
+  const realLng = reqData.buddyteam?.currentloclng
+  const hasRealGps = realLat && realLng && Number(realLat) !== 0 && Number(realLng) !== 0
+
   let driverLat: number | undefined = undefined
   let driverLng: number | undefined = undefined
-  if (currentStep === 1) {
-    driverLat = pickuplatitude + 0.003
-    driverLng = pickuplongitude - 0.003
-  } else if (currentStep === 2) {
+
+  if (currentStep === 2) {
+    // 📍 ถึงจุดรับ/ร้านค้าแล้ว -> ปักหมุดคนขับที่ตำแหน่งร้านค้า/จุดรับทันที
     driverLat = pickuplatitude
     driverLng = pickuplongitude
+  } else if (currentStep === 4) {
+    // 🏁 ถึงจุดหมายปลายทางแล้ว -> ปักหมุดคนขับที่ตำแหน่งจุดส่งทันที
+    driverLat = dropofflatitude
+    driverLng = dropofflongitude
+  } else if (hasRealGps) {
+    // 🛰️ ใช้พิกัด GPS จริงจากคนขับตามเรียลไทม์ระหว่างเดินทาง
+    driverLat = Number(realLat)
+    driverLng = Number(realLng)
+  } else if (currentStep === 1) {
+    driverLat = pickuplatitude + 0.003
+    driverLng = pickuplongitude - 0.003
   } else if (currentStep === 3) {
     driverLat = (pickuplatitude + dropofflatitude) / 2
     driverLng = (pickuplongitude + dropofflongitude) / 2
-  } else if (currentStep === 4) {
-    driverLat = dropofflatitude
-    driverLng = dropofflongitude
   }
 
   const isCompleted = requeststatus === 'เสร็จสิ้น' || requeststatus === 'completed'

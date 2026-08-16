@@ -1,9 +1,5 @@
 'use client'
 
-// ═══════════════════════════════════════════════════════════════
-// app/pub/request-driver/page.tsx — SafeSeat Request Driver Page
-// ═══════════════════════════════════════════════════════════════
-
 import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
@@ -23,6 +19,7 @@ const encodeId = (id: number | string | undefined) => {
   return 'P' + id;
 };
 
+// หน้าเรียกรถให้ลูกค้าสำหรับร้านค้าพาร์ทเนอร์ (กระบวนการ 4 ขั้นตอน)
 function RequestDriverContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -39,7 +36,6 @@ function RequestDriverContent() {
     }
   }, [searchParams])
 
-  // Form state
   const [custName, setCustName] = useState('')
   const [phoneNo, setPhoneNo] = useState('')
   const [phoneEmer, setPhoneEmer] = useState('')
@@ -50,7 +46,7 @@ function RequestDriverContent() {
   const [note, setNote] = useState('')
   const [isLadyMode, setIsLadyMode] = useState(false)
   const [verifyingPayment, setVerifyingPayment] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<1 | 2>(2) // 1=cash, 2=transfer
+  const [paymentMethod, setPaymentMethod] = useState<1 | 2>(2) 
   const [destination, setDestination] = useState<{ lat: number; lng: number; label?: string } | null>(null)
   const [showMap, setShowMap] = useState(false)
 
@@ -137,7 +133,7 @@ function RequestDriverContent() {
     }
 
     const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-      const R = 6371; // Earth's radius in km
+      const R = 6371; 
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = 
@@ -158,7 +154,7 @@ function RequestDriverContent() {
         if (response.ok) {
           const data = await response.json()
           if (active && data.code === 'Ok' && data.routes && data.routes.length > 0) {
-            setDistance(data.routes[0].distance / 1000) // convert meters to km
+            setDistance(data.routes[0].distance / 1000) 
             setError('')
             return
           }
@@ -287,7 +283,7 @@ function RequestDriverContent() {
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {/* Background Glow */}
+      {}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
       </div>
@@ -298,7 +294,7 @@ function RequestDriverContent() {
 
       <main className="relative z-10 max-w-4xl mx-auto px-6 pt-48 pb-24 flex flex-col gap-8">
         
-        {/* Header Title Banner */}
+        {}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--color-card)] border border-[var(--color-border)] p-6 rounded-2xl shadow-xl">
           <div>
             <span className="text-xs font-bold text-[#7C3AED] tracking-wider uppercase font-manrope">REQUEST SERVICE</span>
@@ -316,11 +312,11 @@ function RequestDriverContent() {
           </div>
         )}
 
-        {/* Main Card */}
+        {}
         <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-8 shadow-xl flex flex-col gap-8">
           {renderStepper()}
 
-          {/* ─── STEP 1: กรอกข้อมูลส่วนตัว ─── */}
+          {}
           {step === 1 && (
             <div className="flex flex-col gap-6">
               <h2 className="text-xl font-bold font-manrope text-[var(--color-text)]">กรุณากรอกข้อมูลส่วนตัวของลูกค้า</h2>
@@ -437,7 +433,14 @@ function RequestDriverContent() {
                 />
               </div>
 
-              <div className="flex justify-end mt-4">
+              <div className="flex justify-between items-center mt-4">
+                <button 
+                  type="button"
+                  onClick={() => router.push('/pub/dashboard')}
+                  className="px-6 py-3 border border-[var(--color-border)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[#7C3AED] transition-colors cursor-pointer"
+                >
+                  ← ย้อนกลับ
+                </button>
                 <button 
                   onClick={handleStep1Next}
                   className="px-8 py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#6D28D9] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
@@ -448,12 +451,12 @@ function RequestDriverContent() {
             </div>
           )}
 
-          {/* ─── STEP 2: เลือกจุดหมาย ─── */}
+          {}
           {step === 2 && (
             <div className="flex flex-col gap-6">
               <h2 className="text-xl font-bold font-manrope text-[var(--color-text)]">เลือกจุดหมายปลายทาง</h2>
               
-              {/* Location bar */}
+              {}
               <div className="flex flex-col sm:flex-row items-center gap-3">
                 <div className="flex-1 flex items-center gap-2 p-3.5 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-500 text-xs font-bold w-full">
                   <MapPin className="w-4 h-4 shrink-0" />
@@ -473,7 +476,7 @@ function RequestDriverContent() {
 
               {error && <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-semibold">{error}</div>}
 
-              {/* Location list or selected */}
+              {}
               {destination ? (
                 <div className="p-6 bg-[var(--color-surface)] border-2 border-[#7C3AED] rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
                   <div className="flex items-center gap-3">
@@ -525,7 +528,7 @@ function RequestDriverContent() {
             </div>
           )}
 
-          {/* ─── STEP 3: ยืนยันข้อมูล ─── */}
+          {}
           {step === 3 && (
             <div className="flex flex-col gap-6">
               <h2 className="text-xl font-bold font-manrope text-[var(--color-text)]">ตรวจสอบข้อมูล &amp; บริการความปลอดภัย</h2>
@@ -575,7 +578,7 @@ function RequestDriverContent() {
                 </div>
               </div>
 
-              {/* Lady Mode Toggle */}
+              {}
               <div className="p-5 bg-[#7C3AED]/10 border border-[#7C3AED]/30 rounded-2xl flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">👩</span>
@@ -612,13 +615,13 @@ function RequestDriverContent() {
             </div>
           )}
 
-          {/* ─── STEP 4: ชำระเงิน ─── */}
+          {}
           {step === 4 && (
             <div className="flex flex-col gap-6">
               <h2 className="text-xl font-bold font-manrope text-[var(--color-text)]">เลือกช่องทางการชำระเงิน</h2>
               {error && <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-semibold">{error}</div>}
 
-              {/* Price Banner */}
+              {}
               <div className="p-6 bg-gradient-to-r from-[#7C3AED]/15 to-[#1D4ED8]/15 border border-[#7C3AED]/40 rounded-2xl flex items-center gap-4">
                 <div className="p-3.5 bg-[#7C3AED] text-white rounded-xl shadow-md">
                   <CreditCard className="w-7 h-7" />
@@ -629,7 +632,7 @@ function RequestDriverContent() {
                 </div>
               </div>
 
-              {/* Payment Methods */}
+              {}
               <div className="flex flex-col gap-3">
                 {[
                   { value: 2, icon: QrCode, name: 'โอนเงิน / PromptPay', desc: 'สแกน QR Code เพื่อชำระเงินผ่าน Mobile Banking' },
@@ -666,15 +669,15 @@ function RequestDriverContent() {
                 })}
               </div>
 
-              {/* QR Code Container */}
+              {}
               {paymentMethod === 2 && !verifyingPayment && (
                 <div className="p-6 bg-[var(--color-surface)] border-2 border-dashed border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-4 text-center">
-                  <div className="text-xs font-bold text-[#7C3AED] uppercase tracking-wider">PromptPay QR Code</div>
-                  <div className="p-4 bg-white rounded-2xl shadow-md border">
+                  <div className="text-xs font-bold text-[#7C3AED] uppercase tracking-wider font-manrope">PROMPTPAY QR CODE</div>
+                  <div className="p-4 bg-white rounded-2xl shadow-md border overflow-hidden">
                     <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=SafeSeat-Payment-Fee-${estimatedPrice}`}
+                      src="/images/promptpay_qr.png"
                       alt="PromptPay QR Code"
-                      className="w-44 h-44"
+                      className="w-48 h-48 object-contain rounded-lg"
                     />
                   </div>
                   <div className="text-xl font-extrabold text-[var(--color-text)]">ยอดชำระเงิน: ฿{estimatedPrice}</div>

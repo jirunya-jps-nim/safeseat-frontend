@@ -1,18 +1,11 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// app/register/driver/page.tsx
-// หน้าสมัครสมาชิกสำหรับคนขับรถสำรอง (Driver - Unified Light Theme)
-// รูปแบบเดียวกับหน้าสมัครพาร์ทเนอร์ร้านค้า (Pub) โดยใช้ธีมสีสว่าง
-// ═══════════════════════════════════════════════════════════════
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-// ── Shared Components ─────────────────────────────────────────
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
 
-// ── Register Step Components ──────────────────────────────────
 import {
   StepDriverPersonalInfo,
   StepDriverVehicleInfo,
@@ -20,10 +13,8 @@ import {
   StepDriverTraining,
 } from '@/components/register'
 
-// ── Services ──────────────────────────────────────────────────
 import api from '@/services/api'
 
-// ── Styles & Validation ───────────────────────────────────────
 import { registerStyles as styles } from '@/lib/styles/registerStyles'
 import {
   validateDriverStep1,
@@ -31,7 +22,6 @@ import {
   validateDriverFile,
 } from '@/lib/validation/driverRegisterValidation'
 
-// ── Types ─────────────────────────────────────────────────────
 import { DriverRegisterForm, StepConfig } from '@/types'
 
 const STEPS: StepConfig[] = [
@@ -132,7 +122,6 @@ export default function RegisterDriverPage() {
     }
   }, [files.driverLicensePath])
 
-  // Load draft from localStorage on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem('driver_draft_form')
@@ -408,7 +397,7 @@ export default function RegisterDriverPage() {
             alignItems: 'center',
             animation: 'fadeUp 0.5s ease both',
           }}>
-            {/* success tick animated wrapper */}
+            {}
             <div style={{
               width: '90px',
               height: '90px',
@@ -444,7 +433,7 @@ export default function RegisterDriverPage() {
               ข้อมูลสมัครสมาชิกพนักงานขับรถของคุณได้รับการส่งเข้าสู่ระบบแล้ว คุณสามารถติดตามสถานะการพิจารณาใบสมัครของคุณได้โดยการเข้าสู่ระบบผ่านหน้าเว็บไซต์
             </p>
 
-            {/* Crucial Driver Login Notice Banner */}
+            {}
             <div style={{
               background: '#f8fafc',
               border: '1px solid #e2e8f0',
@@ -483,7 +472,7 @@ export default function RegisterDriverPage() {
                 marginTop: '20px',
                 flexWrap: 'wrap',
               }}>
-                {/* Mock Download Badges */}
+                {}
                 <div style={{
                   background: '#000000',
                   color: '#ffffff',
@@ -526,7 +515,7 @@ export default function RegisterDriverPage() {
               </div>
             </div>
 
-            {/* CTAs */}
+            {}
             <div style={{
               display: 'flex',
               gap: 16,
@@ -568,10 +557,10 @@ export default function RegisterDriverPage() {
 
       <Navbar />
 
-      {/* Main Layout: หน้าสมัครคนขับ มีรูปแบบเดียวกันกับหน้าสมัครผับ */}
+      {}
       <div style={styles.main}>
 
-        {/* ─── Hero Panel (Left 40% - Driver Bright Vibe) ─── */}
+        {}
         <div style={styles.heroPanel}>
           <img
             src="/images/safeseat_futuristic_dashboard_preview.png"
@@ -592,7 +581,7 @@ export default function RegisterDriverPage() {
               ร่วมงานกันอย่างเป็นมืออาชีพและปลอดภัย
             </p>
 
-            {/* Progress Steps ใน Hero */}
+            {}
             <div style={styles.heroSteps}>
               {STEPS.map((s, i) => (
                 <div key={i} style={styles.heroStep}>
@@ -601,9 +590,9 @@ export default function RegisterDriverPage() {
                     style={{
                       ...styles.heroStepDot,
                       backgroundColor:
-                        step > i + 1  ? '#10b981' // ผ่านแล้ว → สีเขียวมรกต
-                        : step === i + 1 ? '#ffffff' // ปัจจุบัน → ขาว
-                        : 'rgba(255,255,255,0.25)', // ยังไม่ถึง
+                        step > i + 1  ? '#10b981' 
+                        : step === i + 1 ? '#ffffff' 
+                        : 'rgba(255,255,255,0.25)', 
                       border:
                         step === i + 1
                           ? '2px solid #10b981'
@@ -645,11 +634,11 @@ export default function RegisterDriverPage() {
           </div>
         </div>
 
-        {/* ─── Form Panel (Right) ─── */}
+        {}
         <div style={styles.formPanel}>
           <div style={styles.formInner}>
 
-            {/* Header ฟอร์ม */}
+            {}
             <div style={styles.formHeader}>
               <div style={styles.formIconWrap}>
                 <span style={{ fontSize: 24 }}>{STEPS[step - 1].icon}</span>
@@ -660,7 +649,7 @@ export default function RegisterDriverPage() {
               </p>
             </div>
 
-            {/* Progress Bar */}
+            {}
             <div style={styles.progressTrack}>
               <div
                 style={{
@@ -671,7 +660,7 @@ export default function RegisterDriverPage() {
               />
             </div>
 
-            {/* Step Content */}
+            {}
             {step === 1 && (
               <StepDriverPersonalInfo
                 form={form}
@@ -716,7 +705,7 @@ export default function RegisterDriverPage() {
 
             {error && <div style={styles.errorBox}>⚠️ {error}</div>}
 
-            {/* Navigation Row */}
+            {}
             <div style={styles.btnRow}>
               {step > 1 ? (
                 <button onClick={handleBack} style={styles.backBtn}>

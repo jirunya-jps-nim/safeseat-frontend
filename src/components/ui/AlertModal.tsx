@@ -1,9 +1,5 @@
 'use client'
 
-// ═══════════════════════════════════════════════════════════════
-// components/ui/AlertModal.tsx — Royal Cyber Glass Alert & Toast Modal
-// ═══════════════════════════════════════════════════════════════
-
 import React from 'react'
 import { CheckCircle2, AlertTriangle, Info, XCircle, HelpCircle } from 'lucide-react'
 
@@ -75,22 +71,22 @@ export default function AlertModal({
       >
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8]" />
 
-        {/* Icon */}
+        {}
         <div className={`p-4 rounded-full border ${c.bgIcon} ${c.color} shadow-lg`}>
           <IconComp className="w-8 h-8" />
         </div>
 
-        {/* Title */}
+        {}
         <h3 className="text-lg sm:text-xl font-bold font-manrope text-[var(--color-text)] whitespace-nowrap">
           {title || c.title}
         </h3>
 
-        {/* Message */}
+        {}
         <p className="text-xs sm:text-sm text-[var(--color-text-muted)] leading-relaxed font-light whitespace-nowrap">
           {message}
         </p>
 
-        {/* Actions */}
+        {}
         <div className="flex items-center gap-3 w-full mt-2">
           {isConfirmMode ? (
             <>

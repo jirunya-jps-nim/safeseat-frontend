@@ -10,6 +10,7 @@ interface NavbarProps {
   showLoginButton?: boolean
 }
 
+// แถบเมนูนำทางหลักของเว็บไซต์ (Navigation Bar)
 export default function Navbar({ showLoginButton = true }: NavbarProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -23,7 +24,6 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
 
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Click outside to close dropdown menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -84,7 +84,7 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
       <header className="fixed top-0 left-0 w-full z-50 pt-6 px-4">
         <nav className="max-w-5xl mx-auto flex items-center justify-between bg-[var(--color-card)]/90 backdrop-blur-xl border border-[var(--color-border)] rounded-full px-6 py-3 shadow-[0_10px_30px_rgba(124,58,237,0.12)] transition-all">
           
-          {/* ── Brand Logo ── */}
+          {}
           <div 
             onClick={() => { closeMobile(); router.push(pubUser ? '/pub/dashboard' : (driverUser ? '/driver-status' : '/')) }}
             className="flex items-center gap-3 cursor-pointer group"
@@ -100,7 +100,7 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
             )}
           </div>
 
-          {/* ── Desktop Links (Thai) ── */}
+          {}
           <div className="hidden md:flex items-center gap-8">
             {pubUser || driverUser || isPubRoute || isDriverRoute ? (
               <>
@@ -130,7 +130,7 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
                   หน้าแรก
                 </button>
 
-                {/* Partners & Services Dropdown Toggle (Thai) */}
+                {}
                 <div ref={dropdownRef} className="relative cursor-pointer">
                   <button
                     type="button"
@@ -179,7 +179,7 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
             )}
           </div>
 
-          {/* ── Right Actions: Book Driver ➔ Theme Switcher ➔ Login (Thai) ── */}
+          {}
           <div className="flex items-center gap-3">
             {pubUser || driverUser ? (
               <div className="flex items-center gap-3">
@@ -206,18 +206,7 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
             ) : (
               showLoginButton && (
                 <div className="flex items-center gap-3">
-                  {/* 1. Register Button */}
-                  <button
-                    onClick={() => { closeMobile(); router.push('/register') }}
-                    className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] px-5 py-2 transition-all active:scale-95 cursor-pointer shadow-[0_0_20px_rgba(124,58,237,0.4)]"
-                  >
-                    <span className="relative z-10 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white">
-                      <Shield className="w-3.5 h-3.5 text-white" />
-                      REGISTER
-                    </span>
-                  </button>
-
-                  {/* 2. ☀️ / 🌙 Dark & Light Mode Toggle Switch */}
+                  {}
                   <button
                     onClick={toggleTheme}
                     className="theme-switch-btn focus:outline-none"
@@ -229,10 +218,10 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
                     </div>
                   </button>
 
-                  {/* 3. Login Button */}
+                  {}
                   <button
                     onClick={() => { closeMobile(); router.push('/login') }}
-                    className="hidden md:block text-sm font-bold text-[var(--color-text)] hover:text-[#7C3AED] transition-colors cursor-pointer"
+                    className="px-5 py-2 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(124,58,237,0.4)]"
                   >
                     เข้าสู่ระบบ
                   </button>
@@ -240,7 +229,7 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
               )
             )}
 
-            {/* Mobile Hamburger Icon */}
+            {}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className="md:hidden text-[var(--color-text)] text-xl p-1 cursor-pointer"
@@ -251,7 +240,7 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
           </div>
         </nav>
 
-        {/* Mobile Menu Overlay (Thai) */}
+        {}
         {mobileOpen && (
           <div className="md:hidden max-w-5xl mx-auto mt-2 p-4 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col gap-3 backdrop-blur-xl shadow-2xl">
             <button
@@ -294,7 +283,7 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
         )}
       </header>
 
-      {/* Logout Confirmation Modal */}
+      {}
       <AlertModal
         isOpen={showLogoutModal}
         title="คุณต้องการออกจากระบบใช่หรือไม่?"

@@ -1,9 +1,5 @@
 'use client'
 
-// ═══════════════════════════════════════════════════════════════
-// app/help/page.tsx — SafeSeat Help Center (Thai Language)
-// ═══════════════════════════════════════════════════════════════
-
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/ui/Navbar'
@@ -31,13 +27,13 @@ export default function HelpCenterPage() {
     },
     {
       category: 'driver',
-      question: 'เอกสารที่จำเป็นสำหรับการสมัครเป็นพนักงานขับรถสำรอง (คนขับ) คืออะไร?',
+      question: 'เอกสารที่จำเป็นสำหรับการสมัครเป็นพนักงานขับรถแทน (คนขับ) คืออะไร?',
       answer: 'เอกสารที่ต้องใช้แนบในการสมัคร ได้แก่: 1. รูปถ่ายโปรไฟล์คนขับ, 2. รูปถ่ายรถยนต์คู่ใจ, 3. รูปถ่ายใบอนุญาตขับรถยนต์ (ใบขับขี่), 4. รูปถ่ายประวัติอาชญากรรม (ถ้ามี), และ 5. ใบรับรองแพทย์ไม่เกิน 1 เดือน เพื่อยืนยันความพร้อมของสุขภาพ'
     },
     {
       category: 'general',
       question: 'ระบบ SafeSeat มีขั้นตอนช่วยลดการเมาแล้วขับอย่างไร?',
-      answer: 'SafeSeat จะมีส่วนเชื่อมต่อโดยให้ร้านค้าพาร์ทเนอร์อำนวยความสะดวกในการเรียกรถส่งผู้ใช้งาน หรือผู้ใช้ทั่วไปสามารถเรียกคนขับสำรองที่อยู่บริเวณใกล้เคียงเพื่อขับรถยนต์ส่วนตัวของผู้ใช้กลับบ้านอย่างปลอดภัย ไร้กังวลเรื่องด่านตรวจและอุบัติเหตุ'
+      answer: 'SafeSeat จะมีส่วนเชื่อมต่อโดยให้ร้านค้าพาร์ทเนอร์อำนวยความสะดวกในการเรียกรถส่งผู้ใช้งาน หรือผู้ใช้ทั่วไปสามารถเรียกพนักงานขับรถแทนที่อยู่บริเวณใกล้เคียงเพื่อขับรถยนต์ส่วนตัวของผู้ใช้กลับบ้านอย่างปลอดภัย ไร้กังวลเรื่องด่านตรวจและอุบัติเหตุ'
     },
     {
       category: 'driver',
@@ -70,7 +66,7 @@ export default function HelpCenterPage() {
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {/* Background Glow */}
+      {}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
       </div>
@@ -81,7 +77,7 @@ export default function HelpCenterPage() {
 
       <main className="relative z-10 max-w-5xl mx-auto px-6 pt-44 pb-24 flex flex-col gap-16">
         
-        {/* ── Hero Section ── */}
+        {}
         <section className="text-center flex flex-col items-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] backdrop-blur-md mb-6">
             <span className="w-2 h-2 rounded-full bg-[#7C3AED] animate-pulse"></span>
@@ -101,7 +97,7 @@ export default function HelpCenterPage() {
             ค้นหาข้อมูลการใช้งาน คำถามที่พบบ่อย และคู่มือขั้นตอนการให้บริการสำหรับลูกค้า ร้านค้าพาร์ทเนอร์ และผู้ขับขี่แทน
           </p>
 
-          {/* Search Input Box */}
+          {}
           <div className="w-full max-w-xl flex items-center gap-3 px-6 py-4 bg-[var(--color-card)] border border-[var(--color-border)] rounded-full shadow-lg">
             <Search className="w-5 h-5 text-[#7C3AED]" />
             <input 
@@ -117,7 +113,7 @@ export default function HelpCenterPage() {
           </div>
         </section>
 
-        {/* ── Filter Tabs ── */}
+        {}
         <div className="flex justify-center flex-wrap gap-3">
           <button 
             onClick={() => { setActiveCategory('all'); setOpenFaqIndex(null); }}
@@ -161,7 +157,7 @@ export default function HelpCenterPage() {
           </button>
         </div>
 
-        {/* ── FAQ Accordion List ── */}
+        {}
         <section className="flex flex-col gap-4">
           {filteredFaqs.length > 0 ? (
             filteredFaqs.map((faq, index) => {
@@ -192,7 +188,7 @@ export default function HelpCenterPage() {
           )}
         </section>
 
-        {/* ── Direct Contact Section ── */}
+        {}
         <section className="flex flex-col gap-8 pt-8 border-t border-[var(--color-border)]">
           <div className="text-center">
             <span className="text-xs font-bold tracking-widest text-[#7C3AED] uppercase">ช่องทางติดต่อโดยตรง</span>

@@ -1,38 +1,16 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// app/status/page.tsx
-// หน้า View Registration Status
-//
-// การทำงาน:
-//  1. อ่าน username จาก localStorage (pub_user)
-//  2. GET /api/pub/status/:username → ดึงข้อมูลสถานะ
-//  3. แสดง Progress Stepper 3 ขั้น:
-//       ส่งเอกสารแล้ว → รอดำเนินการ → อนุมัติ / ปฏิเสธ
-//  4. แสดงรายละเอียดร้าน + วันที่สมัคร
-//
-// regisstatus ที่ backend ส่งมา:
-//  'รอดำเนินการ'  → รอการพิจารณา
-//  'อนุมัติแล้ว' → อนุมัติแล้ว
-//  'ปฏิเสธ' → ปฏิเสธ
-// ═══════════════════════════════════════════════════════════════
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTheme } from '@/components/ThemeContext'
 
-// ── Shared Components ─────────────────────────────────────────
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
 
-// ── Services ─────────────────────────────────────────────────
 import api from '@/services/api'
 
-// ── Styles ───────────────────────────────────────────────────
 import { statusStyles as styles } from '@/lib/styles/statusStyles'
 
-// ─────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────
 interface StatusData {
   registerstatus: 'รอดำเนินการ' | 'อนุมัติแล้ว' | 'ปฏิเสธ'
   regisdate: string
@@ -42,30 +20,18 @@ interface StatusData {
   phoneno: string
 }
 
-// ─────────────────────────────────────────────────────────────
-// Stepper config — 3 ขั้นตอนการลงทะเบียน
-// ─────────────────────────────────────────────────────────────
 const STEPS = [
   { label: 'ส่งเอกสารเรียบร้อยแล้ว', icon: '📄' },
   { label: 'รอดำเนินการ',             icon: '⏳' },
   { label: 'ผลการพิจารณา',            icon: '✅' },
 ]
 
-// ─────────────────────────────────────────────────────────────
-// Helper: แปลง regisstatus → active step index (0-based)
-// pending  → step 1 (รอดำเนินการ)
-// approved → step 2 (ผ่านแล้ว)
-// rejected → step 2 (ไม่ผ่าน)
-// ─────────────────────────────────────────────────────────────
 function getActiveStep(status: string | undefined): number {
   if (status === 'อนุมัติแล้ว' || status === 'ปฏิเสธ') return 2
   if (status === 'รอดำเนินการ') return 1
   return 0
 }
 
-// ─────────────────────────────────────────────────────────────
-// Helper: config สีและข้อความตาม status (รองรับทั้ง Dark Mode & Light Mode)
-// ─────────────────────────────────────────────────────────────
 function getStatusConfig(status: string | undefined, isDark: boolean = true) {
   switch (status) {
     case 'อนุมัติแล้ว':
@@ -120,9 +86,6 @@ function getStatusConfig(status: string | undefined, isDark: boolean = true) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Helper: format วันที่ไทย
-// ─────────────────────────────────────────────────────────────
 function formatDateThai(dateStr: string): string {
   try {
     const d = new Date(dateStr)
@@ -138,20 +101,15 @@ function formatDateThai(dateStr: string): string {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// StatusPage Component
-// ═══════════════════════════════════════════════════════════════
 export default function StatusPage() {
   const router = useRouter()
 
-  // ── State ─────────────────────────────────────────────────
   const [statusData, setStatusData] = useState<StatusData | null>(null)
   const [username, setUsername]     = useState<string>('')
   const [loading, setLoading]       = useState<boolean>(true)
   const [error, setError]           = useState<string>('')
   const [refreshing, setRefreshing] = useState<boolean>(false)
 
-  // ── Fetch status จาก Backend ─────────────────────────────
   const fetchStatus = useCallback(async (user: string, isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
     else setLoading(true)
@@ -161,7 +119,6 @@ export default function StatusPage() {
       const res = await api.get(`/auth/status/${user}`)
       setStatusData(res.data.data)
     } catch (err: unknown) {
-      // ดึง message จาก axios error หรือ Error object
       const msg =
         typeof err === 'object' && err !== null && 'response' in err
           ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
@@ -175,11 +132,9 @@ export default function StatusPage() {
     }
   }, [])
 
-  // ── onMount: อ่าน username จาก localStorage ─────────────
   useEffect(() => {
     const stored = localStorage.getItem('driver_user')
     if (!stored) {
-      // ยังไม่ login → ไปหน้า login
       router.push('/login')
       return
     }
@@ -188,8 +143,6 @@ export default function StatusPage() {
       const user = parsed.username ?? ''
       
       if (user) {
-        // ป้องกัน Error: Calling setState synchronously within an effect...
-        // โดยใช้ Promise เพื่อหน่วงเวลาทั้ง setUsername และ fetchStatus ไปที่ Microtask Queue
         Promise.resolve().then(() => {
           setUsername(user)
           fetchStatus(user)
@@ -202,7 +155,6 @@ export default function StatusPage() {
     }
   }, [router, fetchStatus])
 
-  // ── Logout ───────────────────────────────────────────────
   const handleLogout = () => {
     const isConfirmed = window.confirm('คุณต้องการออกจากระบบใช่หรือไม่?')
     if (isConfirmed) {
@@ -211,29 +163,25 @@ export default function StatusPage() {
     }
   }
 
-  // ── Theme & Status Config ─────────────────────────────────
   const { theme } = useTheme()
   const isDark = theme === 'dark'
   const activeStep  = getActiveStep(statusData?.registerstatus)
   const statusCfg   = getStatusConfig(statusData?.registerstatus, isDark)
 
-  // ─────────────────────────────────────────────────────────
-  // Render
-  // ─────────────────────────────────────────────────────────
   return (
     <div style={styles.page}>
-      {/* Background glow circles */}
+      {}
       <div style={styles.bgCircle1} />
       <div style={styles.bgCircle2} />
       <div style={styles.bgCircle3} />
 
-      {/* Navbar — ซ่อนปุ่ม login (user login อยู่แล้ว) */}
+      {}
       <Navbar showLoginButton={false} />
 
-      {/* Main Content */}
+      {}
       <main style={styles.main}>
 
-        {/* ── Page Header ─────────────────────────────────── */}
+        {}
         <div style={styles.pageHeader}>
           <div style={styles.pageBadge}>
             📋 สถานะการสมัคร
@@ -244,10 +192,10 @@ export default function StatusPage() {
           </p>
         </div>
 
-        {/* ── Card ────────────────────────────────────────── */}
+        {}
         <div style={styles.card}>
 
-          {/* Greeting */}
+          {}
           <p style={styles.greeting}>
             สวัสดี {loading ? '...' : (statusData?.firstname ? `${statusData.firstname} ${statusData.lastname}` : username)} 👋
           </p>
@@ -260,13 +208,12 @@ export default function StatusPage() {
               : `@${username} · ตรวจสอบสถานะการสมัครด้านล่าง`}
           </p>
 
-          {/* ── Stepper ──────────────────────────────────── */}
+          {}
           <div style={styles.stepper}>
             {STEPS.map((step, i) => {
               const isDone    = activeStep > i
               const isActive  = activeStep === i
               const isLast    = i === STEPS.length - 1
-              // สี dot
               const dotBg =
                 isDone    ? statusCfg.dotDone
                 : isActive ? statusCfg.dotActive
@@ -278,14 +225,13 @@ export default function StatusPage() {
                 ? 'none'
                 : `2px solid ${isDark ? 'rgba(71,85,105,0.6)' : '#CBD5E1'}`
 
-              // สี line ถัดไป
               const nextLineBg = activeStep > i ? statusCfg.lineDone : (isDark ? 'rgba(51,65,85,0.6)' : '#E2E8F0')
 
               return (
                 <div key={i} style={styles.stepItem}>
-                  {/* Dot row (dot + line) */}
+                  {}
                   <div style={styles.stepDotWrapper}>
-                    {/* Connector line ก่อน dot (ยกเว้น step แรก) */}
+                    {}
                     {i > 0 && (
                       <div
                         style={{
@@ -295,7 +241,7 @@ export default function StatusPage() {
                       />
                     )}
 
-                    {/* Dot */}
+                    {}
                     <div
                       style={{
                         ...styles.stepDot,
@@ -312,7 +258,7 @@ export default function StatusPage() {
                       {isDone ? '✓' : step.icon}
                     </div>
 
-                    {/* Connector line หลัง dot (ยกเว้น step สุดท้าย) */}
+                    {}
                     {!isLast && (
                       <div
                         style={{
@@ -323,7 +269,7 @@ export default function StatusPage() {
                     )}
                   </div>
 
-                  {/* Label */}
+                  {}
                   <span
                     style={{
                       ...styles.stepLabel,
@@ -343,12 +289,12 @@ export default function StatusPage() {
             })}
           </div>
 
-          {/* ── Error ────────────────────────────────────── */}
+          {}
           {error && !loading && (
             <div style={styles.errorBox}>⚠️ {error}</div>
           )}
 
-          {/* ── Loading skeleton ─────────────────────────── */}
+          {}
           {loading && (
             <div>
               <div style={{
@@ -374,7 +320,7 @@ export default function StatusPage() {
             </div>
           )}
 
-          {/* ── Status banner ────────────────────────────── */}
+          {}
           {!loading && statusData && (
             <>
               <div style={{
@@ -390,7 +336,7 @@ export default function StatusPage() {
                 display: 'flex',
                 gap: 18,
                 alignItems: 'center',
-                marginBottom: '32px', // <--- EXPLICIT MARGIN BETWEEN BANNER AND INFO GRID
+                marginBottom: '32px', 
               }}>
                 <div style={{
                   width: 48,
@@ -417,7 +363,7 @@ export default function StatusPage() {
                 </div>
               </div>
 
-              {/* ── Info grid ─────────────────────────────── */}
+              {}
               <div style={styles.infoGrid}>
                 <div style={{
                   ...styles.infoItem,
@@ -493,7 +439,7 @@ export default function StatusPage() {
             </>
           )}
 
-          {/* ── Action Buttons ───────────────────────────── */}
+          {}
           {!loading && (statusData?.registerstatus === 'ปฏิเสธ' || (statusData as any)?.registerstatus === 'rejected') && (
             <div style={{ ...styles.btnRow, justifyContent: 'center', flexWrap: 'wrap', gap: 16 }}>
               <button
@@ -526,9 +472,9 @@ export default function StatusPage() {
           )}
 
         </div>
-        {/* /card */}
+        {}
 
-        {/* Help note */}
+        {}
         {!loading && (
           <p style={{
             fontSize: 13,

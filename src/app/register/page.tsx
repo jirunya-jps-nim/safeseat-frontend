@@ -1,9 +1,5 @@
 'use client'
 
-// ═══════════════════════════════════════════════════════════════
-// app/register/page.tsx — SafeSeat Registration Selector Page
-// ═══════════════════════════════════════════════════════════════
-
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
@@ -16,7 +12,7 @@ export default function RegisterSelectorPage() {
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {/* Background Glow */}
+      {}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
       </div>
@@ -27,7 +23,7 @@ export default function RegisterSelectorPage() {
 
       <main className="relative z-10 max-w-5xl mx-auto px-6 pt-48 pb-24 flex flex-col items-center gap-12">
         
-        {/* Header Title Section */}
+        {}
         <div className="text-center flex flex-col items-center max-w-4xl">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] backdrop-blur-md mb-6">
             <span className="w-2 h-2 rounded-full bg-[#7C3AED] animate-pulse"></span>
@@ -49,10 +45,10 @@ export default function RegisterSelectorPage() {
           </p>
         </div>
 
-        {/* Selection Cards Grid */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
           
-          {/* Card 1: Pub Owner */}
+          {}
           <div
             onClick={() => router.push('/register/pub')}
             className="group p-8 bg-[var(--color-card)] border border-[var(--color-border)] hover:border-[#7C3AED] rounded-2xl shadow-xl flex flex-col gap-5 cursor-pointer transition-all duration-300 hover:-translate-y-1"
@@ -62,7 +58,7 @@ export default function RegisterSelectorPage() {
             </div>
 
             <span className="text-xs font-mono font-bold tracking-widest text-[#7C3AED]">
-              PORTAL // 01
+              PORTAL 
             </span>
             <h2 className="text-2xl font-bold font-manrope text-[var(--color-text)]">
               Venue Partner
@@ -76,7 +72,7 @@ export default function RegisterSelectorPage() {
             </button>
           </div>
 
-          {/* Card 2: Driver */}
+          {}
           <div
             onClick={() => router.push('/register/driver')}
             className="group p-8 bg-[var(--color-card)] border border-[var(--color-border)] hover:border-[#7C3AED] rounded-2xl shadow-xl flex flex-col gap-5 cursor-pointer transition-all duration-300 hover:-translate-y-1"
@@ -86,7 +82,7 @@ export default function RegisterSelectorPage() {
             </div>
 
             <span className="text-xs font-mono font-bold tracking-widest text-[#7C3AED]">
-              PORTAL // 02
+              PORTAL 
             </span>
             <h2 className="text-2xl font-bold font-manrope text-[var(--color-text)]">
               Designated Driver
@@ -102,7 +98,7 @@ export default function RegisterSelectorPage() {
 
         </div>
 
-        {/* Login Link */}
+        {}
         <div className="text-center text-sm text-[var(--color-text-muted)]">
           <span>มีบัญชีผู้ใช้ในระบบอยู่แล้ว? </span>
           <button

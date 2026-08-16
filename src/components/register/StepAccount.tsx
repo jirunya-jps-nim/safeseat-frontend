@@ -1,8 +1,4 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// components/register/StepAccount.tsx
-// Form ขั้นตอนที่ 3 — สร้างบัญชีผู้ใช้งาน (รองรับสีตัวอักษร)
-// ═══════════════════════════════════════════════════════════════
 
 import React from 'react'
 import Field from '@/components/ui/Field'
@@ -16,7 +12,7 @@ interface StepAccountProps {
   onTogglePassword: () => void
   termsAccepted: boolean
   onToggleTerms: () => void
-  labelColor?: string // ส่งสีของ label เพื่อใช้ในธีมมืดและสว่าง
+  labelColor?: string 
 }
 
 export default function StepAccount({
@@ -32,7 +28,7 @@ export default function StepAccount({
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
 
-      {/* ── ชื่อผู้ใช้งาน ── */}
+      {}
       <Field label="ชื่อผู้ใช้งาน *" icon="👤" color={labelColor}>
         <input
           name="username"
@@ -45,7 +41,7 @@ export default function StepAccount({
         />
       </Field>
 
-      {/* ── รหัสผ่าน (มีปุ่มแสดง/ซ่อน) ── */}
+      {}
       <Field label="รหัสผ่าน *" icon="🔒" color={labelColor}>
         <div style={{ position: 'relative' }}>
           <input
@@ -70,7 +66,7 @@ export default function StepAccount({
         </div>
       </Field>
 
-      {/* ── Checkbox ยอมรับเงื่อนไข ── */}
+      {}
       <label style={{ ...styles.checkboxRow, color: labelColor || '#475569' }}>
         <input
           type="checkbox"
@@ -86,7 +82,7 @@ export default function StepAccount({
         </span>
       </label>
 
-      {/* ── Trust badge ── */}
+      {}
       <div
         style={{
           ...styles.trustBadge,

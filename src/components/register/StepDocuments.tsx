@@ -1,8 +1,4 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// components/register/StepDocuments.tsx
-// Form ขั้นตอนที่ 2 — เอกสารประกอบการและบัญชีธนาคาร (รองรับสีตัวอักษร)
-// ═══════════════════════════════════════════════════════════════
 
 import React from 'react'
 import Field from '@/components/ui/Field'
@@ -18,7 +14,7 @@ interface StepDocumentsProps {
   shopImgRef: React.RefObject<HTMLInputElement | null>
   onLicenseChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onShopImgChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  labelColor?: string // ส่งสีของ label เพื่อใช้จัดการธีมมืดและสว่าง
+  labelColor?: string 
 }
 
 export default function StepDocuments({
@@ -29,7 +25,6 @@ export default function StepDocuments({
   labelColor,
 }: StepDocumentsProps) {
   
-  // กำหนดสีของข้อความและกรอบกล่องอัปโหลดตามธีม
   const hintColor = labelColor ? '#94a3b8' : '#64748b'
   const uploadBorderColor = labelColor 
     ? (licenseFile ? '#818cf8' : 'rgba(255, 255, 255, 0.2)')
@@ -48,7 +43,7 @@ export default function StepDocuments({
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
 
-      {/* ═══ ส่วนที่ 1: อัปโหลดใบอนุญาตประกอบการ ═══ */}
+      {}
       <div style={{ ...styles.uploadLabel, color: labelColor || '#475569' }}>
         แนบหลักฐานใบอนุญาตประกอบการ *{' '}
         <span style={{ ...styles.uploadHint, color: hintColor }}>(PDF / JPG / PNG, ไม่เกิน 10 MB)</span>
@@ -86,7 +81,7 @@ export default function StepDocuments({
         />
       </div>
 
-      {/* ═══ ส่วนที่ 2: อัปโหลดรูปภาพหน้าร้าน ═══ */}
+      {}
       <div style={{ ...styles.uploadLabel, color: labelColor || '#475569' }}>
         แนบรูปภาพหน้าร้าน *{' '}
         <span style={{ ...styles.uploadHint, color: hintColor }}>(JPG / PNG, ไม่เกิน 10 MB)</span>
@@ -123,7 +118,7 @@ export default function StepDocuments({
         />
       </div>
 
-      {/* ═══ ส่วนที่ 3: ข้อมูลภาษีและบัญชีธนาคาร ═══ */}
+      {}
       <Field label="เลขที่ผู้เสียภาษี * (13 หลัก)" icon="🔢" color={labelColor}>
         <input
           name="taxNumber"

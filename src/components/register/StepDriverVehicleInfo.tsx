@@ -30,7 +30,7 @@ export default function StepDriverVehicleInfo({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
-      {/* ข้อมูลยานพาหนะ */}
+      {}
       <div>
         <h3 style={styles.sectionHeader}>ข้อมูลยานพาหนะผู้ให้บริการขับรถ</h3>
         
@@ -81,7 +81,7 @@ export default function StepDriverVehicleInfo({
         </div>
       </div>
 
-      {/* แนบรูปภาพรถยนต์ */}
+      {}
       <div>
         <label style={styles.label}>แนบรูปภาพรถยนต์ *</label>
         <div style={styles.uploadRow}>
@@ -106,7 +106,7 @@ export default function StepDriverVehicleInfo({
         />
       </div>
 
-      {/* ยอมรับนโยบายข้อมูลส่วนตัว */}
+      {}
       <div style={{ marginTop: '10px' }}>
         <label style={styles.checkboxRow}>
           <input

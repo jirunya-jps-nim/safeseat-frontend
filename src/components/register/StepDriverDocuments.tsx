@@ -1,8 +1,4 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// components/register/StepDriverDocuments.tsx
-// หน้าที่สามของการลงทะเบียนคนขับ (แนบหลักฐานใบขับขี่ ประวัติอาชญากรรม และใบรับรองแพทย์) - Light Theme
-// ═══════════════════════════════════════════════════════════════
 
 import React from 'react'
 import PaperclipIcon from '@/components/ui/PaperclipIcon'

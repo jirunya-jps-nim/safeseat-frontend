@@ -1,9 +1,5 @@
 'use client'
 
-// ═══════════════════════════════════════════════════════════════
-// app/about/page.tsx — SafeSeat About Page (Thai Language)
-// ═══════════════════════════════════════════════════════════════
-
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
@@ -16,7 +12,7 @@ export default function AboutPage() {
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {/* Global Background Glow */}
+      {}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
       </div>
@@ -27,7 +23,7 @@ export default function AboutPage() {
 
       <main className="relative z-10 max-w-6xl mx-auto px-6 pt-44 pb-24 flex flex-col gap-20">
         
-        {/* ── Hero Header Section ── */}
+        {}
         <section className="text-center max-w-4xl mx-auto flex flex-col items-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] backdrop-blur-md mb-6">
             <span className="w-2 h-2 rounded-full bg-[#7C3AED] animate-pulse"></span>
@@ -50,11 +46,11 @@ export default function AboutPage() {
           </p>
         </section>
 
-        {/* ── Vision & Mission Grid ── */}
+        {}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col gap-4 hover:border-[#7C3AED]/50 transition-all">
             <span className="text-xs font-mono font-bold tracking-widest text-[#7C3AED]">
-              01 // วิสัยทัศน์ของเรา
+              01 
             </span>
             <h2 className="text-2xl font-bold font-manrope text-[var(--color-text)]">
               การปฏิวัติความปลอดภัยทางถนน
@@ -67,7 +63,7 @@ export default function AboutPage() {
 
           <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col gap-4 hover:border-[#7C3AED]/50 transition-all">
             <span className="text-xs font-mono font-bold tracking-widest text-[#7C3AED]">
-              02 // พันธกิจของเรา
+              02 
             </span>
             <h2 className="text-2xl font-bold font-manrope text-[var(--color-text)]">
               มาตรฐานสวัสดิภาพที่ไม่ประนีประนอม
@@ -79,7 +75,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── Key Features Section ── */}
+        {}
         <section className="flex flex-col gap-10">
           <div className="text-center">
             <span className="text-xs font-bold tracking-[0.2em] text-[#7C3AED] uppercase">ทำไมต้องเลือก SAFESEAT</span>
@@ -94,7 +90,7 @@ export default function AboutPage() {
               <div>
                 <h3 className="text-lg font-bold font-manrope text-[var(--color-text)] mb-2">พนักงานขับรถผ่านการคัดกรอง</h3>
                 <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-                  พนักงานขับรถสำรองทุกคนผ่านการตรวจสอบประวัติอาชญากรรม ประวัติการขับขี่ และมีใบอนุญาตขับขี่ถูกต้องตามกฎหมาย
+                  พนักงานขับรถแทนทุกคนผ่านการตรวจสอบประวัติอาชญากรรม ประวัติการขับขี่ และมีใบอนุญาตขับขี่ถูกต้องตามกฎหมาย
                 </p>
               </div>
             </div>
@@ -125,7 +121,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ── CTA Banner ── */}
+        {}
         <section className="p-12 bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#1D4ED8] rounded-3xl text-center text-white shadow-2xl flex flex-col items-center gap-6">
           <h2 className="text-3xl md:text-4xl font-bold font-manrope">ร่วมเป็นส่วนหนึ่งของเครือข่ายความปลอดภัย</h2>
           <p className="text-sm md:text-base text-white/80 max-w-xl leading-relaxed">

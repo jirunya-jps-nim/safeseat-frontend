@@ -1,9 +1,5 @@
 'use client'
 
-// ═══════════════════════════════════════════════════════════════
-// app/pub/dashboard/page.tsx — SafeSeat Venue Dashboard (Royal Purple-Blue)
-// ═══════════════════════════════════════════════════════════════
-
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/ui/Navbar'
@@ -11,6 +7,7 @@ import Footer from '@/components/ui/Footer'
 import FloatingNav from '@/components/ui/FloatingNav'
 import { Car, FileText, BarChart3, Shield, Radio, CheckCircle2, ArrowRight } from 'lucide-react'
 
+// หน้าแดชบอร์ดหลักสำหรับร้านค้าพาร์ทเนอร์ (Pub / Venue Dashboard)
 export default function PubDashboardPage() {
   const router = useRouter()
   const [pubUser, setPubUser] = useState<any>(null)
@@ -81,7 +78,7 @@ export default function PubDashboardPage() {
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {/* Background Glow */}
+      {}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
       </div>
@@ -92,7 +89,7 @@ export default function PubDashboardPage() {
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-48 pb-24 flex flex-col gap-12">
         
-        {/* ── Hero Banner ── */}
+        {}
         <section className="flex flex-col items-start">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] backdrop-blur-md mb-4">
             <span className="w-2 h-2 rounded-full bg-[#7C3AED] animate-pulse"></span>
@@ -113,7 +110,7 @@ export default function PubDashboardPage() {
           </p>
         </section>
 
-        {/* ── Action Cards Grid ── */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {cards.map((card) => {
             const IconComp = card.icon
@@ -157,7 +154,7 @@ export default function PubDashboardPage() {
           })}
         </div>
 
-        {/* ── Info Badges Row ── */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {badges.map((b, i) => {
             const IconComp = b.icon

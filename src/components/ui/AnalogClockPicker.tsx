@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom'
 interface AnalogClockPickerProps {
   isOpen: boolean
   onClose: () => void
-  value: string // Format "HH:mm" e.g. "18:00"
+  value: string 
   onChange: (timeStr: string) => void
   title?: string
 }
@@ -24,7 +24,6 @@ export default function AnalogClockPicker({
     setMounted(true)
   }, [])
 
-  // Parse initial time
   const parseInitial = (val: string) => {
     if (!val || !val.includes(':')) return { hour12: 6, minute: 0, period: 'PM' as const }
     const [hStr, mStr] = val.split(':')
@@ -54,7 +53,6 @@ export default function AnalogClockPicker({
 
   if (!isOpen || !mounted) return null
 
-  // Calculate 24h format string
   const get24Hour = (h12: number, p: 'AM' | 'PM') => {
     let h24 = h12 % 12
     if (p === 'PM') h24 += 12
@@ -69,7 +67,6 @@ export default function AnalogClockPicker({
     onClose()
   }
 
-  // Preset time selections for quick picking
   const presets = [
     { label: '17:00 (5 PM)', h24: 17, m: 0 },
     { label: '18:00 (6 PM)', h24: 18, m: 0 },
@@ -88,11 +85,9 @@ export default function AnalogClockPicker({
     setPeriod(p)
   }
 
-  // Clock Hand angles (0deg at top 12 o'clock)
   const hourAngle = (hour12 % 12) * 30 + minute * 0.5
   const minuteAngle = minute * 6
 
-  // Clock numbers
   const hoursList = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
   const minutesList = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
 
@@ -114,7 +109,7 @@ export default function AnalogClockPicker({
           </button>
         </div>
 
-        {/* Time Header Display */}
+        {}
         <div className="flex items-center justify-center gap-2 bg-[#1F2937] p-3 rounded-2xl w-full border border-gray-700/60 shadow-inner">
           <button
             onClick={() => setMode('hour')}
@@ -140,7 +135,7 @@ export default function AnalogClockPicker({
             {String(minute).padStart(2, '0')}
           </button>
 
-          {/* AM / PM Selector */}
+          {}
           <div className="flex flex-col gap-1 ml-3">
             <button
               onClick={() => setPeriod('AM')}
@@ -165,7 +160,7 @@ export default function AnalogClockPicker({
           </div>
         </div>
 
-        {/* Mode Selector Tabs */}
+        {}
         <div className="flex bg-[#1F2937] rounded-full p-1 border border-gray-700 text-xs font-bold w-full">
           <button
             onClick={() => setMode('hour')}
@@ -185,12 +180,12 @@ export default function AnalogClockPicker({
           </button>
         </div>
 
-        {/* ── ANALOG CLOCK DIAL (หน้าปัดนาฬิกาเข็ม) ── */}
+        {}
         <div className="relative w-60 h-60 rounded-full bg-gradient-to-b from-[#1F2937] to-[#111827] border-4 border-[#374151] shadow-2xl flex items-center justify-center select-none">
-          {/* Center Pin */}
+          {}
           <div className="absolute w-4 h-4 rounded-full bg-[#7C3AED] z-30 border-2 border-white shadow-md"></div>
 
-          {/* Hour Hand */}
+          {}
           <div
             className="absolute origin-bottom bg-gradient-to-t from-[#7C3AED] to-[#A78BFA] rounded-full z-20 transition-transform duration-300 shadow-lg"
             style={{
@@ -203,7 +198,7 @@ export default function AnalogClockPicker({
             }}
           ></div>
 
-          {/* Minute Hand */}
+          {}
           <div
             className="absolute origin-bottom bg-blue-400 rounded-full z-10 transition-transform duration-300 shadow-lg"
             style={{
@@ -216,12 +211,12 @@ export default function AnalogClockPicker({
             }}
           ></div>
 
-          {/* Dial Numbers */}
+          {}
           {mode === 'hour' ? (
             hoursList.map((h, i) => {
-              const angleDeg = i * 30 // 12=0deg, 1=30deg...
+              const angleDeg = i * 30 
               const angleRad = ((angleDeg - 90) * Math.PI) / 180
-              const radius = 88 // distance from center
+              const radius = 88 
               const x = 120 + radius * Math.cos(angleRad) - 16
               const y = 120 + radius * Math.sin(angleRad) - 16
               const isSelected = hour12 === h
@@ -231,7 +226,7 @@ export default function AnalogClockPicker({
                   key={h}
                   onClick={() => {
                     setHour12(h)
-                    setMode('minute') // Auto switch to minute mode after picking hour
+                    setMode('minute') 
                   }}
                   style={{ left: `${x}px`, top: `${y}px` }}
                   className={`absolute w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold transition-all z-40 ${
@@ -246,7 +241,7 @@ export default function AnalogClockPicker({
             })
           ) : (
             minutesList.map((m, i) => {
-              const angleDeg = i * 30 // 0=0deg, 5=30deg...
+              const angleDeg = i * 30 
               const angleRad = ((angleDeg - 90) * Math.PI) / 180
               const radius = 88
               const x = 120 + radius * Math.cos(angleRad) - 16
@@ -271,7 +266,7 @@ export default function AnalogClockPicker({
           )}
         </div>
 
-        {/* Quick Presets */}
+        {}
         <div className="w-full">
           <div className="text-[11px] font-bold text-gray-400 mb-1.5">⚡ เลือกเวลาด่วนยอดนิยม:</div>
           <div className="grid grid-cols-3 gap-1.5">
@@ -287,7 +282,7 @@ export default function AnalogClockPicker({
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {}
         <div className="flex items-center gap-2.5 w-full pt-1">
           <button
             onClick={onClose}

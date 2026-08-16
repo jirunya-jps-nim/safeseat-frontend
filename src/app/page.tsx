@@ -20,15 +20,17 @@ const decodeId = (input: string) => {
   return isNaN(num) ? null : num;
 };
 
+// หน้าหลักเว็บไซต์ SafeSeat (Landing Page) & ระบบค้นหาติดตามการเดินทางเรียลไทม์
 export default function HomePage() {
   const router = useRouter()
 
-  // Real-time tracking code search states
+  // สถานะค้นหารหัสติดตามการเดินทาง
   const [searchCode, setSearchCode] = useState('')
   const [searchError, setSearchError] = useState('')
   const [searching, setSearching] = useState(false)
   const [multipleMatches, setMultipleMatches] = useState<any[] | null>(null)
 
+  // ค้นหารหัสบริการและเปิดแท็บใหม่ติดตามสถานะ
   const handleSearchCode = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     const cleanInput = searchCode.replace('#', '').trim()
@@ -50,11 +52,8 @@ export default function HomePage() {
         if (res.data.isMultiple && res.data.matches && res.data.matches.length > 0) {
           setMultipleMatches(res.data.matches)
         } else if (res.data.data) {
-          if (res.data.data.requestType === 'user') {
-            router.push(`/trip?id=${decodedId}`)
-          } else {
-            router.push(`/tracking?id=${decodedId}`)
-          }
+          const targetUrl = res.data.data.requestType === 'user' ? `/trip?id=${decodedId}` : `/tracking?id=${decodedId}`
+          window.open(targetUrl, '_blank')
         } else {
           setSearchError('❌ ไม่พบข้อมูลบริการสำหรับรหัสนี้')
         }
@@ -71,7 +70,7 @@ export default function HomePage() {
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {/* ── Global Starfield & Grid Background ── */}
+      {}
       <div className="fixed inset-0 z-0 pointer-events-none bg-[var(--color-bg)] transition-colors duration-300">
         <div className="absolute top-0 left-0 w-[1px] h-[1px] bg-transparent stars-1 animate-[animStar_50s_linear_infinite]"></div>
         <div className="absolute top-0 left-0 w-[2px] h-[2px] bg-transparent stars-2 animate-[animStar_80s_linear_infinite]"></div>
@@ -79,21 +78,20 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(124,58,237,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(124,58,237,0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(circle_at_center,black_40%,transparent_80%)]"></div>
       </div>
 
-      {/* Top Blur Header Mask */}
+      {}
       <div className="gradient-blur"></div>
 
-      {/* Navbar & Floating Controls */}
+      {}
       <Navbar />
 
       <main className="relative z-10">
         
-        {/* ═══════════════════════════════════════════════════════════════
-            1. HERO SECTION: ROYAL PURPLE-BLUE DESIGNED FOR SAFE NIGHTS
-            ═══════════════════════════════════════════════════════════════ */}
+        {
+}
         <section className="min-h-screen flex flex-col items-center justify-center pt-48 pb-20 px-6">
           <div className="text-center max-w-5xl mx-auto">
             
-            {/* Live Status Pill Badge */}
+            {}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] shadow-md backdrop-blur-md mb-8 animate-fade-up">
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
@@ -105,7 +103,7 @@ export default function HomePage() {
               <ArrowRight className="w-3.5 h-3.5 text-[#7C3AED]" />
             </div>
 
-            {/* Purple-Blue Headline */}
+            {}
             <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tighter font-manrope leading-[1.15] mb-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
               <span className="block text-[var(--color-text)]">
                 บริการผู้ขับขี่แทนมืออาชีพ
@@ -121,12 +119,12 @@ export default function HomePage() {
               </span>
             </h1>
 
-            {/* Subtitle Description */}
+            {}
             <p className="text-base md:text-xl text-[var(--color-text-muted)] max-w-3xl mx-auto mb-10 leading-relaxed font-normal animate-fade-up" style={{ animationDelay: '0.2s' }}>
                SafeSeat ผสานระบบนำทาง GPS เรียลไทม์เข้ากับคนขับมืออาชีพที่ผ่านการตรวจสอบประวัติ เพื่อส่งคุณและรถยนต์ส่วนตัวของคุณกลับบ้านอย่างปลอดภัย ไร้กังวลเรื่องอุบัติเหตุและด่านตรวจ
             </p>
 
-            {/* Integrated Tracking Code Search Box */}
+            {}
             <div className="max-w-xl mx-auto mb-10 animate-fade-up" style={{ animationDelay: '0.3s' }}>
               <form onSubmit={handleSearchCode} className="flex flex-col sm:flex-row items-center gap-3 p-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-full shadow-[0_10px_35px_rgba(124,58,237,0.18)] backdrop-blur-xl">
                 <div className="flex-1 flex items-center gap-3 px-5 py-2 w-full">
@@ -149,7 +147,7 @@ export default function HomePage() {
                 </button>
               </form>
 
-              {/* Helper text / Code format guidelines outside placeholder */}
+              {}
               <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-[var(--color-text-muted)]">
                 <span className="font-medium">💡 ตัวอย่างรหัสบริการ:</span>
                 <span className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[#7C3AED] font-medium font-mono">
@@ -160,8 +158,8 @@ export default function HomePage() {
               {searchError && <p className="mt-3 text-xs text-red-500 font-bold">{searchError}</p>}
             </div>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up" style={{ animationDelay: '0.4s' }}>
+            {}
+            <div className="flex justify-center items-center animate-fade-up" style={{ animationDelay: '0.4s' }}>
               <button 
                 onClick={() => router.push('/register')}
                 className="shiny-cta group cursor-pointer"
@@ -170,30 +168,12 @@ export default function HomePage() {
                   เริ่มสมัครใช้งานระบบ <ArrowRight className="w-4 h-4 text-[#7C3AED] transition-transform group-hover:translate-x-1" />
                 </span>
               </button>
-              
-              <button 
-                onClick={() => router.push('/register/pub')}
-                className="group px-6 py-3.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text)] font-bold hover:bg-[var(--color-card-hover)] transition-all flex items-center gap-2 cursor-pointer shadow-md"
-              >
-                <Shield className="w-4 h-4 text-[#7C3AED]" />
-                สำหรับพาร์ทเนอร์ร้านค้า
-              </button>
-
-              <button 
-                onClick={() => router.push('/register/driver')}
-                className="group px-6 py-3.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] text-[var(--color-text)] font-bold hover:bg-[var(--color-card-hover)] transition-all flex items-center gap-2 cursor-pointer shadow-md"
-              >
-                <Car className="w-4 h-4 text-[#7C3AED]" />
-                สำหรับพาร์ทเนอร์คนขับ
-              </button>
             </div>
           </div>
         </section>
 
-
-        {/* ═══════════════════════════════════════════════════════════════
-            2. BENTO GRID: THE OPERATING SYSTEM FOR MODERN SAFE NIGHTLIFE
-            ═══════════════════════════════════════════════════════════════ */}
+        {
+}
         <section className="py-32 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="mb-20 text-center max-w-5xl mx-auto animate-fade-up">
@@ -210,7 +190,7 @@ export default function HomePage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               
-              {/* Main Feature Bento Card (Left Panel - 4 cols - Static Card) */}
+              {}
               <div className="lg:col-span-4 group relative overflow-hidden p-8 border border-[var(--color-border)] bg-[var(--color-card)] rounded-2xl shadow-xl flex flex-col justify-between">
                 <div className="relative z-10 h-full flex flex-col justify-between">
                   <div>
@@ -223,10 +203,10 @@ export default function HomePage() {
                 </div>
               </div>
 
-              {/* Right Side Cards Container (8 cols) */}
+              {}
               <div className="lg:col-span-8 flex flex-col gap-4">
                 
-                {/* Bento Feature 2: Code Export & Tracking (Static Card) */}
+                {}
                 <div className="group relative overflow-hidden p-8 border border-[var(--color-border)] bg-[var(--color-card)] rounded-2xl shadow-md">
                   <div className="relative z-10 flex flex-col h-full justify-between">
                     <div className="mb-4 inline-flex p-3 rounded-xl bg-blue-500/15 border border-blue-500/40 text-blue-500">
@@ -239,10 +219,10 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                {/* Bottom Row: Feature 3 & Feature 4 (Static Cards) */}
+                {}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 flex-1">
                   
-                  {/* Bento Feature 3: Smart SOS Iteration (Static Card) */}
+                  {}
                   <div className="group relative overflow-hidden p-8 border border-[var(--color-border)] bg-[var(--color-card)] rounded-2xl shadow-md flex flex-col justify-between">
                     <div className="relative z-10">
                       <div className="mb-4 inline-flex p-3 rounded-xl bg-purple-500/15 border border-purple-500/40 text-purple-500">
@@ -253,7 +233,7 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* Bento Feature 4: Verified Driver Pipeline (Static Card) */}
+                  {}
                   <div className="group relative overflow-hidden p-8 border border-[var(--color-border)] bg-[var(--color-card)] rounded-2xl shadow-md flex flex-col justify-between">
                     <div className="relative z-10">
                       <div className="mb-4 inline-flex p-3 rounded-xl bg-indigo-500/15 border border-indigo-500/40 text-indigo-500">
@@ -272,10 +252,8 @@ export default function HomePage() {
           </div>
         </section>
 
-
-        {/* ═══════════════════════════════════════════════════════════════
-            3. ROYAL PURPLE-BLUE TESTIMONIAL BANNER
-            ═══════════════════════════════════════════════════════════════ */}
+        {
+}
         <div className="w-full bg-gradient-to-r from-[#7C3AED] via-[#6D28D9] to-[#1D4ED8] py-20 px-6 my-12 text-white shadow-2xl">
           <div className="max-w-4xl mx-auto text-center">
             <div className="flex justify-center gap-1 text-yellow-300 mb-6">
@@ -289,10 +267,8 @@ export default function HomePage() {
           </div>
         </div>
 
-
-        {/* ═══════════════════════════════════════════════════════════════
-            4. SERVICE TIERS & PRICING GRID (3 CARDS: Personal, Venue, Driver)
-            ═══════════════════════════════════════════════════════════════ */}
+        {
+}
         <section className="py-32 px-6 bg-[var(--color-bg)] relative border-t border-[var(--color-border)]">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-20">
@@ -302,11 +278,11 @@ export default function HomePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               
-              {/* Personal Ride */}
+              {}
               <div className="p-8 border border-[var(--color-border)] bg-[var(--color-card)] hover:border-[#7C3AED]/60 transition-all rounded-2xl flex flex-col justify-between shadow-lg">
                 <div>
                   <h3 className="text-xl font-bold font-manrope mb-2 text-[var(--color-text)]">บริการขับรถส่วนบุคคล</h3>
-                  <p className="text-[var(--color-text-muted)] text-sm mb-8 h-10 font-normal">สำหรับบุคคลทั่วไปที่ต้องการคนขับรถสำรองขับรถส่วนตัวกลับบ้าน</p>
+                  <p className="text-[var(--color-text-muted)] text-sm mb-8 h-10 font-normal">สำหรับบุคคลทั่วไปที่ต้องการพนักงานขับรถแทนขับรถส่วนตัวกลับบ้าน</p>
                   <div className="mb-8 flex items-baseline gap-1">
                     <span className="text-[var(--color-text-muted)]">฿</span>
                     <span className="text-5xl font-extrabold text-[var(--color-text)]">350</span>
@@ -332,7 +308,7 @@ export default function HomePage() {
                 </button>
               </div>
 
-              {/* Pro Partner Venue (Recommended Highlight) */}
+              {}
               <div className="relative p-8 border-2 border-[#7C3AED] bg-[var(--color-card)] shadow-[0_0_45px_rgba(124,58,237,0.25)] rounded-2xl flex flex-col justify-between scale-105 z-10">
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white text-[10px] font-bold uppercase tracking-widest px-3.5 py-1 rounded-full shadow-md">
                   แนะนำสำหรับสถานบันเทิง
@@ -368,10 +344,10 @@ export default function HomePage() {
                 </button>
               </div>
 
-              {/* Driver Card Restored */}
+              {}
               <div className="p-8 border border-[var(--color-border)] bg-[var(--color-card)] hover:border-[#7C3AED]/60 transition-all rounded-2xl flex flex-col justify-between shadow-lg">
                 <div>
-                  <h3 className="text-xl font-bold font-manrope mb-2 text-[var(--color-text)]">พนักงานขับรถสำรอง</h3>
+                  <h3 className="text-xl font-bold font-manrope mb-2 text-[var(--color-text)]">พนักงานขับรถแทน</h3>
                   <p className="text-[var(--color-text-muted)] text-sm mb-8 h-10 font-normal">สำหรับพนักงานขับรถมืออาชีพที่ต้องการสร้างรายได้เสริมที่มั่นคง</p>
                   <div className="mb-8 flex items-baseline gap-1">
                     <span className="text-[var(--color-text-muted)]">รายได้</span>
@@ -404,7 +380,7 @@ export default function HomePage() {
 
       </main>
 
-      {/* ── Selection Modal for Duplicate IDs ── */}
+      {}
       {multipleMatches && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
           <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden">
@@ -434,11 +410,8 @@ export default function HomePage() {
                     onClick={() => {
                       const reqId = item.requestid
                       setMultipleMatches(null)
-                      if (isUser) {
-                        router.push(`/trip?id=${reqId}`)
-                      } else {
-                        router.push(`/tracking?id=${reqId}`)
-                      }
+                      const targetUrl = isUser ? `/trip?id=${reqId}` : `/tracking?id=${reqId}`
+                      window.open(targetUrl, '_blank')
                     }}
                     className={`p-4 rounded-2xl border text-left transition-all hover:scale-[1.01] flex items-center justify-between gap-4 cursor-pointer shadow-sm ${
                       isUser 
@@ -475,7 +448,7 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Footer */}
+      {}
       <Footer />
 
     </div>

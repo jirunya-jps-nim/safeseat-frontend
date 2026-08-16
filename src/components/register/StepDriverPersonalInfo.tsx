@@ -34,7 +34,7 @@ export default function StepDriverPersonalInfo({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
-      {/* ── ส่วนที่ 1: ข้อมูลส่วนตัวผู้ให้บริการขับรถ ── */}
+      {}
       <div>
         <h3 style={styles.sectionHeader}>ส่วนที่ 1 : ข้อมูลส่วนตัวผู้ให้บริการขับรถ</h3>
         <div style={styles.grid2}>
@@ -100,7 +100,7 @@ export default function StepDriverPersonalInfo({
         </div>
       </div>
 
-      {/* ── ส่วนที่ 2: ข้อมูลการเข้าสู่ระบบ & อัปโหลดรูปภาพ ── */}
+      {}
       <div>
         <h3 style={styles.sectionHeader}>ส่วนที่ 2 : ข้อมูลการเข้าสู่ระบบ</h3>
         
@@ -131,7 +131,7 @@ export default function StepDriverPersonalInfo({
         </div>
 
         <div style={{ ...styles.grid2, marginTop: '12px', alignItems: 'flex-start' }}>
-          {/* อัปโหลดรูปภาพใบหน้าตนเอง */}
+          {}
           <div style={{ flex: 1, ...styles.inputGroup }}>
             <label style={styles.label}>แนบรูปภาพใบหน้าตนเอง *</label>
             <div style={styles.uploadRow}>
@@ -156,7 +156,7 @@ export default function StepDriverPersonalInfo({
             />
           </div>
 
-          {/* เลือกเพศ */}
+          {}
           <div style={{ width: '130px', ...styles.inputGroup }}>
             <label style={styles.label}>เพศ *</label>
             <div style={styles.radioGroup}>
@@ -187,7 +187,7 @@ export default function StepDriverPersonalInfo({
         </div>
       </div>
 
-      {/* ── ส่วนที่ 3: ความสามารถในการขับรถยนต์ ── */}
+      {}
       <div>
         <h3 style={styles.sectionHeader}>ส่วนที่ 3 : ความสามารถในการขับรถยนต์</h3>
         <div style={styles.checkboxGroup}>

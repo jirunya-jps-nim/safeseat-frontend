@@ -1,8 +1,5 @@
 'use client'
 
-// ═══════════════════════════════════════════════════════════════
-// app/pub/service-info/page.tsx — Service History (Royal Purple-Blue)
-// ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -121,11 +118,11 @@ export default function ServiceInfoPage() {
   const getPriorityRank = (status: string) => {
     if (!status) return 1
     const s = status.toLowerCase()
-    if (s === 'รอคนขับ' || s === 'pending') return 1 // 🥇 Rank 1: รอรับงานเท่านั้น อยู่บนสุด
+    if (s === 'รอคนขับ' || s === 'pending') return 1 
     if (['กำลังไปรับ', 'ถึงจุดรับแล้ว', 'ระหว่างเดินทาง', 'accepted', 'คนขับรับงาน'].includes(s) || ['กำลังไปรับ', 'ถึงจุดรับแล้ว', 'ระหว่างเดินทาง', 'accepted', 'คนขับรับงาน'].includes(status)) {
-      return 2 // 🥈 Rank 2: กำลังดำเนินการ (คนขับรับงานแล้ว)
+      return 2 
     }
-    return 3 // 🥉 Rank 3: เสร็จสิ้น / ยกเลิก
+    return 3 
   }
 
   const filtered = records
@@ -142,11 +139,11 @@ export default function ServiceInfoPage() {
       const aRank = getPriorityRank(a.requeststatus)
       const bRank = getPriorityRank(b.requeststatus)
       if (aRank !== bRank) {
-        return aRank - bRank // 1 (รอรับงาน) -> 2 (กำลังดำเนินการ) -> 3 (เสร็จสิ้น/ยกเลิก)
+        return aRank - bRank 
       }
       const aId = Number(a.requestid || a.requestId || 0)
       const bId = Number(b.requestid || b.requestId || 0)
-      return bId - aId // เรียงตาม ID ล่าสุดจากมากไปน้อย
+      return bId - aId 
     })
 
   const counts = {
@@ -168,7 +165,7 @@ export default function ServiceInfoPage() {
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {/* Background Glow */}
+      {}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
       </div>
@@ -179,7 +176,7 @@ export default function ServiceInfoPage() {
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-48 pb-24 flex flex-col gap-8">
         
-        {/* Page Header */}
+        {}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--color-card)] border border-[var(--color-border)] p-6 rounded-2xl shadow-xl">
           <div>
             <span className="text-xs font-bold text-[#7C3AED] tracking-wider uppercase font-manrope">SERVICE HISTORY</span>
@@ -187,10 +184,10 @@ export default function ServiceInfoPage() {
           </div>
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => pubUser && fetchRecords(pubUser.username)}
-              className="px-4 py-2 border border-[var(--color-border)] bg-[var(--color-surface)] rounded-full text-xs font-bold text-[var(--color-text)] hover:border-[#7C3AED] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              onClick={() => router.push('/pub/dashboard')}
+              className="px-4 py-2 border border-[var(--color-border)] bg-[var(--color-surface)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[#7C3AED] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-[#7C3AED]" /> รีเฟรช
+              ← ย้อนกลับ
             </button>
             <button 
               onClick={() => router.push('/pub/request-driver')}
@@ -201,7 +198,7 @@ export default function ServiceInfoPage() {
           </div>
         </div>
 
-        {/* Stats row */}
+        {}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: 'คำขอทั้งหมด', value: counts.all, color: 'text-[#7C3AED]' },
@@ -216,7 +213,7 @@ export default function ServiceInfoPage() {
           ))}
         </div>
 
-        {/* Controls */}
+        {}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-[var(--color-card)] border border-[var(--color-border)] p-4 rounded-2xl shadow-md">
           <div className="flex flex-wrap gap-2 w-full md:w-auto">
             {tabDefs.map(tab => (
@@ -250,7 +247,7 @@ export default function ServiceInfoPage() {
 
         {error && <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-semibold">{error}</div>}
 
-        {/* Table Content */}
+        {}
         {loading ? (
           <div className="p-16 text-center bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-3">
             <RefreshCw className="w-8 h-8 text-[#7C3AED] animate-spin" />
@@ -268,7 +265,7 @@ export default function ServiceInfoPage() {
           </div>
         ) : (
           <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl overflow-x-auto shadow-xl">
-            <table className="w-full text-left border-collapse min-w-[750px]">
+            <table className="w-full text-left border-collapse min-w-[850px]">
               <thead>
                 <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] text-[11px] font-bold uppercase tracking-wider">
                   <th className="p-4">วันที่/เวลา</th>
@@ -277,6 +274,7 @@ export default function ServiceInfoPage() {
                   <th className="p-4">ประเภทรถ</th>
                   <th className="p-4">การชำระเงิน</th>
                   <th className="p-4">สถานะ</th>
+                  <th className="p-4 text-center">QR Code</th>
                   <th className="p-4 text-right">รายละเอียด</th>
                 </tr>
               </thead>
@@ -334,30 +332,30 @@ export default function ServiceInfoPage() {
                           </div>
                         )}
                       </td>
-                      <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {recordId && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const originUrl = typeof window !== 'undefined' ? window.location.origin : ''
-                                const tUrl = `${originUrl}/tracking?id=${recordId}`
-                                setSelectedQrRecord({ url: tUrl, id: recordId, custName: item.custname })
-                              }}
-                              className="px-3 py-1.5 bg-[var(--color-surface)] border border-[#7C3AED]/30 text-[#7C3AED] hover:bg-[#7C3AED]/10 rounded-full text-xs font-bold cursor-pointer transition-colors inline-flex items-center gap-1.5"
-                              title="แสดง QR Code สำหรับติดตาม"
-                            >
-                              <QrCode className="w-3.5 h-3.5 text-[#7C3AED]" /> QR Code
-                            </button>
-                          )}
+                      <td className="p-4 text-center">
+                        {recordId ? (
                           <button
                             type="button"
-                            onClick={() => router.push(`/pub/tracking?id=${recordId}`)}
-                            className="px-4 py-1.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white rounded-full text-xs font-bold shadow-md cursor-pointer transition-all inline-flex items-center gap-1"
+                            onClick={() => {
+                              const originUrl = typeof window !== 'undefined' ? window.location.origin : ''
+                              const tUrl = `${originUrl}/tracking?id=${recordId}`
+                              setSelectedQrRecord({ url: tUrl, id: recordId, custName: item.custname })
+                            }}
+                            className="px-3.5 py-1.5 bg-[var(--color-surface)] border border-[#7C3AED]/30 text-[#7C3AED] hover:bg-[#7C3AED]/10 rounded-full text-xs font-bold cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-xs"
+                            title="แสดง QR Code สำหรับติดตาม"
                           >
-                            ดูรายละเอียด <ArrowRight className="w-3 h-3" />
+                            <QrCode className="w-3.5 h-3.5 text-[#7C3AED]" /> QR Code
                           </button>
-                        </div>
+                        ) : '—'}
+                      </td>
+                      <td className="p-4 text-right">
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/pub/tracking?id=${recordId}`)}
+                          className="px-4 py-1.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white rounded-full text-xs font-bold shadow-md cursor-pointer transition-all inline-flex items-center gap-1"
+                        >
+                          ดูรายละเอียด <ArrowRight className="w-3 h-3" />
+                        </button>
                       </td>
                     </tr>
                   )
@@ -370,7 +368,7 @@ export default function ServiceInfoPage() {
 
       <Footer />
 
-      {/* ── QR CODE MODAL (ROOT LEVEL Z-99999 OVER EVERYTHING) ── */}
+      {}
       {selectedQrRecord && (
         <div className="fixed inset-0 z-[99999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setSelectedQrRecord(null)}>
           <div className="bg-[var(--color-card)] border border-[#7C3AED]/40 rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl flex flex-col items-center gap-5 text-center relative" onClick={e => e.stopPropagation()}>
@@ -394,7 +392,7 @@ export default function ServiceInfoPage() {
               </p>
             </div>
 
-            {/* QR Code Image */}
+            {}
             <div className="p-4 bg-white rounded-2xl shadow-xl border border-gray-200 my-1">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(selectedQrRecord.url)}`}

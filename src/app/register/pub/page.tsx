@@ -1,26 +1,17 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// app/register/pub/page.tsx
-// หน้าสมัครสมาชิกสำหรับเจ้าของสถานประกอบการ (Pub - Light Theme)
-// รูปแบบเดียวกับหน้าสมัครคนขับ โดยใช้โครงสร้างธีมสว่าง สะอาดตา
-// ═══════════════════════════════════════════════════════════════
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-// ── Shared Components ─────────────────────────────────────────
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
 
-// ── Register Step Components ──────────────────────────────────
 import StepShopInfo from '@/components/register/StepShopInfo'
 import StepDocuments from '@/components/register/StepDocuments'
 import StepAccount from '@/components/register/StepAccount'
 
-// ── Services ──────────────────────────────────────────────────
 import api from '@/services/api'
 
-// ── Styles & Validation ───────────────────────────────────────
 import { registerStyles as styles } from '@/lib/styles/registerStyles'
 import {
   validateStep1,
@@ -30,7 +21,6 @@ import {
   validateShopImageFile,
 } from '@/lib/validation/registerValidation'
 
-// ── Types ─────────────────────────────────────────────────────
 import { RegisterForm, StepConfig } from '@/types'
 
 const STEPS: StepConfig[] = [
@@ -62,7 +52,6 @@ export default function RegisterPubPage() {
   const licenseRef = useRef<HTMLInputElement>(null)
   const shopImgRef = useRef<HTMLInputElement>(null)
 
-  // Load pub draft from localStorage on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem('pub_draft_form')
@@ -196,7 +185,7 @@ export default function RegisterPubPage() {
 
       <div style={styles.main}>
 
-        {/* ─── Hero Panel (Left 40% - Pub Bright Vibe) ─── */}
+        {}
         <div style={styles.heroPanel}>
           <img
             src="/images/safeseat_futuristic_dashboard_preview.png"
@@ -217,7 +206,7 @@ export default function RegisterPubPage() {
               หลังจากปิดร้าน — ปลอดภัยทุกเส้นทาง
             </p>
 
-            {/* Progress Steps ใน Hero */}
+            {}
             <div style={styles.heroSteps}>
               {STEPS.map((s, i) => (
                 <div key={i} style={styles.heroStep}>
@@ -269,7 +258,7 @@ export default function RegisterPubPage() {
           </div>
         </div>
 
-        {/* ─── Form Panel (Right - Light Mode Form) ─── */}
+        {}
         <div style={styles.formPanel}>
           <div style={styles.formInner}>
 
@@ -292,7 +281,7 @@ export default function RegisterPubPage() {
               />
             </div>
 
-            {/* ─── Render Step Component ─── */}
+            {}
             {step === 1 && (
               <StepShopInfo
                 form={form}
@@ -341,7 +330,7 @@ export default function RegisterPubPage() {
 
             {error && <div style={styles.errorBox}>⚠️ {error}</div>}
 
-            {/* ── Navigation Buttons ── */}
+            {}
             <div style={styles.btnRow}>
               {step > 1 ? (
                 <button onClick={handleBack} style={styles.backBtn}>

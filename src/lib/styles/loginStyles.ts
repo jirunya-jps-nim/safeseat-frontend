@@ -1,10 +1,5 @@
 import React from 'react'
 
-// ─── Login Page Styles — Royal Purple-Blue Edition ──────────────────────
-// Design: Two-column layout — high-impact imagery left, clean form right
-// Colors: Deep Space (#050714), Royal Violet (#7C3AED), Royal Blue (#1D4ED8)
-// ──────────────────────────────────────────────────────────────────────────
-
 export const loginStyles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: '100vh',
@@ -30,7 +25,6 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     alignItems: 'stretch',
   },
 
-  // ── Hero (Left) ──
   heroPanel: {
     width: '45%',
     minHeight: '640px',
@@ -133,7 +127,6 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     backgroundColor: 'rgba(124, 58, 237, 0.25)',
   },
 
-  // ── Form (Right) ──
   formPanel: {
     flex: 1,
     backgroundColor: 'var(--color-card)',
@@ -185,7 +178,6 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
-  // ── Role Toggle ──
   roleToggleContainer: {
     display: 'flex',
     backgroundColor: 'var(--color-surface)',
@@ -221,7 +213,6 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     boxShadow: '0 4px 14px rgba(124, 58, 237, 0.4)',
   },
 
-  // ── Fields ──
   fieldGroup: {
     marginBottom: '16px',
   },
@@ -275,7 +266,6 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     lineHeight: 1,
   },
 
-  // ── Feedback ──
   errorBox: {
     backgroundColor: 'rgba(239, 68, 68, 0.12)',
     border: '1px solid #ef4444',
@@ -292,7 +282,6 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
-  // ── Submit ──
   submitBtn: {
     width: '100%',
     backgroundImage: 'linear-gradient(135deg, #7C3AED 0%, #1D4ED8 100%)',
@@ -324,7 +313,6 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     animation: 'clay-spin 0.7s linear infinite',
   },
 
-  // ── Divider ──
   divider: {
     display: 'flex',
     alignItems: 'center',
@@ -344,7 +332,6 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
-  // ── Register Link ──
   registerText: {
     textAlign: 'center',
     fontSize: '13.5px',
@@ -360,7 +347,6 @@ export const loginStyles: Record<string, React.CSSProperties> = {
     fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
-  // ── Trust Badge ──
   trustBadge: {
     textAlign: 'center',
     fontSize: '11.5px',

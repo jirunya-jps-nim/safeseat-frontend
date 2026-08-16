@@ -1,4 +1,3 @@
-// Barrel export — Register step components
 export { default as StepShopInfo } from './StepShopInfo'
 export { default as StepDocuments } from './StepDocuments'
 export { default as StepAccount } from './StepAccount'

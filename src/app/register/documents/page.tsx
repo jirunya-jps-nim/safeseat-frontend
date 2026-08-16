@@ -1,10 +1,5 @@
 'use client'
 
-// ═══════════════════════════════════════════════════════════════
-// app/register/documents/page.tsx
-// SafeSeat Example Documents Page — Royal Purple-Blue Edition
-// ═══════════════════════════════════════════════════════════════
-
 import { useState } from 'react'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
@@ -106,7 +101,7 @@ export default function ExampleDocumentsPage() {
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {/* Background Glow */}
+      {}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
       </div>
@@ -116,7 +111,7 @@ export default function ExampleDocumentsPage() {
       <FloatingNav />
 
       <main className="relative z-10 max-w-6xl mx-auto px-6 pt-44 pb-24 flex flex-col md:flex-row gap-8">
-        {/* Left Sidebar */}
+        {}
         <aside className="w-full md:w-72 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 shrink-0 h-fit shadow-xl">
           <div className="text-xs font-bold tracking-widest text-[#7C3AED] border-b border-[var(--color-border)] pb-3 mb-4 font-manrope">
             REGISTRATION STEPS
@@ -141,13 +136,13 @@ export default function ExampleDocumentsPage() {
           </ul>
         </aside>
 
-        {/* Right Content Area */}
+        {}
         <section className="flex-1 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-8 shadow-xl flex flex-col gap-6">
           <h1 className="text-2xl font-bold font-manrope text-[var(--color-text)] tracking-tight">
             {currentStep.detailsTitle}
           </h1>
 
-          {/* Description Box */}
+          {}
           <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-6">
             <p className="text-sm font-bold text-[var(--color-text)] mb-3">{currentStep.intro}</p>
             <ul className="pl-5 space-y-2 list-disc text-xs text-[var(--color-text-muted)] leading-relaxed">
@@ -159,7 +154,7 @@ export default function ExampleDocumentsPage() {
             </ul>
           </div>
 
-          {/* Image Display Area */}
+          {}
           <div className="flex flex-col gap-3">
             <h2 className="text-sm font-bold text-[var(--color-text)]">{currentStep.imageLabel}</h2>
             <div className="flex justify-center items-center border border-[var(--color-border)] rounded-xl p-6 bg-[var(--color-surface)] overflow-hidden">

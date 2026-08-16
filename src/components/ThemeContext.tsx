@@ -34,7 +34,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setThemeState(savedTheme)
       applyTheme(savedTheme)
     } else {
-      // Default to dark mode for Midnight Editorial
       setThemeState('dark')
       applyTheme('dark')
     }
@@ -63,7 +62,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useTheme() {
   const context = useContext(ThemeContext)
   if (!context) {
-    // Fallback if rendered outside provider
     return {
       theme: 'dark' as Theme,
       toggleTheme: () => {},

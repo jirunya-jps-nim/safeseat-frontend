@@ -1,9 +1,5 @@
 'use client'
 
-// ═══════════════════════════════════════════════════════════════
-// app/login/page.tsx — SafeSeat Login Page
-// ═══════════════════════════════════════════════════════════════
-
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Navbar from '@/components/ui/Navbar'
@@ -14,10 +10,12 @@ import { loginStyles as styles } from '@/lib/styles/loginStyles'
 import { validateLogin } from '@/lib/validation/loginValidation'
 import { LoginForm } from '@/types'
 
+// หน้าเข้าสู่ระบบ (สำหรับ พาร์ทเนอร์ร้านค้า, พนักงานขับรถ, และ ผู้ดูแลระบบ)
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
+  // สถานะฟอร์มและบทบาทผู้ใช้งาน
   const [form, setForm] = useState<LoginForm>({ username: '', password: '' })
   const [error, setError] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false)
@@ -34,7 +32,6 @@ function LoginContent() {
     if (searchParams.get('registered') === '1') {
       showToast('สมัครสำเร็จแล้ว! กรุณารอการตรวจสอบและอนุมัติจากทีม SafeSeat')
     }
-    // Reset form fields on page mount and unmount
     setForm({ username: '', password: '' })
     setError('')
     return () => {
@@ -130,10 +127,10 @@ function LoginContent() {
         </div>
       )}
 
-      {/* Main Layout */}
+      {}
       <div style={styles.container}>
 
-        {/* ─── Hero Panel (Left 45%) ─── */}
+        {}
         <div style={styles.heroPanel}>
           <div style={styles.heroOverlay} />
           <img
@@ -169,22 +166,19 @@ function LoginContent() {
           </div>
         </div>
 
-        {/* ─── Form Panel (Right flex:1) ─── */}
+        {}
         <div style={styles.formPanel}>
           <div style={styles.formInner}>
 
-            {/* Form Header */}
-            <div style={styles.formHeader}>
-              <div style={styles.formIconWrap}>
-                <span style={{ fontSize: 28 }}>🔐</span>
-              </div>
-              <h2 style={styles.formTitle}>เข้าสู่ระบบ</h2>
-              <p style={styles.formSubtitle}>
+            {}
+            <div style={{ ...styles.formHeader, textAlign: 'center' }}>
+              <h2 style={{ ...styles.formTitle, fontSize: '32px', fontWeight: 900, textAlign: 'center' }}>เข้าสู่ระบบ</h2>
+              <p style={{ ...styles.formSubtitle, textAlign: 'center', marginTop: '6px' }}>
                 ยินดีต้อนรับกลับ! กรุณาเข้าสู่ระบบเพื่อใช้งาน
               </p>
             </div>
 
-            {/* ── Role Toggle ── */}
+            {}
             <div style={styles.roleToggleContainer}>
               <button
                 type="button"
@@ -218,10 +212,10 @@ function LoginContent() {
               </button>
             </div>
 
-            {/* Input: Username */}
+            {}
             <div style={styles.fieldGroup} key={`username-${role}`}>
               <label style={styles.label}>
-                {role === 'driver' ? 'เบอร์โทรศัพท์ (ชื่อผู้ใช้งาน)' : role === 'admin' ? 'ชื่อผู้ดูแลระบบ (username)' : 'ชื่อผู้ใช้งาน'}
+                {role === 'driver' ? 'เบอร์โทรศัพท์ (ชื่อผู้ใช้งาน)' : role === 'admin' ? 'ชื่อผู้ดูแลระบบ (USERNAME)' : 'ชื่อผู้ใช้งาน'}
               </label>
               <div style={styles.inputWrapper}>
                 <span style={styles.inputIcon}>
@@ -231,9 +225,9 @@ function LoginContent() {
                   name="username"
                   placeholder={
                     role === 'driver' 
-                      ? 'กรุณากรอกเบอร์โทรศัพท์ 10 หลัก' 
+                      ? 'กรุณากรอกเบอร์โทรศัพท์' 
                       : role === 'admin'
-                      ? 'กรุณากรอกชื่อผู้ดูแลระบบ 6-30 ตัวอักษร'
+                      ? 'กรุณากรอกชื่อผู้ดูแลระบบ'
                       : 'กรุณากรอกชื่อผู้ใช้งาน'
                   }
                   value={form.username}
@@ -241,12 +235,11 @@ function LoginContent() {
                   onKeyDown={handleKeyDown}
                   style={styles.input}
                   autoComplete="off"
-                  maxLength={role === 'driver' ? 10 : role === 'admin' ? 30 : 50}
                 />
               </div>
             </div>
 
-            {/* Input: Password */}
+            {}
             <div style={styles.fieldGroup} key={`password-${role}`}>
               <label style={styles.label}>รหัสผ่าน</label>
               <div style={styles.inputWrapper}>

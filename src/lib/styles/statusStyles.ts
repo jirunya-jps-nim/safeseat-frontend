@@ -1,11 +1,6 @@
 import React from 'react'
 
-// ─── Status Page Styles — Royal Purple-Blue Edition ────────────────────
-// Colors: Deep Space (#050714), Royal Violet (#7C3AED), Royal Blue (#1D4ED8)
-// ──────────────────────────────────────────────────────────────────────────
-
 export const statusStyles: Record<string, React.CSSProperties> = {
-  // ── Layout ────────────────────────────────────────────────────
   page: {
     minHeight: '100vh',
     backgroundColor: 'var(--color-bg)',
@@ -20,7 +15,6 @@ export const statusStyles: Record<string, React.CSSProperties> = {
   bgCircle2: { display: 'none' },
   bgCircle3: { display: 'none' },
 
-  // ── Main content wrapper ─────────────────────────────────────
   main: {
     flex: 1,
     display: 'flex',
@@ -34,7 +28,6 @@ export const statusStyles: Record<string, React.CSSProperties> = {
     width: '100%',
   },
 
-  // ── Page header ───────────────────────────────────────────────
   pageHeader: {
     textAlign: 'center',
     marginBottom: '36px',
@@ -71,7 +64,6 @@ export const statusStyles: Record<string, React.CSSProperties> = {
     fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
-  // ── Card container ────────────────────────────────────────────
   card: {
     width: '100%',
     maxWidth: '680px',
@@ -83,7 +75,6 @@ export const statusStyles: Record<string, React.CSSProperties> = {
     marginBottom: '20px',
   },
 
-  // ── Hello greeting ────────────────────────────────────────────
   greeting: {
     fontFamily: "'Manrope', 'Kanit', sans-serif",
     fontSize: '22px',
@@ -99,7 +90,6 @@ export const statusStyles: Record<string, React.CSSProperties> = {
     fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
-  // ── Stepper ───────────────────────────────────────────────────
   stepper: {
     display: 'flex',
     alignItems: 'center',
@@ -145,7 +135,6 @@ export const statusStyles: Record<string, React.CSSProperties> = {
     transition: 'background-color 0.25s ease',
   },
 
-  // ── Info Grid ────────────────────────────────────────────────
   infoGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
@@ -175,7 +164,6 @@ export const statusStyles: Record<string, React.CSSProperties> = {
     fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
-  // ── Status Messages Box ───────────────────────────────────────
   statusBox: {
     borderRadius: '16px',
     padding: '24px',
@@ -185,19 +173,16 @@ export const statusStyles: Record<string, React.CSSProperties> = {
     alignItems: 'flex-start',
   },
 
-  // Pending Box
   pendingBox: {
     backgroundColor: 'rgba(234, 179, 8, 0.1)',
     border: '1px solid rgba(234, 179, 8, 0.3)',
     color: '#eab308',
   },
-  // Approved Box
   approvedBox: {
     backgroundColor: 'rgba(34, 197, 94, 0.1)',
     border: '1px solid rgba(34, 197, 94, 0.3)',
     color: '#22c55e',
   },
-  // Rejected Box
   rejectedBox: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
     border: '1px solid rgba(239, 68, 68, 0.3)',
@@ -224,7 +209,6 @@ export const statusStyles: Record<string, React.CSSProperties> = {
     fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
-  // ── Action Buttons ───────────────────────────────────────────
   actionArea: {
     display: 'flex',
     flexDirection: 'column',

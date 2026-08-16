@@ -1,9 +1,5 @@
 'use client'
 
-// ═══════════════════════════════════════════════════════════════
-// app/pub/summary/page.tsx — Analytics & Revenue Summary (Royal Purple-Blue)
-// ═══════════════════════════════════════════════════════════════
-
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import api from '@/services/api'
@@ -32,7 +28,6 @@ export default function SummaryPage() {
   const [records, setRecords] = useState<RequestRecord[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Statistics
   const [dailyEarnings, setDailyEarnings] = useState(0)
   const [weeklyEarnings, setWeeklyEarnings] = useState(0)
   const [monthlyEarnings, setMonthlyEarnings] = useState(0)
@@ -168,7 +163,7 @@ export default function SummaryPage() {
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {/* Background Glow */}
+      {}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
       </div>
@@ -179,34 +174,42 @@ export default function SummaryPage() {
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-48 pb-24 flex flex-col gap-8">
         
-        {/* Page Header */}
+        {}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--color-card)] border border-[var(--color-border)] p-6 rounded-2xl shadow-xl">
           <div>
             <span className="text-xs font-bold text-[#7C3AED] tracking-wider uppercase font-manrope">REVENUE SUMMARY &amp; ANALYTICS</span>
             <h1 className="text-2xl sm:text-3xl font-bold font-manrope text-[var(--color-text)] mt-1">ผลสรุปบริการและส่วนแบ่งรายได้ ({pubName})</h1>
           </div>
-          <div className="text-xs font-semibold px-4 py-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)]">
-            📊 รายงานสรุปภาพรวมรายได้ร้านค้า
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => router.push('/pub/dashboard')}
+              className="px-4 py-2 border border-[var(--color-border)] bg-[var(--color-surface)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[#7C3AED] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              ← ย้อนกลับ
+            </button>
+            <div className="text-xs font-semibold px-4 py-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] hidden sm:block">
+              📊 รายงานสรุปภาพรวมรายได้ร้านค้า
+            </div>
           </div>
         </div>
 
-        {/* ── Main Grid ── */}
+        {}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Left Column: Weekly Chart */}
+          {}
           <div className="lg:col-span-7 p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">สถิติการใช้บริการรายสัปดาห์</h3>
-                  <p className="text-xs text-[var(--color-text-muted)]">จำนวนครั้งการเรียกพนักงานขับรถสำรองหน้าร้าน</p>
+                  <p className="text-xs text-[var(--color-text-muted)]">จำนวนครั้งการเรียกพนักงานขับรถแทนหน้าร้าน</p>
                 </div>
                 <div className="p-2.5 bg-[#7C3AED]/15 rounded-xl text-[#7C3AED]">
                   <BarChart3 className="w-5 h-5" />
                 </div>
               </div>
 
-              {/* Chart Plot Area */}
+              {}
               <div className="h-56 flex items-end justify-between gap-2 border-b border-[var(--color-border)] pb-2 px-4 relative">
                 {weeklyStats.map((val, idx) => (
                   <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group">
@@ -224,7 +227,7 @@ export default function SummaryPage() {
                 ))}
               </div>
 
-              {/* X Axis */}
+              {}
               <div className="flex justify-between px-4 mt-3">
                 {weekLabels.map((lbl, idx) => (
                   <div key={idx} className="text-xs font-bold text-[var(--color-text-muted)] flex items-center gap-1.5">
@@ -236,7 +239,7 @@ export default function SummaryPage() {
             </div>
           </div>
 
-          {/* Right Column: Completed Services List */}
+          {}
           <div className="lg:col-span-5 p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-center mb-6">
@@ -292,7 +295,7 @@ export default function SummaryPage() {
 
         </div>
 
-        {/* Bottom Stat Cards Grid */}
+        {}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { label: 'รายได้รายวัน', value: `฿${dailyEarnings}`, sub: `${dailyCount} รายการ`, icon: DollarSign, color: 'text-pink-500' },

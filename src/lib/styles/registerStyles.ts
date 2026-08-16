@@ -1,13 +1,7 @@
 import React from 'react'
 
-// ─── Register Page Styles — Royal Purple-Blue Edition ──────────────────
-// Design: Two-column layout — branding/steps panel left, form right
-// Colors: Deep Space (#050714), Royal Violet (#7C3AED), Royal Blue (#1D4ED8)
-// ──────────────────────────────────────────────────────────────────────────
-
 export const registerStyles: Record<string, React.CSSProperties> = {
 
-  // ── Page wrapper ──────────────────────────────────────────────
   page: {
     minHeight: '100vh',
     backgroundColor: 'var(--color-bg)',
@@ -21,7 +15,6 @@ export const registerStyles: Record<string, React.CSSProperties> = {
   bgCircle2: { display: 'none' },
   bgCircle3: { display: 'none' },
 
-  // ── Layout ───────────────────────────────────────────────────
   main: {
     flex: 1,
     display: 'flex',
@@ -38,7 +31,6 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     minHeight: '640px',
   },
 
-  // ── Hero Panel (Left) ─────────────────────────────────────────
   heroPanel: {
     width: '40%',
     position: 'relative',
@@ -150,7 +142,6 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     transition: 'background-color 0.2s',
   },
 
-  // ── Form Panel (Right) ────────────────────────────────────────
   formPanel: {
     flex: 1,
     display: 'flex',
@@ -196,7 +187,6 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
-  // ── Progress Bar ──────────────────────────────────────────────
   progressTrack: {
     height: '4px',
     borderRadius: '4px',
@@ -212,7 +202,6 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     transition: 'width 0.35s ease',
   },
 
-  // ── Input ─────────────────────────────────────────────────────
   input: {
     width: '100%',
     padding: '11px 14px',
@@ -229,7 +218,6 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
-  // ── Feedback ─────────────────────────────────────────────────
   errorBox: {
     backgroundColor: 'rgba(239, 68, 68, 0.12)',
     border: '1px solid #ef4444',
@@ -243,7 +231,6 @@ export const registerStyles: Record<string, React.CSSProperties> = {
     fontFamily: "'Inter', 'Kanit', sans-serif",
   },
 
-  // ── Navigation Buttons ────────────────────────────────────────
   btnRow: {
     display: 'flex',
     justifyContent: 'space-between',

@@ -1,9 +1,5 @@
 'use client'
 
-// ═══════════════════════════════════════════════════════════════
-// app/tracking/page.tsx — Public Service Tracking (No Header/Navbar)
-// ═══════════════════════════════════════════════════════════════
-
 import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
@@ -40,11 +36,6 @@ function TrackingContent() {
   useEffect(() => {
     if (reqData && reqData.requeststatus) {
       const currentStatus = reqData.requeststatus
-      if (prevStatusRef.current && prevStatusRef.current !== currentStatus) {
-        // เมื่อมีการเปลี่ยนสถานะ ให้รีเฟรชหน้าจอทันทีเพื่ออัปเดตสถานะการทำงานสดใหม่
-        window.location.reload()
-        return
-      }
       prevStatusRef.current = currentStatus
     }
   }, [reqData])
@@ -185,7 +176,6 @@ function TrackingContent() {
     : 'ผู้ช่วยคนขับ SafeSeat (บัดดี้)'
   const driver2Phone = reqData.follower?.phone_no || reqData.follower?.phoneno || reqData.follower_phone || ''
 
-  // Real-time GPS tracking from driver team
   const realLat = reqData.buddyteam?.currentloclat
   const realLng = reqData.buddyteam?.currentloclng
   const hasRealGps = realLat && realLng && Number(realLat) !== 0 && Number(realLng) !== 0
@@ -194,15 +184,12 @@ function TrackingContent() {
   let driverLng: number | undefined = undefined
 
   if (currentStep === 2) {
-    // 📍 ถึงจุดรับ/ร้านค้าแล้ว -> ปักหมุดคนขับที่ตำแหน่งร้านค้า/จุดรับทันที
     driverLat = pickuplatitude
     driverLng = pickuplongitude
   } else if (currentStep === 4) {
-    // 🏁 ถึงจุดหมายปลายทางแล้ว -> ปักหมุดคนขับที่ตำแหน่งจุดส่งทันที
     driverLat = dropofflatitude
     driverLng = dropofflongitude
   } else if (hasRealGps) {
-    // 🛰️ ใช้พิกัด GPS จริงจากคนขับตามเรียลไทม์ระหว่างเดินทาง
     driverLat = Number(realLat)
     driverLng = Number(realLng)
   } else if (currentStep === 1) {
@@ -225,7 +212,7 @@ function TrackingContent() {
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {/* Background Glow */}
+      {}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
       </div>
@@ -234,7 +221,7 @@ function TrackingContent() {
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-10 pb-20 flex flex-col gap-8">
         
-        {/* Prominent Status Hero Banner */}
+        {}
         <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col gap-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -247,16 +234,16 @@ function TrackingContent() {
             </div>
           </div>
 
-          {/* Stepper Progress */}
+          {}
           <div className="grid grid-cols-4 gap-2 pt-4 border-t border-[var(--color-border)]">
             {stepsList.map(s => {
               const active = currentStep >= s.step
               return (
                 <div key={s.step} className="flex flex-col items-center gap-2">
-                  <div className={`w-full h-2 rounded-full transition-all ${
-                    active ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8]' : 'bg-[var(--color-surface)] border border-[var(--color-border)]'
+                  <div className={`w-full h-2 rounded-full transition-all duration-500 ease-in-out ${
+                    active ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] scale-y-110 shadow-sm' : 'bg-[var(--color-surface)] border border-[var(--color-border)]'
                   }`} />
-                  <span className={`text-[11px] font-bold ${active ? 'text-[#7C3AED]' : 'text-[var(--color-text-muted)]'}`}>
+                  <span className={`text-[11px] font-bold transition-colors duration-300 ${active ? 'text-[#7C3AED]' : 'text-[var(--color-text-muted)]'}`}>
                     {s.label}
                   </span>
                 </div>
@@ -265,7 +252,7 @@ function TrackingContent() {
           </div>
         </div>
 
-        {/* Map Section */}
+        {}
         <div className="h-96 relative rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-xl">
           <RouteMap 
             pickupLat={pickuplatitude} pickupLng={pickuplongitude} 
@@ -282,10 +269,10 @@ function TrackingContent() {
           </div>
         </div>
 
-        {/* Info Card */}
+        {}
         <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col gap-8">
           
-          {/* Metadata Grid */}
+          {}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 border-b border-[var(--color-border)] pb-6">
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">รหัสการบริการ</span>
@@ -305,7 +292,7 @@ function TrackingContent() {
             </div>
           </div>
 
-          {/* Partner Pub Info Section */}
+          {}
           {(reqData?.pub_id || reqData?.pub) && (
             <div className="p-5 bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-500/20 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
@@ -342,7 +329,7 @@ function TrackingContent() {
             </div>
           )}
 
-          {/* Contact Details Section Grid */}
+          {}
           <div className="flex flex-col gap-6">
             <h3 className="text-xl font-bold font-manrope text-[var(--color-text)] flex items-center gap-2">
               <UserCheck className="w-5 h-5 text-[#7C3AED]" /> ข้อมูลการติดต่อทีมงานคนขับ & เบอร์ฉุกเฉิน
@@ -350,7 +337,7 @@ function TrackingContent() {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
-              {/* Driver 1: Leader */}
+              {}
               <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-[#7C3AED]/15 rounded-xl text-[#7C3AED] text-xl">👨‍✈️</div>
@@ -376,7 +363,7 @@ function TrackingContent() {
                 </div>
               </div>
 
-              {/* Driver 2: Follower */}
+              {}
               <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-blue-500/15 rounded-xl text-blue-500 text-xl">👩‍✈️</div>
@@ -402,7 +389,7 @@ function TrackingContent() {
                 </div>
               </div>
 
-              {/* Emergency Contact */}
+              {}
               <div className="p-5 bg-red-500/10 border border-red-500/30 rounded-2xl flex flex-col justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-red-500/20 rounded-xl text-red-500 text-xl">🚨</div>

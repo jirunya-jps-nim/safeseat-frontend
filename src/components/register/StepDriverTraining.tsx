@@ -1,8 +1,4 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// components/register/StepDriverTraining.tsx
-// ขั้นตอนสุดท้ายของการลงทะเบียนคนขับ (อบรมภายนอก 4 คอร์ส)
-// ═══════════════════════════════════════════════════════════════
 
 import React from 'react'
 import PaperclipIcon from '@/components/ui/PaperclipIcon'
@@ -64,7 +60,7 @@ export default function StepDriverTraining({
 
             return (
               <div key={course.id} style={styles.courseItem}>
-                {/* ข้อมูลหลักสูตร */}
+                {}
                 <div style={styles.courseHeader}>
                   <div style={styles.courseMeta}>
                     <span style={styles.courseTitle}>{course.title}</span>
@@ -80,7 +76,7 @@ export default function StepDriverTraining({
                   </a>
                 </div>
 
-                {/* แนบเกียรติบัตร */}
+                {}
                 <div style={{ marginTop: '8px' }}>
                   <label style={styles.label}>แนบเกียรติบัตรการอบรม *</label>
                   <div style={styles.uploadRow}>

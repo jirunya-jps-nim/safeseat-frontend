@@ -8,10 +8,10 @@ export default function Footer() {
   return (
     <footer className="bg-[var(--color-bg)] border-t border-[var(--color-border)] pt-10 pb-6 relative overflow-hidden text-[var(--color-text)] font-inter transition-colors duration-300">
       
-      {/* Footer Top Grid */}
+      {}
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 mb-6 relative z-10">
         
-        {/* Brand Summary */}
+        {}
         <div className="md:col-span-2">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-5 h-5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] rounded-sm rotate-45 shadow-[0_0_15px_rgba(124,58,237,0.7)]"></div>
@@ -22,7 +22,7 @@ export default function Footer() {
           </p>
         </div>
         
-        {/* Navigation */}
+        {}
         <div>
           <h4 className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest mb-4 font-manrope">เมนูหลัก</h4>
           <ul className="space-y-2.5 text-[var(--color-text-muted)] text-xs font-medium">
@@ -34,7 +34,7 @@ export default function Footer() {
           </ul>
         </div>
         
-        {/* Emergency Contact */}
+        {}
         <div>
           <h4 className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest mb-4 font-manrope">ติดต่อ &amp; ช่วยเหลือ</h4>
           <div className="space-y-3 text-[var(--color-text-muted)] text-xs font-medium">
@@ -54,14 +54,14 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Giant Stroke SAFESEAT text — Hidden in Light Mode, shown subtly in Dark Mode only */}
+      {}
       <div className="hidden dark:flex justify-center items-center py-2 opacity-15 pointer-events-none">
         <h1 className="text-[7vw] md:text-[6vw] leading-none font-extrabold font-manrope tracking-tighter text-stroke select-none">
           SAFESEAT
         </h1>
       </div>
 
-      {/* Footer Bottom Legal Bar */}
+      {}
       <div className="max-w-7xl mx-auto px-6 border-t border-[var(--color-border)] pt-4 flex flex-col md:flex-row items-center justify-between text-[var(--color-text-muted)] text-[10px] tracking-widest gap-2">
         <p>&copy; 2026 SafeSeat Platform Inc. สงวนลิขสิทธิ์ทั้งหมด</p>
         <div className="flex gap-6 font-semibold">

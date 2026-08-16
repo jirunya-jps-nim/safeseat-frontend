@@ -4,7 +4,6 @@ import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 
-// สร้าง Custom DivIcon สำหรับจุดรับ (ตำแหน่งร้านค้า - สีน้ำเงิน/ฟ้า พร้อมไอคอนร้านค้า)
 const pickupIcon = typeof window !== 'undefined' ? L.divIcon({
   className: 'custom-pickup-marker',
   html: `
@@ -22,7 +21,6 @@ const pickupIcon = typeof window !== 'undefined' ? L.divIcon({
   popupAnchor: [0, -40]
 }) : null;
 
-// สร้าง Custom DivIcon สำหรับจุดหมายปลายทาง (หมุดสีแดง)
 const dropoffIcon = typeof window !== 'undefined' ? L.divIcon({
   className: 'custom-dropoff-marker',
   html: `
@@ -40,8 +38,6 @@ const dropoffIcon = typeof window !== 'undefined' ? L.divIcon({
   popupAnchor: [0, -40]
 }) : null;
 
-
-// สร้าง Custom DivIcon สำหรับคนขับ (รถสีส้ม/เหลือง)
 const driverIcon = typeof window !== 'undefined' ? L.divIcon({
   className: 'custom-driver-marker',
   html: `
@@ -59,8 +55,6 @@ const driverIcon = typeof window !== 'undefined' ? L.divIcon({
   popupAnchor: [0, -40]
 }) : null;
 
-
-// Component to dynamically fit the map view bounds to include the entire route and driver
 function AutoFitBounds({ 
   positions, 
   driverLat, 
@@ -81,11 +75,9 @@ function AutoFitBounds({
       }
       map.fitBounds(bounds, { padding: [40, 40], animate: false })
 
-      // Restrict zooming/panning to only the route area
-      const paddedBounds = bounds.pad(0.3) // 30% padding around the route
+      const paddedBounds = bounds.pad(0.3) 
       map.setMaxBounds(paddedBounds)
       
-      // Determine optimal zoom level based on bounds
       const optimalZoom = map.getBoundsZoom(bounds)
       map.setMinZoom(Math.max(optimalZoom - 2, 8))
       map.setMaxZoom(17)
@@ -141,7 +133,6 @@ export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng,
     let active = true
 
     const loadRoutes = async () => {
-      // 1. ดึงเส้นทางถนนจริงระหว่าง จุดรับ (Pickup) ➔ จุดหมายปลายทาง (Dropoff)
       const mainWaypoints = `${pickupLng},${pickupLat};${dropoffLng},${dropoffLat}`
       const mainCoords = await fetchOSRMRoute(mainWaypoints)
 
@@ -153,17 +144,13 @@ export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng,
         }
       }
 
-      // 2. ถ้ามีตำแหน่งคนขับ ดึงเส้นทางถนนจริงจาก ตำแหน่งคนขับ ➔ จุดรับ หรือ จุดหมายปลายทาง
       if (driverLat && driverLng) {
         let driverWaypoints = ''
         if (currentStep === 1) {
-          // คนขับกำลังเดินทางไปรับที่ร้านค้า (Driver ➔ Pickup)
           driverWaypoints = `${driverLng},${driverLat};${pickupLng},${pickupLat}`
         } else if (currentStep === 3 || currentStep === 4) {
-          // คนขับกำลังนำส่งผู้ใช้ (Driver ➔ Dropoff)
           driverWaypoints = `${driverLng},${driverLat};${dropoffLng},${dropoffLat}`
         } else {
-          // คนขับไปยังจุดรับ
           driverWaypoints = `${driverLng},${driverLat};${pickupLng},${pickupLat}`
         }
 
@@ -202,18 +189,18 @@ export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng,
           url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
         />
 
-        {/* หมุดจุดรับ (ร้านค้า) */}
+        {}
         <Marker position={[pickupLat, pickupLng]} icon={pickupIcon || undefined} />
 
-        {/* หมุดจุดหมายปลายทาง */}
+        {}
         <Marker position={[dropoffLat, dropoffLng]} icon={dropoffIcon || undefined} />
 
-        {/* หมุดคนขับ (ถ้ามี) */}
+        {}
         {driverLat && driverLng && (
           <Marker position={[driverLat, driverLng]} icon={driverIcon || undefined} />
         )}
 
-        {/* เส้นทางถนนจริงหลัก (จุดรับ ➔ จุดหมาย) */}
+        {}
         {mainRouteCoords.length > 0 && (
           <Polyline
             positions={mainRouteCoords}
@@ -223,7 +210,7 @@ export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng,
           />
         )}
 
-        {/* เส้นทางถนนจริงของคนขับ (ตำแหน่งคนขับ ➔ จุดรับ/จุดหมาย) */}
+        {}
         {driverRouteCoords.length > 0 && (
           <Polyline
             positions={driverRouteCoords}

@@ -1,8 +1,5 @@
 'use client'
 
-// ═══════════════════════════════════════════════════════════════
-// app/pub/waiting/page.tsx — Waiting for Driver (5 Minutes Timer)
-// ═══════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -22,7 +19,6 @@ function WaitingContent() {
   const searchParams = useSearchParams()
   const requestId = searchParams.get('id')
   
-  // 5 Minutes = 300 seconds
   const [timeLeft, setTimeLeft] = useState(300)
   const [status, setStatus] = useState('กำลังกระจายงานไปยังทีมคนขับในพื้นที่...')
   const [isTimeout, setIsTimeout] = useState(false)
@@ -88,7 +84,6 @@ function WaitingContent() {
             req.requeststatus === 'cancelled' ||
             req.requeststatus === 'ยกเลิก'
           ) {
-            // เมื่อคนขับกดปฏิเสธ ทำการยกเลิกการค้นหาและให้ผู้ใช้ลองเรียกใหม่ทันที
             handleCancelSearch(req, 'คนขับได้ปฏิเสธรายการเรียกรถ กรุณาให้ผู้ใช้เรียกใช้บริการใหม่อีกครั้ง')
           }
         }
@@ -101,30 +96,48 @@ function WaitingContent() {
     return () => clearInterval(interval)
   }, [requestId, isTimeout, router, trackingParam])
 
+  const [showCancelModal, setShowCancelModal] = useState(false)
+
   const handleCancelSearch = (targetData?: any, reason?: string) => {
     const pubUserStr = localStorage.getItem('pub_user')
     const pubUser = pubUserStr ? JSON.parse(pubUserStr) : null
     const dataToUse = targetData || reqData
 
+    const existingSaved = localStorage.getItem('safeseat_request_form')
+    let parsedExisting: any = {}
+    if (existingSaved) {
+      try { parsedExisting = JSON.parse(existingSaved) } catch {}
+    }
+
     if (dataToUse) {
       const dropLat = Number(dataToUse.dropofflatitude) || 0
       const dropLng = Number(dataToUse.dropofflongitude) || 0
+
+      let cBrand = parsedExisting.carBrand || ''
+      let cModel = parsedExisting.carModel || ''
+      if (!cBrand && !cModel && dataToUse.carmodel) {
+        const parts = String(dataToUse.carmodel).trim().split(' ')
+        cBrand = parts[0] || ''
+        cModel = parts.slice(1).join(' ') || parts[0] || ''
+      }
+
       const formData = {
         pubId: pubUser?.pubid || dataToUse.pubid || 1,
-        custName: dataToUse.custname || '',
-        phoneNo: dataToUse.phoneno || '',
-        phoneEmer: dataToUse.phoneemer || '',
-        carModel: dataToUse.carmodel || '',
-        licensePlate: dataToUse.carplate || '',
-        carType: dataToUse.requiredcartype === 1 ? 'Electric' : (dataToUse.requiredcartype === 2 ? 'Manual' : 'Autometric'),
-        destination: (dropLat && dropLng) ? {
+        custName: parsedExisting.custName || dataToUse.custname || '',
+        phoneNo: parsedExisting.phoneNo || dataToUse.phoneno || '',
+        phoneEmer: parsedExisting.phoneEmer || dataToUse.phoneemer || '',
+        carBrand: cBrand,
+        carModel: cModel,
+        licensePlate: parsedExisting.licensePlate || dataToUse.carplate || '',
+        carType: parsedExisting.carType || (dataToUse.requiredcartype === 1 ? 'Electric' : (dataToUse.requiredcartype === 2 ? 'Manual' : 'Autometric')),
+        destination: parsedExisting.destination || ((dropLat && dropLng) ? {
           lat: dropLat,
           lng: dropLng,
           label: dataToUse.destination_name || `พิกัด: ${dropLat.toFixed(5)}, ${dropLng.toFixed(5)}`
-        } : null,
-        isLadyMode: dataToUse.isladymode || false,
-        paymentMethod: dataToUse.paymentmethod === 1 ? 1 : 2,
-        note: dataToUse.note || '',
+        } : null),
+        isLadyMode: parsedExisting.isLadyMode !== undefined ? parsedExisting.isLadyMode : (dataToUse.isladymode || false),
+        paymentMethod: parsedExisting.paymentMethod || (dataToUse.paymentmethod === 1 ? 1 : 2),
+        note: parsedExisting.note !== undefined ? parsedExisting.note : (dataToUse.note || ''),
       }
       localStorage.setItem('safeseat_request_form', JSON.stringify(formData))
     }
@@ -136,7 +149,6 @@ function WaitingContent() {
     router.push('/pub/request-driver?step=1')
   }
 
-  // Format 300 seconds -> 5:00
   const minutes = Math.floor(timeLeft / 60)
   const seconds = timeLeft % 60
   const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
@@ -176,7 +188,7 @@ function WaitingContent() {
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {/* Background Glow */}
+      {}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
       </div>
@@ -188,7 +200,7 @@ function WaitingContent() {
       <main className="relative z-10 max-w-5xl mx-auto px-6 pt-48 pb-24 flex items-center justify-center">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 w-full p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl">
           
-          {/* Left Column: Radar Animation & Timer */}
+          {}
           <div className="lg:col-span-5 flex flex-col items-center text-center justify-between border-b lg:border-b-0 lg:border-r border-[var(--color-border)] pb-8 lg:pb-0 lg:pr-8">
             <div className="flex flex-col items-center w-full">
               <div className="relative w-28 h-28 flex items-center justify-center mb-6">
@@ -211,14 +223,14 @@ function WaitingContent() {
             </div>
 
             <button 
-              onClick={() => handleCancelSearch()}
+              onClick={() => setShowCancelModal(true)}
               className="mt-6 w-full py-3 bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all cursor-pointer"
             >
               ยกเลิกการค้นหา
             </button>
           </div>
 
-          {/* Right Column: Request Details & QR */}
+          {}
           <div className="lg:col-span-7 flex flex-col gap-6">
             {reqData && (
               <div className="p-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col gap-4">
@@ -262,7 +274,7 @@ function WaitingContent() {
               </div>
             )}
 
-            {/* Tracking QR & Link Share */}
+            {}
             {trackingUrl && (
               <div className="p-6 bg-[var(--color-surface)] border-2 border-dashed border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-4 text-center">
                 <span className="text-xs font-bold text-[var(--color-text)]">ลูกค้าสแกน QR Code เพื่อติดตามสถานะเรียลไทม์</span>
@@ -299,6 +311,42 @@ function WaitingContent() {
       </main>
 
       <Footer />
+
+      {}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 sm:p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center gap-5">
+            <div className="w-14 h-14 rounded-full bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-500 text-2xl">
+              ⚠️
+            </div>
+            <div>
+              <h3 className="text-xl font-bold font-manrope text-[var(--color-text)]">ยืนยันการยกเลิกการค้นหา</h3>
+              <p className="text-xs text-[var(--color-text-muted)] mt-2 leading-relaxed font-light">
+                คุณต้องการยกเลิกการค้นหาคนขับใช่หรือไม่? ข้อมูลการเรียกรถเดิมของคุณจะถูกบันทึกไว้สำหรับเรียกรถใหม่
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 w-full mt-2">
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                className="py-3 px-4 rounded-full border border-[var(--color-border)] text-xs font-bold text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] transition-all cursor-pointer"
+              >
+                ย้อนกลับ
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCancelModal(false)
+                  handleCancelSearch()
+                }}
+                className="py-3 px-4 rounded-full bg-red-500 hover:bg-red-600 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+              >
+                ยืนยันยกเลิก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

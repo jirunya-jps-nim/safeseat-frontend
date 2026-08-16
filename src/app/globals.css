@@ -1,11 +1,9 @@
-/* ================================================================
-   globals.css — SafeSeat Royal Purple-Blue Design System
-   ================================================================ */
+
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@200;400;600;700;800&family=Kanit:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* ── Royal Purple-Blue Tokens ─────────────────────────────────── */
+
 :root, html.dark {
   --accent-purple: #7C3AED;
   --accent-blue: #1D4ED8;
@@ -39,12 +37,12 @@ html.light {
   --accent-gradient: linear-gradient(135deg, #7C3AED 0%, #1D4ED8 50%, #2563EB 100%);
   --accent-glow: rgba(124, 58, 237, 0.2);
   
-  --color-bg: #FFFFFF;           /* 100% Pure White Background */
-  --color-card: #FFFFFF;         /* 100% Pure White Cards */
-  --color-card-hover: #F5F3FF;   /* Soft violet hover */
-  --color-surface: #EDE9FE;      /* Light violet surface */
-  --color-text: #0F172A;         /* Deep slate black text */
-  --color-text-muted: #334155;   /* High-contrast slate muted text */
+  --color-bg: #FFFFFF;           
+  --color-card: #FFFFFF;         
+  --color-card-hover: #F5F3FF;   
+  --color-surface: #EDE9FE;      
+  --color-text: #0F172A;         
+  --color-text-muted: #334155;   
   --color-text-subtle: #64748B;  
   --color-border: rgba(124, 58, 237, 0.18);
   --color-border-light: rgba(124, 58, 237, 0.1);
@@ -76,7 +74,7 @@ body, input, button, select, textarea {
 .font-manrope { font-family: 'Manrope', 'Kanit', sans-serif; }
 .font-inter { font-family: 'Inter', 'Kanit', sans-serif; }
 
-/* ── Custom Animations ── */
+
 @keyframes fade-in-up {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -96,7 +94,7 @@ body, input, button, select, textarea {
   animation: fade-in-up 0.8s ease-out forwards;
 }
 
-/* ── Shiny Purple-Blue CTA Button ── */
+
 .shiny-cta {
   --gradient-angle: 0deg;
   position: relative;
@@ -127,7 +125,7 @@ body, input, button, select, textarea {
   z-index: 0;
 }
 
-/* ── Parallax Stars ── */
+
 html.dark .stars-1 { box-shadow: 234px 124px #fff, 654px 345px #fff, 876px 12px #fff, 1200px 800px #fff, 400px 1500px #fff, 1800px 200px #fff, 100px 1000px #fff, 900px 1900px #fff, 500px 600px #fff, 1400px 100px #fff, 300px 400px #fff, 1600px 1200px #fff; }
 html.dark .stars-2 { box-shadow: 123px 456px #fff, 789px 234px #fff, 456px 890px #fff, 1100px 300px #fff, 200px 1200px #fff, 1500px 500px #fff, 600px 1700px #fff, 1300px 900px #fff; }
 
@@ -145,7 +143,7 @@ html.light .stars-2 { box-shadow: 123px 456px #1D4ED8, 789px 234px #1D4ED8, 456p
   mask-image: linear-gradient(to bottom, black, transparent);
 }
 
-/* ── Selection Purple ── */
+
 .selection-purple::selection {
   background-color: #7C3AED;
   color: #ffffff;
@@ -155,7 +153,7 @@ html.light .stars-2 { box-shadow: 123px 456px #1D4ED8, 789px 234px #1D4ED8, 456p
   color: #ffffff;
 }
 
-/* ── Giant Text Stroke ── */
+
 html.dark .text-stroke {
   -webkit-text-stroke: 1px rgba(124, 58, 237, 0.3);
   color: transparent;
@@ -166,7 +164,7 @@ html.light .text-stroke {
   color: transparent;
 }
 
-/* ── Theme Switch Styling ── */
+
 .theme-switch-btn {
   position: relative;
   width: 54px;

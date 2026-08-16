@@ -5,7 +5,6 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import api from '@/services/api'
 
-// แก้ปัญหา icon ของ Leaflet ไม่แสดงใน React
 const markerIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -16,7 +15,6 @@ const markerIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Component ย่อยสำหรับดักจับการคลิกบนแผนที่
 function LocationMarker({ position, setPosition }: { position: L.LatLng | null, setPosition: (pos: L.LatLng) => void }) {
   useMapEvents({
     click(e) {
@@ -29,12 +27,11 @@ function LocationMarker({ position, setPosition }: { position: L.LatLng | null, 
   )
 }
 
-// Component สำหรับอัปเดตตำแหน่งจุดศูนย์กลางของแผนที่แบบโปรแกรมมิ่ง
 function ChangeMapCenter({ center }: { center: [number, number] }) {
   const map = useMap()
   useEffect(() => {
     if (center) {
-      map.setView(center, 15) // ขยายระดับการซูมเป็น 15 เมื่อค้นพบสถานที่
+      map.setView(center, 15) 
     }
   }, [center, map])
   return null
@@ -55,7 +52,6 @@ interface MapPickerProps {
 }
 
 export default function MapPicker({ defaultLat, defaultLng, onConfirm, onCancel }: MapPickerProps) {
-  // ค่าเริ่มต้นตั้งไว้ที่ตัวเมืองเชียงใหม่ (18.7883, 98.9853)
   const [position, setPosition] = useState<L.LatLng | null>(
     defaultLat && defaultLng ? new L.LatLng(defaultLat, defaultLng) : null
   )
@@ -66,7 +62,6 @@ export default function MapPicker({ defaultLat, defaultLng, onConfirm, onCancel 
 
   const [mapCenter, setMapCenter] = useState<[number, number]>(initialCenter)
   
-  // สถานะการค้นหา
   const [searchQuery, setSearchQuery] = useState('')
   const [searching, setSearching] = useState(false)
   const [searchResults, setSearchResults] = useState<PlaceResult[]>([])
@@ -84,7 +79,6 @@ export default function MapPicker({ defaultLat, defaultLng, onConfirm, onCancel 
       if (items.length === 0) {
         setNoResults(true)
       } else {
-        // เมื่อเสิร์ชเจอ ให้ปักพิกัดและเลื่อนแผนที่ไปที่ตำแหน่งแรกสุดทันที
         const firstPlace = items[0]
         const newLatLng = new L.LatLng(firstPlace.latitude, firstPlace.longitude)
         setPosition(newLatLng)
@@ -104,7 +98,7 @@ export default function MapPicker({ defaultLat, defaultLng, onConfirm, onCancel 
     setPosition(newLatLng)
     setSelectedLabel(place.title)
     setMapCenter([place.latitude, place.longitude])
-    setSearchResults([]) // ปิดรายการแสดงผลการค้นหาหลังเลือกเสร็จ
+    setSearchResults([]) 
   }
 
   return (
@@ -115,7 +109,7 @@ export default function MapPicker({ defaultLat, defaultLng, onConfirm, onCancel 
           <button type="button" onClick={onCancel} style={closeBtnStyle}>✕</button>
         </div>
 
-        {/* ค้นหาตำแหน่งสถานที่ */}
+        {}
         <div 
           style={searchContainerStyle} 
           onKeyDown={(e) => e.stopPropagation()} 
@@ -232,7 +226,6 @@ export default function MapPicker({ defaultLat, defaultLng, onConfirm, onCancel 
   )
 }
 
-// ─── Styles ────────────────────────────────────────────────────────
 const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)',
   zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -264,7 +257,6 @@ const confirmBtnStyle: React.CSSProperties = {
   backgroundColor: '#4f46e5', color: '#fff', fontWeight: 600, fontFamily: "'Prompt', sans-serif"
 }
 
-// Search Styles
 const searchContainerStyle: React.CSSProperties = {
   padding: '12px 20px',
   borderBottom: '1px solid #e2e8f0',

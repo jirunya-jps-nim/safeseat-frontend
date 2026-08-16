@@ -6,7 +6,6 @@ import Field from '@/components/ui/Field'
 import AnalogClockPicker from '@/components/ui/AnalogClockPicker'
 import { RegisterForm } from '@/types'
 
-// Dynamic import ป้องกัน error "window is not defined" จาก Leaflet ตอนทำ SSR
 const MapPicker = dynamic(() => import('@/components/ui/MapPicker'), { ssr: false })
 
 interface StepShopInfoProps {
@@ -14,10 +13,9 @@ interface StepShopInfoProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   onPin?: (lat: number, lng: number) => void
   inputStyle: React.CSSProperties
-  labelColor?: string // ส่งสีของ label และข้อความประกอบมาเพื่อความยืดหยุ่นของธีม
+  labelColor?: string 
 }
 
-// Helper formatting 24h "18:00" -> "06:00 PM"
 function formatDisplayTime(val: string): string {
   if (!val) return '06:00 PM'
   const parts = val.split(':')
@@ -49,7 +47,7 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
 
-      {/* ── ชื่อสถานประกอบการ ── */}
+      {}
       <Field label="ชื่อสถานประกอบการ *" icon="🏪" color={labelColor}>
         <input
           name="pubName"
@@ -60,7 +58,7 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
         />
       </Field>
 
-      {/* ── เวลาเปิด-ปิด (ตัวเลือกเวลาแบบเข็มนาฬิกา Analog Clock) ── */}
+      {}
       <div style={{ display: 'flex', gap: 12 }}>
         <div style={{ flex: 1 }}>
           <Field label="เวลาเปิด *" icon="🕐" color={labelColor}>
@@ -135,7 +133,7 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
         </div>
       </div>
 
-      {/* Analog Clock Picker Modal (ตัวเลือกเข็มนาฬิกา) */}
+      {}
       <AnalogClockPicker
         isOpen={activeClock !== null}
         onClose={() => setActiveClock(null)}
@@ -144,7 +142,7 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
         title={activeClock === 'pubOpen' ? 'ตั้งค่าเวลาเปิดร้าน (เข็มนาฬิกา)' : 'ตั้งค่าเวลาปิดร้าน (เข็มนาฬิกา)'}
       />
 
-      {/* ── อีเมล ── */}
+      {}
       <Field label="อีเมล *" icon="📧" color={labelColor}>
         <input
           name="pubEmail"
@@ -156,7 +154,7 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
         />
       </Field>
 
-      {/* ── เบอร์โทรศัพท์ ── */}
+      {}
       <Field label="หมายเลขโทรศัพท์ * (ขึ้นต้นด้วย 0, 9–10 หลัก)" icon="📱" color={labelColor}>
         <input
           name="pubPhone"
@@ -169,7 +167,7 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
         />
       </Field>
 
-      {/* ── ตำแหน่งร้าน (ปักหมุดผ่านแผนที่) ── */}
+      {}
       <Field label="ตำแหน่งร้าน *" icon="📍" color={labelColor}>
         <div style={{ display: 'flex', gap: 10 }}>
           <input

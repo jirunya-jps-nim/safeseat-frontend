@@ -14,8 +14,8 @@ export default function Footer() {
         {}
         <div className="md:col-span-2">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-5 h-5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] rounded-sm rotate-45 shadow-[0_0_15px_rgba(124,58,237,0.7)]"></div>
-            <span className="text-xl font-bold font-manrope tracking-tight text-[var(--color-text)]">Safe<span className="text-[#7C3AED]">Seat</span></span>
+            <div className="w-5 h-5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] rounded-sm rotate-45 shadow-[0_0_15px_rgba(35,64,167,0.7)]"></div>
+            <span className="text-xl font-bold font-manrope tracking-tight text-[var(--color-text)]">Safe<span className="text-[#2340A7]">Seat</span></span>
           </div>
           <p className="text-[var(--color-text-muted)] max-w-sm leading-relaxed text-xs font-normal">
             แพลตฟอร์มบริการคนขับรถแทนมืออาชีพ เพื่อยกระดับความปลอดภัย ยุติอุบัติเหตุเมาแล้วขับ และสร้างความอุ่นใจในการเดินทางทุกค่ำคืน
@@ -24,11 +24,11 @@ export default function Footer() {
         
         {}
         <div>
-          <h4 className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest mb-4 font-manrope">เมนูหลัก</h4>
+          <h4 className="text-xs font-bold text-[#2340A7] uppercase tracking-widest mb-4 font-manrope">เมนูหลัก</h4>
           <ul className="space-y-2.5 text-[var(--color-text-muted)] text-xs font-medium">
             <li><Link href="/" className="hover:text-[var(--color-text)] transition-colors">หน้าแรก</Link></li>
             <li><Link href="/about" className="hover:text-[var(--color-text)] transition-colors">เกี่ยวกับเรา</Link></li>
-            <li><Link href="/register/pub" className="hover:text-[var(--color-text)] transition-colors">สำหรับพาร์ทเนอร์ร้านค้า</Link></li>
+            <li><Link href="/register/pub" className="hover:text-[var(--color-text)] transition-colors">สำหรับพาร์ทเนอร์สถานบันเทิง</Link></li>
             <li><Link href="/register/driver" className="hover:text-[var(--color-text)] transition-colors">สำหรับผู้ขับขี่แทน</Link></li>
             <li><Link href="/help" className="hover:text-[var(--color-text)] transition-colors">ศูนย์ช่วยเหลือ &amp; SOS</Link></li>
           </ul>
@@ -36,18 +36,18 @@ export default function Footer() {
         
         {}
         <div>
-          <h4 className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest mb-4 font-manrope">ติดต่อ &amp; ช่วยเหลือ</h4>
+          <h4 className="text-xs font-bold text-[#2340A7] uppercase tracking-widest mb-4 font-manrope">ติดต่อ &amp; ช่วยเหลือ</h4>
           <div className="space-y-3 text-[var(--color-text-muted)] text-xs font-medium">
             <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-text)]">
-              <Phone className="w-3.5 h-3.5 text-[#7C3AED]" />
+              <Phone className="w-3.5 h-3.5 text-[#2340A7]" />
               <span>สายด่วน 24 ชั่วโมง: 02-123-4567</span>
             </div>
             <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-text)]">
-              <Mail className="w-3.5 h-3.5 text-[#7C3AED]" />
+              <Mail className="w-3.5 h-3.5 text-[#2340A7]" />
               <span>contact@safeseat.app</span>
             </div>
             <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-text)]">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#7C3AED]" />
+              <ShieldCheck className="w-3.5 h-3.5 text-[#2340A7]" />
               <span>ประกันภัยคุ้มครองยานพาหนะ</span>
             </div>
           </div>

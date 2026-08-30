@@ -25,6 +25,7 @@ function WaitingContent() {
   const [reqData, setReqData] = useState<any>(null)
   const [copied, setCopied] = useState(false)
   const [trackingUrl, setTrackingUrl] = useState('')
+  const [carFallback, setCarFallback] = useState({ model: '', plate: '' })
 
   const trackingParam = searchParams.get('tracking') || (requestId ? encodeId(requestId) : '')
 
@@ -36,6 +37,15 @@ function WaitingContent() {
 
   useEffect(() => {
     if (!requestId) return
+    // โหลด carmodel/carplate จาก localStorage เป็น fallback
+    try {
+      const savedModel = localStorage.getItem(`safeseat_carmodel_${requestId}`)
+      const savedPlate = localStorage.getItem(`safeseat_carplate_${requestId}`)
+      if (savedModel || savedPlate) {
+        setCarFallback({ model: savedModel || '', plate: savedPlate || '' })
+      }
+    } catch (e) {}
+
     const fetchRequestInfo = async () => {
       try {
         const res = await api.get(`/pub/service-request/${requestId}?type=pub`)
@@ -98,7 +108,15 @@ function WaitingContent() {
 
   const [showCancelModal, setShowCancelModal] = useState(false)
 
-  const handleCancelSearch = (targetData?: any, reason?: string) => {
+  const handleCancelSearch = async (targetData?: any, reason?: string) => {
+    if (requestId) {
+      try {
+        await api.delete(`/pub/service-request/${requestId}`)
+      } catch (err) {
+        console.error('Failed to delete request from database:', err)
+      }
+    }
+
     const pubUserStr = localStorage.getItem('pub_user')
     const pubUser = pubUserStr ? JSON.parse(pubUserStr) : null
     const dataToUse = targetData || reqData
@@ -121,6 +139,12 @@ function WaitingContent() {
         cModel = parts.slice(1).join(' ') || parts[0] || ''
       }
 
+      const rawNote = parsedExisting.note !== undefined ? parsedExisting.note : (dataToUse.note || '')
+      const cleanedNote = rawNote
+        .replace(/\[รุ่นรถ:\s*.*?\|\s*ทะเบียน:\s*.*?\]/g, '')
+        .replace(/\[DEST:.*?\]/g, '')
+        .trim()
+
       const formData = {
         pubId: pubUser?.pubid || dataToUse.pubid || 1,
         custName: parsedExisting.custName || dataToUse.custname || '',
@@ -137,7 +161,7 @@ function WaitingContent() {
         } : null),
         isLadyMode: parsedExisting.isLadyMode !== undefined ? parsedExisting.isLadyMode : (dataToUse.isladymode || false),
         paymentMethod: parsedExisting.paymentMethod || (dataToUse.paymentmethod === 1 ? 1 : 2),
-        note: parsedExisting.note !== undefined ? parsedExisting.note : (dataToUse.note || ''),
+        note: cleanedNote,
       }
       localStorage.setItem('safeseat_request_form', JSON.stringify(formData))
     }
@@ -146,7 +170,7 @@ function WaitingContent() {
       sessionStorage.setItem('safeseat_reject_notice', reason)
     }
 
-    router.push('/pub/request-driver?step=1')
+    router.push('/pub/dashboard')
   }
 
   const minutes = Math.floor(timeLeft / 60)
@@ -168,13 +192,13 @@ function WaitingContent() {
             <AlertTriangle className="w-16 h-16 text-red-500" />
             <h2 className="text-2xl font-bold font-manrope text-red-500">ไม่มีคนขับรับงานภายใน 5 นาที</h2>
             <p className="text-sm text-[var(--color-text-muted)] leading-relaxed font-light">
-              ขณะนี้ยังไม่มีคนขับอยู่ในพื้นที่หรือสะดวกรับงานภายในเวลา 5 นาทีที่กำหนด <br/>กรุณากดปุ่มย้อนกลับเพื่อลองเรียกรถใหม่อีกครั้ง
+              ขณะนี้ยังไม่มีคนขับอยู่ในพื้นที่หรือสะดวกรับงานภายในเวลา 5 นาทีที่กำหนด <br/>กรุณากดปุ่มย้อนกลับเพื่อกลับไปยังหน้าแดชบอร์ด
             </p>
             <button 
               onClick={() => handleCancelSearch()}
-              className="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md cursor-pointer transition-all"
+              className="w-full py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md cursor-pointer transition-all"
             >
-              กลับไปหน้าเรียกรถ
+              กลับไปยังหน้าแดชบอร์ด
             </button>
           </div>
         </main>
@@ -190,7 +214,7 @@ function WaitingContent() {
       
       {}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#2340A7]/10 rounded-full blur-[140px]"></div>
       </div>
 
       <div className="gradient-blur"></div>
@@ -204,15 +228,15 @@ function WaitingContent() {
           <div className="lg:col-span-5 flex flex-col items-center text-center justify-between border-b lg:border-b-0 lg:border-r border-[var(--color-border)] pb-8 lg:pb-0 lg:pr-8">
             <div className="flex flex-col items-center w-full">
               <div className="relative w-28 h-28 flex items-center justify-center mb-6">
-                <div className="absolute inset-0 rounded-full bg-[#7C3AED]/20 animate-ping" />
-                <div className="absolute inset-2 rounded-full bg-blue-500/20 animate-pulse" />
-                <div className="p-4 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] rounded-full text-white shadow-xl relative z-10">
+                <div className="absolute inset-0 rounded-full bg-[#2340A7]/20 animate-ping" />
+                <div className="absolute inset-2 rounded-full bg-[#2563EB]/20 animate-pulse" />
+                <div className="p-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] rounded-full text-white shadow-xl relative z-10">
                   <Car className="w-10 h-10" />
                 </div>
               </div>
 
               <h2 className="text-2xl font-bold font-manrope text-[var(--color-text)]">กำลังค้นหาคนขับรถ</h2>
-              <p className="text-xs font-bold text-[#7C3AED] mt-1 tracking-wider">{status}</p>
+              <p className="text-xs font-bold text-[#2340A7] mt-1 tracking-wider">{status}</p>
 
               <div className="w-full mt-6 p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex flex-col items-center">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] font-mono">เหลือเวลาค้นหา (5 นาที)</span>
@@ -236,7 +260,7 @@ function WaitingContent() {
               <div className="p-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col gap-4">
                 <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-3">
                   <span className="text-sm font-bold text-[var(--color-text)] flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#7C3AED]" /> สรุปข้อมูลการเรียกรถ <span className="text-xs font-mono font-bold text-[#7C3AED] px-2 py-0.5 rounded bg-[#7C3AED]/10 font-mono">#{reqData.requestid || requestId}</span>
+                    <FileText className="w-4 h-4 text-[#2340A7]" /> สรุปข้อมูลการเรียกรถ <span className="text-xs font-mono font-bold text-[#2340A7] px-2 py-0.5 rounded bg-[#2340A7]/10 font-mono">#{reqData.requestid || requestId}</span>
                   </span>
                   {reqData.isladymode && (
                     <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-400">
@@ -264,7 +288,7 @@ function WaitingContent() {
                   </div>
                   <div>
                     <span className="text-[var(--color-text-muted)] text-[10px] uppercase font-mono block">รุ่น / ทะเบียนรถ</span>
-                    <span className="text-[var(--color-text)] font-bold">{reqData.carmodel || '-'} ({reqData.carplate || '-'})</span>
+                    <span className="text-[var(--color-text)] font-bold">{reqData.carmodel || carFallback.model || '-'} ({reqData.carplate || carFallback.plate || '-'})</span>
                   </div>
                   <div>
                     <span className="text-[var(--color-text-muted)] text-[10px] uppercase font-mono block">ค่าบริการคาดการณ์</span>
@@ -296,7 +320,7 @@ function WaitingContent() {
                   className={`w-full py-3 px-4 rounded-full text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer ${
                     copied 
                       ? 'bg-emerald-500 text-white' 
-                      : 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white'
+                      : 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white'
                   }`}
                 >
                   {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -322,7 +346,7 @@ function WaitingContent() {
             <div>
               <h3 className="text-xl font-bold font-manrope text-[var(--color-text)]">ยืนยันการยกเลิกการค้นหา</h3>
               <p className="text-xs text-[var(--color-text-muted)] mt-2 leading-relaxed font-light">
-                คุณต้องการยกเลิกการค้นหาคนขับใช่หรือไม่? ข้อมูลการเรียกรถเดิมของคุณจะถูกบันทึกไว้สำหรับเรียกรถใหม่
+                คุณต้องการยกเลิกการค้นหาคนขับใช่หรือไม่? ระบบจะยกเลิกการค้นหาและลบข้อมูลการเรียกรถนี้ออกจากระบบทันที
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 w-full mt-2">
@@ -356,7 +380,7 @@ export default function PubWaitingPage() {
     <Suspense fallback={
       <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center text-[var(--color-text)] font-inter">
         <div className="flex flex-col items-center gap-3">
-          <RefreshCw className="w-8 h-8 text-[#7C3AED] animate-spin" />
+          <RefreshCw className="w-8 h-8 text-[#2340A7] animate-spin" />
           <p className="text-sm font-bold">กำลังโหลด...</p>
         </div>
       </div>

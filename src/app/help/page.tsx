@@ -22,8 +22,8 @@ export default function HelpCenterPage() {
   const faqs: FAQItem[] = [
     {
       category: 'pub',
-      question: 'ขั้นตอนการสมัครพาร์ทเนอร์ร้านค้า/สถานบันเทิง มีอะไรบ้าง?',
-      answer: 'คุณสามารถสมัครโดยเตรียมเอกสารรูปใบอนุญาตประกอบการค้า และรูปภาพหน้าร้าน จากนั้นเข้าไปที่หน้า "สมัครเป็นพาร์ทเนอร์ร้านค้า" กรอกข้อมูล และปักหมุดแผนที่ให้ชัดเจน หลังจากกดยืนยันแล้ว ทางผู้ดูแลระบบจะใช้เวลาตรวจสอบและอนุมัติภายใน 1-3 วันทำการ'
+      question: 'ขั้นตอนการสมัครพาร์ทเนอร์สถานบันเทิง มีอะไรบ้าง?',
+      answer: 'คุณสามารถสมัครโดยเตรียมเอกสารรูปใบอนุญาตประกอบการ และรูปภาพหน้าสถานบันเทิง จากนั้นเข้าไปที่หน้า "สมัครเป็นพาร์ทเนอร์สถานบันเทิง" กรอกข้อมูล และปักหมุดแผนที่ให้ชัดเจน หลังจากกดยืนยันแล้ว ทางผู้ดูแลระบบจะใช้เวลาตรวจสอบและอนุมัติภายใน 1-3 วันทำการ'
     },
     {
       category: 'driver',
@@ -33,7 +33,7 @@ export default function HelpCenterPage() {
     {
       category: 'general',
       question: 'ระบบ SafeSeat มีขั้นตอนช่วยลดการเมาแล้วขับอย่างไร?',
-      answer: 'SafeSeat จะมีส่วนเชื่อมต่อโดยให้ร้านค้าพาร์ทเนอร์อำนวยความสะดวกในการเรียกรถส่งผู้ใช้งาน หรือผู้ใช้ทั่วไปสามารถเรียกพนักงานขับรถแทนที่อยู่บริเวณใกล้เคียงเพื่อขับรถยนต์ส่วนตัวของผู้ใช้กลับบ้านอย่างปลอดภัย ไร้กังวลเรื่องด่านตรวจและอุบัติเหตุ'
+      answer: 'SafeSeat จะมีส่วนเชื่อมต่อโดยให้สถานบันเทิงพาร์ทเนอร์อำนวยความสะดวกในการเรียกรถส่งผู้ใช้งาน หรือผู้ใช้ทั่วไปสามารถเรียกพนักงานขับรถแทนที่อยู่บริเวณใกล้เคียงเพื่อขับรถยนต์ส่วนตัวของผู้ใช้กลับบ้านอย่างปลอดภัย ไร้กังวลเรื่องด่านตรวจและอุบัติเหตุ'
     },
     {
       category: 'driver',
@@ -42,8 +42,8 @@ export default function HelpCenterPage() {
     },
     {
       category: 'pub',
-      question: 'สถานประกอบการต้องการเพิ่มตำแหน่งที่ตั้งร้านค้าใหม่ ต้องทำอย่างไร?',
-      answer: 'คุณสามารถเข้าสู่ระบบผ่านบัญชีผู้ใช้พาร์ทเนอร์ร้านค้า จากนั้นเลือกเมนูข้อมูลร้านค้า เพื่อปรับเปลี่ยนตำแหน่งหมุดบนแผนที่ผ่านระบบ Leaflet Map Picker ได้แบบเรียลไทม์ทันที'
+      question: 'สถานประกอบการต้องการเพิ่มตำแหน่งที่ตั้งสถานบันเทิงใหม่ ต้องทำอย่างไร?',
+      answer: 'คุณสามารถเข้าสู่ระบบผ่านบัญชีผู้ใช้พาร์ทเนอร์สถานบันเทิง จากนั้นเลือกเมนูข้อมูลสถานบันเทิง เพื่อปรับเปลี่ยนตำแหน่งหมุดบนแผนที่ผ่านระบบ Leaflet Map Picker ได้แบบเรียลไทม์ทันที'
     },
     {
       category: 'general',
@@ -66,9 +66,9 @@ export default function HelpCenterPage() {
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {}
+      {/* Ambient background glow */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#2340A7]/10 rounded-full blur-[140px]"></div>
       </div>
 
       <div className="gradient-blur"></div>
@@ -77,29 +77,29 @@ export default function HelpCenterPage() {
 
       <main className="relative z-10 max-w-5xl mx-auto px-6 pt-44 pb-24 flex flex-col gap-16">
         
-        {}
+        {/* Header Search Section */}
         <section className="text-center flex flex-col items-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] backdrop-blur-md mb-6">
-            <span className="w-2 h-2 rounded-full bg-[#7C3AED] animate-pulse"></span>
-            <span className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest font-manrope">
+            <span className="w-2 h-2 rounded-full bg-[#2340A7] animate-pulse"></span>
+            <span className="text-xs font-bold text-[#2340A7] uppercase tracking-widest font-manrope">
               ศูนย์ช่วยเหลือ &amp; ความปลอดภัย
             </span>
           </div>
 
           <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold font-manrope tracking-tight leading-tight mb-6 text-[var(--color-text)] max-w-5xl mx-auto whitespace-nowrap">
             คำถามที่พบบ่อย &amp;{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8]">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2340A7] to-[#2563EB]">
               ฝ่ายสนับสนุนลูกค้า
             </span>
           </h1>
 
           <p className="text-xs sm:text-sm md:text-base text-[var(--color-text-muted)] font-light mb-8 whitespace-nowrap overflow-x-auto px-2">
-            ค้นหาข้อมูลการใช้งาน คำถามที่พบบ่อย และคู่มือขั้นตอนการให้บริการสำหรับลูกค้า ร้านค้าพาร์ทเนอร์ และผู้ขับขี่แทน
+            ค้นหาข้อมูลการใช้งาน คำถามที่พบบ่อย และคู่มือขั้นตอนการให้บริการสำหรับลูกค้า สถานบันเทิงพาร์ทเนอร์ และผู้ขับขี่แทน
           </p>
 
-          {}
+          {/* Search Box */}
           <div className="w-full max-w-xl flex items-center gap-3 px-6 py-4 bg-[var(--color-card)] border border-[var(--color-border)] rounded-full shadow-lg">
-            <Search className="w-5 h-5 text-[#7C3AED]" />
+            <Search className="w-5 h-5 text-[#2340A7]" />
             <input 
               type="text" 
               placeholder="พิมพ์คำถาม หรือหัวข้อที่ต้องการค้นหา..." 
@@ -108,19 +108,19 @@ export default function HelpCenterPage() {
                 setSearchQuery(e.target.value)
                 setOpenFaqIndex(null)
               }}
-              className="w-full bg-transparent border-none outline-none text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)]"
+              className="w-full bg-transparent border-none outline-none text-sm text-[var(--color-text)] placeholder-[var(--color-text-muted)] font-medium"
             />
           </div>
         </section>
 
-        {}
+        {/* Category Filters */}
         <div className="flex justify-center flex-wrap gap-3">
           <button 
             onClick={() => { setActiveCategory('all'); setOpenFaqIndex(null); }}
             className={`px-5 py-2 rounded-full text-xs font-bold tracking-wider transition-all cursor-pointer ${
               activeCategory === 'all' 
-                ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white shadow-md' 
-                : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#7C3AED]'
+                ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white shadow-md' 
+                : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#2340A7]'
             }`}
           >
             หมวดหมู่ทั้งหมด
@@ -129,8 +129,8 @@ export default function HelpCenterPage() {
             onClick={() => { setActiveCategory('general'); setOpenFaqIndex(null); }}
             className={`px-5 py-2 rounded-full text-xs font-bold tracking-wider transition-all cursor-pointer ${
               activeCategory === 'general' 
-                ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white shadow-md' 
-                : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#7C3AED]'
+                ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white shadow-md' 
+                : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#2340A7]'
             }`}
           >
             ผู้ใช้บริการทั่วไป
@@ -139,25 +139,25 @@ export default function HelpCenterPage() {
             onClick={() => { setActiveCategory('pub'); setOpenFaqIndex(null); }}
             className={`px-5 py-2 rounded-full text-xs font-bold tracking-wider transition-all cursor-pointer ${
               activeCategory === 'pub' 
-                ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white shadow-md' 
-                : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#7C3AED]'
+                ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white shadow-md' 
+                : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#2340A7]'
             }`}
           >
-            พาร์ทเนอร์ร้านค้า
+            พาร์ทเนอร์สถานบันเทิง
           </button>
           <button 
             onClick={() => { setActiveCategory('driver'); setOpenFaqIndex(null); }}
             className={`px-5 py-2 rounded-full text-xs font-bold tracking-wider transition-all cursor-pointer ${
               activeCategory === 'driver' 
-                ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white shadow-md' 
-                : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#7C3AED]'
+                ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white shadow-md' 
+                : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#2340A7]'
             }`}
           >
             ผู้ขับขี่แทน
           </button>
         </div>
 
-        {}
+        {/* FAQs Accordion */}
         <section className="flex flex-col gap-4">
           {filteredFaqs.length > 0 ? (
             filteredFaqs.map((faq, index) => {
@@ -171,7 +171,7 @@ export default function HelpCenterPage() {
                     <span className="font-bold text-base text-[var(--color-text)] font-manrope">
                       {faq.question}
                     </span>
-                    <ChevronDown className={`w-5 h-5 text-[#7C3AED] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-5 h-5 text-[#2340A7] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                   </div>
                   {isOpen && (
                     <div className="px-6 pb-6 pt-2 border-t border-[var(--color-border)] text-sm text-[var(--color-text-muted)] leading-relaxed font-light">
@@ -188,40 +188,40 @@ export default function HelpCenterPage() {
           )}
         </section>
 
-        {}
+        {/* Contact Channels */}
         <section className="flex flex-col gap-8 pt-8 border-t border-[var(--color-border)]">
           <div className="text-center">
-            <span className="text-xs font-bold tracking-widest text-[#7C3AED] uppercase">ช่องทางติดต่อโดยตรง</span>
+            <span className="text-xs font-bold tracking-widest text-[#2340A7] uppercase">ช่องทางติดต่อโดยตรง</span>
             <h2 className="text-3xl font-bold font-manrope text-[var(--color-text)] mt-2">ต้องการความช่วยเหลือเพิ่มเติม?</h2>
             <p className="text-sm text-[var(--color-text-muted)] mt-1">เจ้าหน้าที่ฝ่ายสนับสนุนลูกค้าพร้อมดูแลและตอบข้อสงสัยของคุณตลอด 24 ชั่วโมง</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center text-center gap-3 shadow-md hover:border-[#7C3AED]/50 transition-all">
+            <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center text-center gap-3 shadow-md hover:border-[#2340A7]/50 transition-all">
               <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400">
                 <MessageSquare className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">LINE Official</h3>
               <p className="text-xs text-[var(--color-text-muted)]">แชทสอบถามฝ่ายสนับสนุนลูกค้า</p>
-              <span className="text-xs font-bold text-[#7C3AED]">@safeseat_support</span>
+              <span className="text-xs font-bold text-[#2340A7]">@safeseat_support</span>
             </div>
 
-            <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center text-center gap-3 shadow-md hover:border-[#7C3AED]/50 transition-all">
-              <div className="p-3 bg-[#7C3AED]/10 border border-[#7C3AED]/30 rounded-xl text-[#7C3AED]">
+            <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center text-center gap-3 shadow-md hover:border-[#2340A7]/50 transition-all">
+              <div className="p-3 bg-[#2340A7]/10 border border-[#2340A7]/30 rounded-xl text-[#2340A7]">
                 <Phone className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">สายด่วนฉุกเฉิน</h3>
               <p className="text-xs text-[var(--color-text-muted)]">สายด่วนดูแลการเดินทางเรียลไทม์</p>
-              <span className="text-xs font-bold text-[#7C3AED]">02-123-4567</span>
+              <span className="text-xs font-bold text-[#2340A7]">02-123-4567</span>
             </div>
 
-            <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center text-center gap-3 shadow-md hover:border-[#7C3AED]/50 transition-all">
+            <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center text-center gap-3 shadow-md hover:border-[#2340A7]/50 transition-all">
               <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-400">
                 <Mail className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">อีเมลฝ่ายสนับสนุน</h3>
               <p className="text-xs text-[var(--color-text-muted)]">แจ้งปัญหาระบบและส่งเอกสาร</p>
-              <span className="text-xs font-bold text-[#7C3AED]">support@safeseat.app</span>
+              <span className="text-xs font-bold text-[#2340A7]">support@safeseat.app</span>
             </div>
           </div>
         </section>

@@ -428,9 +428,9 @@ export default function StatusPage() {
                     fontWeight: 700,
                     fontSize: 16,
                   }}>
-                    {statusData.registerstatus === 'รอดำเนินการ'  && '⏳ รอการพิจารณา'}
-                    {statusData.registerstatus === 'อนุมัติแล้ว' && '✅ อนุมัติแล้ว'}
-                    {statusData.registerstatus === 'ปฏิเสธ' && '❌ ไม่ผ่านการพิจารณา'}
+                    {((statusData as any)?.registerstatus === 'pending' || (statusData as any)?.registerstatus === 'รอดำเนินการ' || (statusData as any)?.registerstatus === 'รอการพิจารณา' || !(statusData as any)?.registerstatus) && '⏳ รอการพิจารณา'}
+                    {((statusData as any)?.registerstatus === 'approved' || (statusData as any)?.registerstatus === 'อนุมัติแล้ว') && '✅ อนุมัติแล้ว'}
+                    {((statusData as any)?.registerstatus === 'rejected' || (statusData as any)?.registerstatus === 'ปฏิเสธ') && '❌ ไม่ผ่านการพิจารณา'}
                   </div>
                 </div>
               </div>
@@ -458,7 +458,7 @@ export default function StatusPage() {
                 }}
                 style={{
                   ...styles.refreshBtn,
-                  background: 'linear-gradient(135deg, #7C3AED, #1D4ED8)',
+                  background: 'linear-gradient(135deg, #2340A7, #2563EB)',
                   color: '#ffffff',
                   border: 'none',
                   fontWeight: 700,

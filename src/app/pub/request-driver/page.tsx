@@ -19,7 +19,7 @@ const encodeId = (id: number | string | undefined) => {
   return 'P' + id;
 };
 
-// หน้าเรียกรถให้ลูกค้าสำหรับร้านค้าพาร์ทเนอร์ (กระบวนการ 4 ขั้นตอน)
+// หน้าเรียกรถให้ลูกค้าสำหรับสถานบันเทิงพาร์ทเนอร์ (กระบวนการ 4 ขั้นตอน)
 function RequestDriverContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -91,7 +91,14 @@ function RequestDriverContent() {
           if (parsed.carBrand) setCarBrand(parsed.carBrand)
           if (parsed.carModel) setCarModel(parsed.carModel)
           if (parsed.licensePlate) setLicensePlate(parsed.licensePlate)
-          if (parsed.note) setNote(parsed.note)
+          if (parsed.note) {
+            // Strip internal metadata tags before restoring user-visible note
+            const cleanNote = parsed.note
+              .replace(/\[รุ่นรถ:\s*.*?\|\s*ทะเบียน:\s*.*?\]/g, '')
+              .replace(/\[DEST:.*?\]/g, '')
+              .trim()
+            if (cleanNote) setNote(cleanNote)
+          }
           if (parsed.isLadyMode !== undefined) setIsLadyMode(Boolean(parsed.isLadyMode))
           if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod)
           if (parsed.destination) setDestination(parsed.destination)
@@ -181,31 +188,95 @@ function RequestDriverContent() {
     }
   }, [destination, pickupLat, pickupLng])
 
-  const estimatedPrice = distance > 0 ? Math.round(150 + distance * 25) : 0
+  const estimatedPrice = distance > 0 ? Math.round(300 + distance * 10) : 0
+
+  const isCustNameError = error.includes('ชื่อ - นามสกุล') || (error.includes('ชื่อ') && !error.includes('ยี่ห้อ') && !error.includes('จุดหมาย'))
+  const isPhoneError = (error.includes('เบอร์โทรศัพท์') || error.includes('เบอร์โทรติดต่อ')) && !error.includes('ฉุกเฉิน')
+  const isPhoneEmerError = error.includes('ฉุกเฉิน') || error.includes('ซ้ำกัน')
+  const isCarBrandError = error.includes('ยี่ห้อ')
+  const isCarModelError = error.includes('รุ่นรถ')
+  const isLicensePlateError = error.includes('ทะเบียน')
+  const isCarTypeError = error.includes('เกียร์')
+  const isDestError = error.includes('จุดหมาย') || error.includes('ระยะทาง')
 
   const validateStep1 = () => {
-    if (!custName.trim()) return 'กรุณากรอกชื่อ - นามสกุล'
-    if (!phoneNo.trim() || phoneNo.length !== 10) return 'กรุณากรอกเบอร์โทรศัพท์ 10 หลัก'
-    if (!phoneEmer.trim() || phoneEmer.length !== 10) return 'กรุณากรอกเบอร์โทรฉุกเฉิน 10 หลัก'
+    if (!custName.trim()) return 'กรุณากรอกชื่อ - นามสกุลลูกค้า'
+    if (custName.trim().length < 2) return 'ชื่อ - นามสกุลลูกค้าต้องมีความยาวอย่างน้อย 2 ตัวอักษร'
+    if (!/^[ก-๙a-zA-Z\s.-]+$/.test(custName.trim())) return 'ชื่อ - นามสกุลลูกค้า ต้องเป็นอักษรภาษาไทยหรือภาษาอังกฤษเท่านั้น'
+    
+    // เบอร์โทรศัพท์ติดต่อของลูกค้า (10 หลัก ขึ้นต้นด้วย 06, 08, 09 เท่านั้น)
+    if (!phoneNo.trim()) return 'กรุณากรอกเบอร์โทรศัพท์ติดต่อของลูกค้า'
+    if (!/^0[689]\d{8}$/.test(phoneNo.trim()) || /^(\d)\1+$/.test(phoneNo.trim())) {
+      return 'เบอร์โทรศัพท์ติดต่อไม่ถูกต้อง (ต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 06, 08 หรือ 09 เท่านั้น)'
+    }
+    
+    // เบอร์โทรติดต่อฉุกเฉิน (10 หลัก ขึ้นต้นด้วย 06, 08, 09 เท่านั้น)
+    if (!phoneEmer.trim()) return 'กรุณากรอกเบอร์โทรติดต่อฉุกเฉิน'
+    if (!/^0[689]\d{8}$/.test(phoneEmer.trim()) || /^(\d)\1+$/.test(phoneEmer.trim())) {
+      return 'เบอร์โทรติดต่อฉุกเฉินไม่ถูกต้อง (ต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 06, 08 หรือ 09 เท่านั้น)'
+    }
+    
     if (phoneNo.trim() === phoneEmer.trim()) return 'เบอร์โทรศัพท์ของลูกค้าและเบอร์โทรฉุกเฉินต้องห้ามซ้ำกัน'
+    
     if (!carBrand.trim()) return 'กรุณากรอกยี่ห้อรถยนต์ของลูกค้า'
     if (!carModel.trim()) return 'กรุณากรอกรุ่นรถยนต์ของลูกค้า'
     if (!licensePlate.trim()) return 'กรุณากรอกทะเบียนรถยนต์ของลูกค้า'
+    if (!carType) return 'กรุณาเลือกชนิดระบบเกียร์รถยนต์'
     return ''
   }
 
   const handleStep1Next = () => {
     const err = validateStep1()
-    if (err) { setError(err); return }
+    if (err) {
+      setError(err)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
     setError('')
     setStep(2)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleStep2Next = () => {
-    if (!destination) { setError('กรุณาเลือกจุดหมายปลายทาง'); return }
-    if (distance <= 0) { setError('ไม่พบข้อมูลระยะทางจากจุดเริ่มต้นไปยังปลายทาง กรุณาเลือกจุดหมายใหม่อีกครั้งเพื่อคำนวณระยะทางจริง'); return }
+    const s1Err = validateStep1()
+    if (s1Err) {
+      setError(s1Err)
+      setStep(1)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    if (!destination) {
+      setError('กรุณาเลือกจุดหมายปลายทางของลูกค้า')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    if (distance <= 0) {
+      setError('ไม่พบข้อมูลระยะทางจากจุดเริ่มต้นไปยังปลายทาง กรุณาเลือกจุดหมายใหม่อีกครั้งเพื่อคำนวณระยะทางจริง')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
     setError('')
     setStep(3)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleStep3Next = () => {
+    const s1Err = validateStep1()
+    if (s1Err) {
+      setError(s1Err)
+      setStep(1)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    if (!destination || distance <= 0) {
+      setError('กรุณาเลือกจุดหมายปลายทางของลูกค้า')
+      setStep(2)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    setError('')
+    setStep(4)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleSubmit = async (simulatedPaymentStatus?: 'paid' | 'unpaid') => {
@@ -223,9 +294,21 @@ function RequestDriverContent() {
         paymentMethod,
         dropoffLatitude: destination?.lat,
         dropoffLongitude: destination?.lng,
+        dropoffName: destination?.label || ''
       })
       if (res.data.success) {
         const requestId = res.data.data?.requestid || res.data.data?.id
+        if (requestId && destination?.label) {
+          try {
+            localStorage.setItem(`safeseat_dest_name_${requestId}`, destination.label)
+          } catch (e) {}
+        }
+        if (requestId) {
+          try {
+            if (fullCarModel) localStorage.setItem(`safeseat_carmodel_${requestId}`, fullCarModel)
+            if (licensePlate) localStorage.setItem(`safeseat_carplate_${requestId}`, licensePlate)
+          } catch (e) {}
+        }
         router.push(`/pub/waiting?id=${requestId}`)
       } else {
         setError(res.data.message || 'เกิดข้อผิดพลาดในการเรียกรถ')
@@ -247,7 +330,7 @@ function RequestDriverContent() {
     return (
       <div className="flex justify-between items-center mb-10 relative">
         <div className="absolute top-5 left-[6%] right-[6%] h-[2px] bg-[var(--color-border)] z-0" />
-        <div className="absolute top-5 left-[6%] h-[2px] bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] z-0 transition-all duration-300" style={{ width: `${((step - 1) / 3) * 88}%` }} />
+        <div className="absolute top-5 left-[6%] h-[2px] bg-gradient-to-r from-[#2340A7] to-[#2563EB] z-0 transition-all duration-300" style={{ width: `${((step - 1) / 3) * 88}%` }} />
         {steps.map(s => {
           const isCurrent = step === s.num
           const isCompleted = step > s.num
@@ -257,17 +340,17 @@ function RequestDriverContent() {
               onClick={() => { if (s.num < step) setStep(s.num as Step) }}
               className={`flex flex-col items-center z-10 flex-1 ${s.num < step ? 'cursor-pointer' : 'cursor-default'}`}
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all shadow-md ${
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-base transition-all shadow-md ${
                 isCompleted 
-                  ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white border-none' 
+                  ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white border-none' 
                   : isCurrent 
-                  ? 'bg-[var(--color-card)] border-2 border-[#7C3AED] text-[#7C3AED] ring-4 ring-[#7C3AED]/20' 
+                  ? 'bg-[var(--color-card)] border-2 border-[#2340A7] text-[#2340A7] ring-4 ring-[#2340A7]/20' 
                   : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)]'
               }`}>
                 {isCompleted ? '✓' : s.num}
               </div>
-              <span className={`text-xs font-semibold mt-2.5 text-center font-manrope ${
-                isCurrent || isCompleted ? 'text-[#7C3AED] font-bold' : 'text-[var(--color-text-muted)]'
+              <span className={`text-sm sm:text-base font-bold mt-2.5 text-center font-manrope ${
+                isCurrent || isCompleted ? 'text-[#2340A7]' : 'text-[var(--color-text-muted)]'
               }`}>
                 {s.label}
               </span>
@@ -285,7 +368,7 @@ function RequestDriverContent() {
       
       {}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#2340A7]/10 rounded-full blur-[140px]"></div>
       </div>
 
       <div className="gradient-blur"></div>
@@ -297,11 +380,11 @@ function RequestDriverContent() {
         {}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--color-card)] border border-[var(--color-border)] p-6 rounded-2xl shadow-xl">
           <div>
-            <span className="text-xs font-bold text-[#7C3AED] tracking-wider uppercase font-manrope">REQUEST SERVICE</span>
+            <span className="text-xs font-bold text-[#2340A7] tracking-wider uppercase font-manrope">REQUEST SERVICE</span>
             <h1 className="text-2xl sm:text-3xl font-bold font-manrope text-[var(--color-text)] mt-1">เรียกรถให้ลูกค้า (Create Driver Request)</h1>
           </div>
           <div className="text-xs font-semibold px-4 py-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)]">
-            🏪 ร้านค้า: <span className="text-[var(--color-text)] font-bold">{pubName}</span>
+            🏪 สถานบันเทิง: <span className="text-[var(--color-text)] font-bold">{pubName}</span>
           </div>
         </div>
 
@@ -316,10 +399,17 @@ function RequestDriverContent() {
         <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-8 shadow-xl flex flex-col gap-8">
           {renderStepper()}
 
+          {error && (
+            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm sm:text-base font-bold flex items-center gap-2.5 animate-fade-in shadow-sm">
+              <span className="text-lg">⚠️</span>
+              <span>{error}</span>
+            </div>
+          )}
+
           {}
           {step === 1 && (
             <div className="flex flex-col gap-6">
-              <h2 className="text-xl font-bold font-manrope text-[var(--color-text)]">กรุณากรอกข้อมูลส่วนตัวของลูกค้า</h2>
+              <h2 className="text-2xl font-extrabold font-manrope text-[var(--color-text)]">กรุณากรอกข้อมูลส่วนตัวของลูกค้า</h2>
 
               {rejectNotice && (
                 <div className="p-4 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-500 text-sm font-semibold flex items-center justify-between shadow-md animate-fade-in">
@@ -333,74 +423,137 @@ function RequestDriverContent() {
                 </div>
               )}
 
-              {error && <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-semibold">{error}</div>}
-
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text)]">ชื่อ - นามสกุลลูกค้า *</label>
+              <div className="flex flex-col gap-2.5">
+                <label className="text-[15.5px] font-bold text-[var(--color-text)]">ชื่อ - นามสกุลลูกค้า *</label>
                 <input 
                   value={custName} 
-                  onChange={e => setCustName(e.target.value)}
-                  className="w-full px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:outline-none focus:border-[#7C3AED] transition-colors"
+                  onChange={e => {
+                    const val = e.target.value
+                    if (/^[ก-๙a-zA-Z\s.-]*$/.test(val)) {
+                      setCustName(val)
+                    }
+                  }}
+                  autoComplete="off"
+                  className={`w-full px-4 py-3.5 bg-[var(--color-surface)] border rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none transition-colors ${
+                    isCustNameError
+                      ? 'border-red-500 bg-red-500/5 focus:border-red-500'
+                      : 'border-[var(--color-border)] focus:border-[#2340A7]'
+                  }`}
                   placeholder="กรอกชื่อ - นามสกุล" 
                 />
+                {isCustNameError && (
+                  <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text)]">เบอร์โทรติดต่อ *</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[15.5px] font-bold text-[var(--color-text)]">เบอร์โทรติดต่อ *</label>
                   <input 
                     value={phoneNo} 
                     onChange={e => setPhoneNo(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (!/[0-9]/.test(e.key) && !['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                        e.preventDefault()
+                      }
+                    }}
                     maxLength={10} 
-                    className="w-full px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:outline-none focus:border-[#7C3AED] transition-colors"
-                    placeholder="เช่น 083xxxxxxx" 
+                    inputMode="numeric"
+                    autoComplete="off"
+                    className={`w-full px-4 py-3.5 bg-[var(--color-surface)] border rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none transition-colors ${
+                      isPhoneError
+                        ? 'border-red-500 bg-red-500/5 focus:border-red-500'
+                        : 'border-[var(--color-border)] focus:border-[#2340A7]'
+                    }`}
+                    placeholder="กรุณากรอกเบอร์โทรศัพท์ (10 หลัก)" 
                   />
+                  {isPhoneError && (
+                    <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
+                  )}
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text)]">เบอร์โทรติดต่อฉุกเฉิน *</label>
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[15.5px] font-bold text-[var(--color-text)]">เบอร์โทรติดต่อฉุกเฉิน *</label>
                   <input 
                     value={phoneEmer} 
                     onChange={e => setPhoneEmer(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (!/[0-9]/.test(e.key) && !['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                        e.preventDefault()
+                      }
+                    }}
                     maxLength={10} 
-                    className="w-full px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:outline-none focus:border-[#7C3AED] transition-colors"
-                    placeholder="เช่น 083xxxxxxx" 
+                    inputMode="numeric"
+                    autoComplete="off"
+                    className={`w-full px-4 py-3.5 bg-[var(--color-surface)] border rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none transition-colors ${
+                      isPhoneEmerError
+                        ? 'border-red-500 bg-red-500/5 focus:border-red-500'
+                        : 'border-[var(--color-border)] focus:border-[#2340A7]'
+                    }`}
+                    placeholder="กรุณากรอกเบอร์โทรฉุกเฉิน (10 หลัก)" 
                   />
+                  {isPhoneEmerError && (
+                    <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
+                  )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text)]">ยี่ห้อรถยนต์ *</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[15.5px] font-bold text-[var(--color-text)]">ยี่ห้อรถยนต์ *</label>
                   <input 
                     value={carBrand} 
                     onChange={e => setCarBrand(e.target.value)}
-                    className="w-full px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:outline-none focus:border-[#7C3AED] transition-colors"
+                    autoComplete="off"
+                    className={`w-full px-4 py-3.5 bg-[var(--color-surface)] border rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none transition-colors ${
+                      isCarBrandError
+                        ? 'border-red-500 bg-red-500/5 focus:border-red-500'
+                        : 'border-[var(--color-border)] focus:border-[#2340A7]'
+                    }`}
                     placeholder="เช่น Honda, Toyota, BYD" 
                   />
+                  {isCarBrandError && (
+                    <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
+                  )}
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text)]">รุ่นรถยนต์ *</label>
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[15.5px] font-bold text-[var(--color-text)]">รุ่นรถยนต์ *</label>
                   <input 
                     value={carModel} 
                     onChange={e => setCarModel(e.target.value)}
-                    className="w-full px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:outline-none focus:border-[#7C3AED] transition-colors"
+                    autoComplete="off"
+                    className={`w-full px-4 py-3.5 bg-[var(--color-surface)] border rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none transition-colors ${
+                      isCarModelError
+                        ? 'border-red-500 bg-red-500/5 focus:border-red-500'
+                        : 'border-[var(--color-border)] focus:border-[#2340A7]'
+                    }`}
                     placeholder="เช่น Civic, Camry, Atto 3" 
                   />
+                  {isCarModelError && (
+                    <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
+                  )}
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text)]">ทะเบียนรถยนต์ *</label>
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[15.5px] font-bold text-[var(--color-text)]">ทะเบียนรถยนต์ *</label>
                   <input 
                     value={licensePlate} 
                     onChange={e => setLicensePlate(e.target.value)}
-                    className="w-full px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:outline-none focus:border-[#7C3AED] transition-colors"
+                    autoComplete="off"
+                    className={`w-full px-4 py-3.5 bg-[var(--color-surface)] border rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none transition-colors ${
+                      isLicensePlateError
+                        ? 'border-red-500 bg-red-500/5 focus:border-red-500'
+                        : 'border-[var(--color-border)] focus:border-[#2340A7]'
+                    }`}
                     placeholder="เช่น กข 1234 เชียงใหม่" 
                   />
+                  {isLicensePlateError && (
+                    <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
+                  )}
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text)]">ชนิดระบบเกียร์รถยนต์ *</label>
-                <div className="grid grid-cols-3 gap-3">
+              <div className="flex flex-col gap-2.5">
+                <label className="text-[15.5px] font-bold text-[var(--color-text)]">ชนิดระบบเกียร์รถยนต์ *</label>
+                <div className="grid grid-cols-3 gap-3.5">
                   {['Autometric', 'Manual', 'Electric'].map(type => {
                     const active = carType === type
                     return (
@@ -408,10 +561,12 @@ function RequestDriverContent() {
                         key={type}
                         type="button"
                         onClick={() => setCarType(type)}
-                        className={`py-3.5 px-3 rounded-xl text-xs font-bold tracking-wider transition-all border cursor-pointer ${
+                        className={`py-4 px-3 rounded-xl text-[15px] font-bold tracking-wider transition-all border cursor-pointer ${
                           active
-                            ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white border-transparent shadow-md'
-                            : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[#7C3AED]'
+                            ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white border-transparent shadow-md'
+                            : isCarTypeError
+                            ? 'bg-[var(--color-surface)] border-red-500 text-[var(--color-text-muted)]'
+                            : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[#2340A7]'
                         }`}
                       >
                         {type === 'Autometric' ? '🚗 Auto' : type === 'Manual' ? '⚙️ Manual' : '⚡ Electric'}
@@ -419,16 +574,20 @@ function RequestDriverContent() {
                     )
                   })}
                 </div>
+                {isCarTypeError && (
+                  <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
+                )}
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-[var(--color-text)]">หมายเหตุเพิ่มเติม (ถ้ามี)</label>
+              <div className="flex flex-col gap-2.5">
+                <label className="text-[15.5px] font-bold text-[var(--color-text)]">หมายเหตุเพิ่มเติม (ถ้ามี)</label>
                 <textarea 
                   value={note} 
                   onChange={e => setNote(e.target.value)}
                   maxLength={100} 
                   rows={3}
-                  className="w-full px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-sm text-[var(--color-text)] focus:outline-none focus:border-[#7C3AED] transition-colors resize-none"
+                  autoComplete="off"
+                  className="w-full px-4 py-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none focus:border-[#2340A7] transition-colors resize-none"
                   placeholder="เช่น ผู้ใช้บริการต้องการระบุข้อมูลที่อยู่เพิ่มเติม หรือข้อมูลที่ต้องการแจ้งให้ทราบ" 
                 />
               </div>
@@ -437,13 +596,13 @@ function RequestDriverContent() {
                 <button 
                   type="button"
                   onClick={() => router.push('/pub/dashboard')}
-                  className="px-6 py-3 border border-[var(--color-border)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[#7C3AED] transition-colors cursor-pointer"
+                  className="px-6 py-3 border border-[var(--color-border)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[#2340A7] transition-colors cursor-pointer"
                 >
                   ← ย้อนกลับ
                 </button>
                 <button 
                   onClick={handleStep1Next}
-                  className="px-8 py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#6D28D9] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
+                  className="px-8 py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
                 >
                   ดำเนินการต่อ <ArrowRight className="w-4 h-4" />
                 </button>
@@ -454,73 +613,76 @@ function RequestDriverContent() {
           {}
           {step === 2 && (
             <div className="flex flex-col gap-6">
-              <h2 className="text-xl font-bold font-manrope text-[var(--color-text)]">เลือกจุดหมายปลายทาง</h2>
+              <h2 className="text-2xl font-extrabold font-manrope text-[var(--color-text)]">เลือกจุดหมายปลายทาง</h2>
               
-              {}
               <div className="flex flex-col sm:flex-row items-center gap-3">
-                <div className="flex-1 flex items-center gap-2 p-3.5 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-500 text-xs font-bold w-full">
-                  <MapPin className="w-4 h-4 shrink-0" />
+                <div className="flex-1 flex items-center gap-2.5 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-500 text-sm sm:text-base font-bold w-full">
+                  <MapPin className="w-5 h-5 shrink-0" />
                   <span>จุดรับ: {pubName}</span>
                 </div>
-                <span className="text-[var(--color-text-muted)] font-bold">→</span>
+                <span className="text-[var(--color-text-muted)] font-bold text-lg">→</span>
                 <div
                   onClick={() => setShowMap(true)}
-                  className="flex-1 flex items-center gap-2 p-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-xs font-bold cursor-pointer hover:border-[#7C3AED] transition-colors w-full"
+                  className={`flex-1 flex items-center gap-2.5 p-4 bg-[var(--color-surface)] border rounded-xl text-sm sm:text-base font-bold cursor-pointer transition-colors w-full ${
+                    isDestError
+                      ? 'border-red-500 bg-red-500/5'
+                      : 'border-[var(--color-border)] hover:border-[#2340A7]'
+                  }`}
                 >
-                  <MapPin className="w-4 h-4 shrink-0 text-[#7C3AED]" />
-                  <span className={destination ? 'text-[#7C3AED]' : 'text-[var(--color-text-muted)]'}>
+                  <MapPin className="w-5 h-5 shrink-0 text-[#2340A7]" />
+                  <span className={destination ? 'text-[#2340A7]' : 'text-[var(--color-text-muted)]'}>
                     {destination ? (destination.label || `${destination.lat.toFixed(4)}, ${destination.lng.toFixed(4)}`) : 'กรุณาคลิกเลือกจุดหมายปลายทาง'}
                   </span>
                 </div>
               </div>
+              {isDestError && (
+                <span className="text-xs text-red-500 font-semibold block -mt-2">⚠️ {error}</span>
+              )}
 
-              {error && <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-semibold">{error}</div>}
-
-              {}
               {destination ? (
-                <div className="p-6 bg-[var(--color-surface)] border-2 border-[#7C3AED] rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-[#7C3AED]/15 rounded-xl text-[#7C3AED]">
-                      <MapPin className="w-6 h-6" />
+                <div className="p-6 bg-[var(--color-surface)] border-2 border-[#2340A7] rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-3.5 bg-[#2340A7]/15 rounded-xl text-[#2340A7]">
+                      <MapPin className="w-7 h-7" />
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-[var(--color-text)]">จุดหมายปลายทางที่เลือก</div>
-                      <div className="text-xs font-bold text-[#7C3AED] mt-1">{destination.label}</div>
-                      <div className="text-xs text-[var(--color-text-muted)] mt-0.5">พิกัด: {destination.lat.toFixed(5)}, {destination.lng.toFixed(5)}</div>
+                      <div className="text-base font-bold text-[var(--color-text)]">จุดหมายปลายทางที่เลือก</div>
+                      <div className="text-sm sm:text-base font-bold text-[#2340A7] mt-1">{destination.label}</div>
+                      <div className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-0.5">พิกัด: {destination.lat.toFixed(5)}, {destination.lng.toFixed(5)}</div>
                     </div>
                   </div>
                   <button 
                     onClick={() => setShowMap(true)} 
-                    className="px-4 py-2 border border-[var(--color-border)] rounded-full text-xs font-bold text-[var(--color-text)] hover:border-[#7C3AED] transition-colors cursor-pointer"
+                    className="px-5 py-2.5 border border-[var(--color-border)] rounded-full text-sm font-bold text-[var(--color-text)] hover:border-[#2340A7] transition-colors cursor-pointer"
                   >
                     เปลี่ยนตำแหน่ง
                   </button>
                 </div>
               ) : (
                 <div className="p-12 text-center bg-[var(--color-surface)] border-2 border-dashed border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-3">
-                  <MapPin className="w-12 h-12 text-[#7C3AED]" />
-                  <h3 className="text-base font-bold text-[var(--color-text)]">ยังไม่ได้เลือกจุดหมายปลายทาง</h3>
-                  <p className="text-xs text-[var(--color-text-muted)] max-w-sm">กรุณากดปุ่มด้านล่างเพื่อเปิดแผนที่และปักหมุดตำแหน่งจุดหมายปลายทางให้คนขับไปส่ง</p>
+                  <MapPin className="w-14 h-14 text-[#2340A7]" />
+                  <h3 className="text-lg font-bold text-[var(--color-text)]">ยังไม่ได้เลือกจุดหมายปลายทาง</h3>
+                  <p className="text-sm text-[var(--color-text-muted)] max-w-sm">กรุณากดปุ่มด้านล่างเพื่อเปิดแผนที่และปักหมุดตำแหน่งจุดหมายปลายทางให้คนขับไปส่ง</p>
                   <button 
                     onClick={() => setShowMap(true)}
-                    className="mt-2 px-6 py-3 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md cursor-pointer flex items-center gap-2"
+                    className="mt-2 px-7 py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white font-bold text-sm sm:text-base uppercase tracking-wider rounded-full shadow-md cursor-pointer flex items-center gap-2"
                   >
                     🗺️ เปิดแผนที่เพื่อระบุตำแหน่ง
                   </button>
                 </div>
               )}
 
-              <div className="flex justify-between items-center mt-4">
+              <div className="flex justify-between items-center mt-6">
                 <button 
                   onClick={() => { setError(''); setStep(1) }}
-                  className="px-6 py-3 border border-[var(--color-border)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
+                  className="px-7 py-3.5 border border-[var(--color-border)] rounded-full text-sm sm:text-base font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
                 >
                   ← ย้อนกลับ
                 </button>
                 <button
                   onClick={handleStep2Next}
                   disabled={loadingRoute}
-                  className="px-8 py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#6D28D9] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
+                  className="px-9 py-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white font-bold text-sm sm:text-base uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
                 >
                   {loadingRoute ? 'กำลังคำนวณ...' : 'ยืนยันพิกัด →'}
                 </button>
@@ -531,38 +693,17 @@ function RequestDriverContent() {
           {}
           {step === 3 && (
             <div className="flex flex-col gap-6">
-              <h2 className="text-xl font-bold font-manrope text-[var(--color-text)]">ตรวจสอบข้อมูล &amp; บริการความปลอดภัย</h2>
+              <h2 className="text-2xl font-extrabold font-manrope text-[var(--color-text)]">ตรวจสอบข้อมูล &amp; บริการความปลอดภัย</h2>
               
               {destination && (
                 <div className="h-64 relative rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-md">
-                  <RouteMap pickupLat={pickupLat} pickupLng={pickupLng} dropoffLat={destination.lat} dropoffLng={destination.lng} />
-                  <div className="absolute left-4 bottom-4 z-20 bg-[var(--color-card)]/90 backdrop-blur-md px-3.5 py-1.5 rounded-lg border border-[var(--color-border)] text-xs font-bold text-[#7C3AED] shadow-sm">
-                    🛣️ ระยะทางประมาณ: {distance.toFixed(2)} กม.
-                  </div>
+                  <RouteMap pickupLat={pickupLat} pickupLng={pickupLng} dropoffLat={destination.lat} dropoffLng={destination.lng} distance={distance} />
                 </div>
               )}
 
-              {error && <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-semibold">{error}</div>}
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center gap-3">
-                  <div className="p-2.5 bg-[#7C3AED]/15 rounded-lg text-[#7C3AED]">👤</div>
-                  <div>
-                    <div className="text-xs text-[var(--color-text-muted)] font-medium">ชื่อลูกค้า</div>
-                    <div className="text-sm font-bold text-[var(--color-text)]">{custName}</div>
-                  </div>
-                </div>
-
-                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center gap-3">
-                  <div className="p-2.5 bg-blue-500/15 rounded-lg text-blue-500">📞</div>
-                  <div>
-                    <div className="text-xs text-[var(--color-text-muted)] font-medium">เบอร์โทรติดต่อ / ฉุกเฉิน</div>
-                    <div className="text-sm font-bold text-[var(--color-text)]">{phoneNo} / {phoneEmer}</div>
-                  </div>
-                </div>
-
-                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center gap-3">
-                  <div className="p-2.5 bg-purple-500/15 rounded-lg text-purple-500">🚗</div>
+                  <div className="p-2.5 bg-indigo-500/15 rounded-lg text-indigo-500">🚗</div>
                   <div>
                     <div className="text-xs text-[var(--color-text-muted)] font-medium">ระบบเกียร์ / รุ่นรถ</div>
                     <div className="text-sm font-bold text-[var(--color-text)]">{carType} ({carModel})</div>
@@ -578,8 +719,7 @@ function RequestDriverContent() {
                 </div>
               </div>
 
-              {}
-              <div className="p-5 bg-[#7C3AED]/10 border border-[#7C3AED]/30 rounded-2xl flex items-center justify-between">
+              <div className="p-5 bg-[#2340A7]/10 border border-[#2340A7]/30 rounded-2xl flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">👩</span>
                   <div>
@@ -593,21 +733,21 @@ function RequestDriverContent() {
                     type="checkbox" 
                     checked={isLadyMode}
                     onChange={e => setIsLadyMode(e.target.checked)}
-                    className="w-5 h-5 accent-[#7C3AED] cursor-pointer"
+                    className="w-5 h-5 accent-[#2340A7] cursor-pointer"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-between items-center mt-4">
+              <div className="flex justify-between items-center mt-6">
                 <button 
                   onClick={() => { setError(''); setStep(2) }}
-                  className="px-6 py-3 border border-[var(--color-border)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
+                  className="px-7 py-3.5 border border-[var(--color-border)] rounded-full text-sm sm:text-base font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
                 >
                   ← ย้อนกลับ
                 </button>
                 <button 
-                  onClick={() => { setError(''); setStep(4) }}
-                  className="px-8 py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#6D28D9] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
+                  onClick={handleStep3Next}
+                  className="px-9 py-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white font-bold text-sm sm:text-base uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
                 >
                   ดำเนินการต่อ →
                 </button>
@@ -615,25 +755,21 @@ function RequestDriverContent() {
             </div>
           )}
 
-          {}
           {step === 4 && (
             <div className="flex flex-col gap-6">
-              <h2 className="text-xl font-bold font-manrope text-[var(--color-text)]">เลือกช่องทางการชำระเงิน</h2>
-              {error && <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-semibold">{error}</div>}
+              <h2 className="text-2xl font-extrabold font-manrope text-[var(--color-text)]">เลือกช่องทางการชำระเงิน</h2>
 
-              {}
-              <div className="p-6 bg-gradient-to-r from-[#7C3AED]/15 to-[#1D4ED8]/15 border border-[#7C3AED]/40 rounded-2xl flex items-center gap-4">
-                <div className="p-3.5 bg-[#7C3AED] text-white rounded-xl shadow-md">
-                  <CreditCard className="w-7 h-7" />
+              <div className="p-6 bg-gradient-to-r from-[#2340A7]/15 to-[#2563EB]/15 border border-[#2340A7]/40 rounded-2xl flex items-center gap-4">
+                <div className="p-4 bg-[#2340A7] text-white rounded-xl shadow-md">
+                  <CreditCard className="w-8 h-8" />
                 </div>
                 <div>
-                  <div className="text-xs text-[var(--color-text-muted)] font-medium">ค่าบริการประมาณการตามระยะทาง ({distance.toFixed(2)} กม.)</div>
-                  <div className="text-3xl font-extrabold font-manrope text-[var(--color-text)] mt-1">฿{estimatedPrice}</div>
+                  <div className="text-sm text-[var(--color-text-muted)] font-medium">ค่าบริการประมาณการตามระยะทาง ({distance.toFixed(2)} กม.)</div>
+                  <div className="text-4xl sm:text-5xl font-extrabold font-manrope text-[var(--color-text)] mt-1">฿{estimatedPrice}</div>
                 </div>
               </div>
 
-              {}
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                 {[
                   { value: 2, icon: QrCode, name: 'โอนเงิน / PromptPay', desc: 'สแกน QR Code เพื่อชำระเงินผ่าน Mobile Banking' },
                   { value: 1, icon: CreditCard, name: 'เงินสด (Cash)', desc: 'ชำระเงินสดโดยตรงกับคนขับรถเมื่อถึงที่หมาย' },
@@ -648,36 +784,35 @@ function RequestDriverContent() {
                           setPaymentMethod(opt.value as 1 | 2);
                         }
                       }}
-                      className={`p-5 rounded-2xl border cursor-pointer transition-all flex items-center gap-4 ${
+                      className={`p-6 rounded-2xl border cursor-pointer transition-all flex items-center gap-4 ${
                         active
-                          ? 'border-2 border-[#7C3AED] bg-[#7C3AED]/10 shadow-md'
-                          : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[#7C3AED]'
+                          ? 'border-2 border-[#2340A7] bg-[#2340A7]/10 shadow-md'
+                          : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[#2340A7]'
                       }`}
                     >
-                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${active ? 'border-[#7C3AED]' : 'border-[var(--color-border)]'}`}>
-                        {active && <div className="w-2.5 h-2.5 rounded-full bg-[#7C3AED]" />}
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${active ? 'border-[#2340A7]' : 'border-[var(--color-border)]'}`}>
+                        {active && <div className="w-3 h-3 rounded-full bg-[#2340A7]" />}
                       </div>
-                      <div className="p-2.5 bg-[var(--color-card)] rounded-xl border border-[var(--color-border)] text-[#7C3AED]">
-                        <IconComp className="w-5 h-5" />
+                      <div className="p-3 bg-[var(--color-card)] rounded-xl border border-[var(--color-border)] text-[#2340A7]">
+                        <IconComp className="w-6 h-6" />
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-[var(--color-text)]">{opt.name}</div>
-                        <div className="text-xs text-[var(--color-text-muted)]">{opt.desc}</div>
+                        <div className="text-base sm:text-lg font-bold text-[var(--color-text)]">{opt.name}</div>
+                        <div className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-0.5">{opt.desc}</div>
                       </div>
                     </div>
                   )
                 })}
               </div>
 
-              {}
               {paymentMethod === 2 && !verifyingPayment && (
                 <div className="p-6 bg-[var(--color-surface)] border-2 border-dashed border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-4 text-center">
-                  <div className="text-xs font-bold text-[#7C3AED] uppercase tracking-wider font-manrope">PROMPTPAY QR CODE</div>
+                  <div className="text-sm font-bold text-[#2340A7] uppercase tracking-wider font-manrope">PROMPTPAY QR CODE</div>
                   <div className="p-4 bg-white rounded-2xl shadow-md border overflow-hidden">
                     <img 
                       src="/images/promptpay_qr.png"
                       alt="PromptPay QR Code"
-                      className="w-48 h-48 object-contain rounded-lg"
+                      className="w-52 h-52 object-contain rounded-lg"
                     />
                   </div>
                   <div className="text-xl font-extrabold text-[var(--color-text)]">ยอดชำระเงิน: ฿{estimatedPrice}</div>
@@ -687,7 +822,7 @@ function RequestDriverContent() {
 
               {verifyingPayment && (
                 <div className="p-8 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-3 text-center">
-                  <RefreshCw className="w-8 h-8 text-[#7C3AED] animate-spin" />
+                  <RefreshCw className="w-8 h-8 text-[#2340A7] animate-spin" />
                   <div className="text-sm font-bold text-[var(--color-text)]">กำลังตรวจสอบข้อมูลการชำระเงิน...</div>
                 </div>
               )}
@@ -714,7 +849,7 @@ function RequestDriverContent() {
                     }
                   }}
                   disabled={loading || verifyingPayment}
-                  className="px-8 py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#6D28D9] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
+                  className="px-8 py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
                 >
                   {loading ? 'กำลังส่งข้อมูล...' : 'เรียกคนขับรถเลย! ✓'}
                 </button>
@@ -747,7 +882,7 @@ export default function RequestDriverPage() {
     <Suspense fallback={
       <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center text-[var(--color-text)] font-inter">
         <div className="flex flex-col items-center gap-3">
-          <RefreshCw className="w-8 h-8 text-[#7C3AED] animate-spin" />
+          <RefreshCw className="w-8 h-8 text-[#2340A7] animate-spin" />
           <p className="text-sm font-bold">กำลังโหลดหน้าจอเรียกรถ...</p>
         </div>
       </div>

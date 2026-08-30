@@ -22,8 +22,8 @@ export default function Field({ label, icon, children, color }: FieldProps) {
 const styles: Record<string, React.CSSProperties> = {
   label: {
     display: 'block',
-    fontSize: 12.5,
-    fontWeight: 500,
-    marginBottom: 6,
+    fontSize: 15.5,
+    fontWeight: 600,
+    marginBottom: 7,
   },
 }

@@ -38,7 +38,7 @@ function getStatusConfig(status: string | undefined, isDark: boolean = true) {
     case 'อนุมัติแล้ว':
       return {
         icon: '🎉',
-        title: 'ยินดีด้วย! ร้านของคุณได้รับการอนุมัติแล้ว',
+        title: 'ยินดีด้วย! สถานบันเทิงของคุณได้รับการอนุมัติแล้ว',
         desc: 'คุณสามารถเริ่มใช้งานระบบ SafeSeat ได้ทันที ลูกค้าของคุณจะปลอดภัยทุกเส้นทาง',
         bannerBg: isDark
           ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.20) 0%, rgba(5, 150, 105, 0.12) 100%)'
@@ -374,7 +374,7 @@ export default function StatusPage() {
                   border: `1px solid ${isDark ? 'var(--color-border)' : '#E2E8F0'}`,
                 }}>
                   <div style={{ ...styles.infoLabel, color: isDark ? '#94a3b8' : '#475569' }}>
-                    ชื่อร้าน / สถานประกอบการ
+                    ชื่อสถานบันเทิง / สถานประกอบการ
                   </div>
                   <div style={{ ...styles.infoValue, color: isDark ? '#ffffff' : '#0F172A' }}>
                     {statusData.pubname || '—'}
@@ -431,9 +431,9 @@ export default function StatusPage() {
                     fontWeight: 700,
                     fontSize: 16,
                   }}>
-                    {statusData.regisstatus === 'pending'  && '⏳ รอการพิจารณา (Pending)'}
-                    {statusData.regisstatus === 'approved' && '✅ อนุมัติแล้ว (Approved)'}
-                    {statusData.regisstatus === 'rejected' && '❌ ไม่ผ่านการพิจารณา (Rejected)'}
+                    {((statusData as any)?.regisstatus === 'pending' || (statusData as any)?.regisstatus === 'รอดำเนินการ' || (statusData as any)?.regisstatus === 'รอการพิจารณา' || !(statusData as any)?.regisstatus) && '⏳ รอการพิจารณา (Pending)'}
+                    {((statusData as any)?.regisstatus === 'approved' || (statusData as any)?.regisstatus === 'อนุมัติแล้ว') && '✅ อนุมัติแล้ว (Approved)'}
+                    {((statusData as any)?.regisstatus === 'rejected' || (statusData as any)?.regisstatus === 'ปฏิเสธ') && '❌ ไม่ผ่านการพิจารณา (Rejected)'}
                   </div>
                 </div>
               </div>
@@ -469,7 +469,7 @@ export default function StatusPage() {
                 }}
                 style={{
                   ...styles.refreshBtn,
-                  background: 'linear-gradient(135deg, #7C3AED, #1D4ED8)',
+                  background: 'linear-gradient(135deg, #2340A7, #2563EB)',
                   color: '#ffffff',
                   border: 'none',
                   fontWeight: 700,

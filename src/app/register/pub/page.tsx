@@ -24,7 +24,7 @@ import {
 import { RegisterForm, StepConfig } from '@/types'
 
 const STEPS: StepConfig[] = [
-  { label: 'ข้อมูลร้าน',    icon: '🏪' },
+  { label: 'ข้อมูลสถานบันเทิง',    icon: '🏪' },
   { label: 'เอกสาร & บัญชี', icon: '📄' },
   { label: 'บัญชีผู้ใช้',    icon: '🔐' },
 ]
@@ -53,23 +53,19 @@ export default function RegisterPubPage() {
   const shopImgRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('pub_draft_form')
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        setForm((prev: RegisterForm) => ({ ...prev, ...parsed }))
-      }
-    } catch (e) {
-      console.error("Failed to load pub draft", e)
+    // Clear saved draft from localStorage on reload or fresh mount so form is always reset
+    localStorage.removeItem('pub_draft_form')
+
+    const handleBeforeUnload = () => {
+      localStorage.removeItem('pub_draft_form')
     }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const updated = { ...form, [e.target.name]: e.target.value }
     setForm(updated)
-    try {
-      localStorage.setItem('pub_draft_form', JSON.stringify(updated))
-    } catch {}
     setError('')
   }
 
@@ -99,8 +95,10 @@ export default function RegisterPubPage() {
 
   const parseApiError = (err: unknown, defaultMsg: string): string => {
     if (typeof err === 'object' && err !== null) {
-      if ('response' in err && (err as { response?: { data?: { message?: string } } }).response?.data?.message) {
-        return (err as { response: { data: { message: string } } }).response.data.message
+      if ('response' in err && (err as { response?: { data?: { error?: string; message?: string } | string } }).response?.data) {
+        const resData = (err as { response: { data: { error?: string; message?: string } | string } }).response.data
+        if (typeof resData === 'string') return resData
+        return resData.error || resData.message || defaultMsg
       }
       if ('message' in err && (err as { message?: string }).message === 'Network Error') {
         return 'ไม่สามารถเชื่อมต่อเครื่องเซิร์ฟเวอร์ได้ (Network Error) กรุณาตรวจสอบว่า Backend ทำงานอยู่หรือไม่'
@@ -115,33 +113,61 @@ export default function RegisterPubPage() {
   const handleNext = async (): Promise<void> => {
     setError('')
     if (step === 1) {
-      if (!validateStep1(form, setError)) return
+      if (!validateStep1(form, setError)) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
       
       setLoading(true)
       try {
-        await api.post('/pub/check-email', { pubEmail: form.pubEmail, pubPhone: form.pubPhone })
+        const res = await api.post('/pub/check-email', { 
+          pubName: form.pubName, 
+          pubEmail: form.pubEmail, 
+          pubPhone: form.pubPhone 
+        })
+        if (res.status >= 400 || res.data?.success === false || res.data?.error) {
+          setError(res.data?.error || res.data?.message || 'ชื่อสถานประกอบการ อีเมล หรือหมายเลขโทรศัพท์นี้ถูกใช้งานแล้วในระบบ')
+          setLoading(false)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          return
+        }
       } catch (err: unknown) {
-        setError(parseApiError(err, 'เกิดข้อผิดพลาดในการตรวจสอบอีเมลและเบอร์โทรศัพท์'))
+        setError(parseApiError(err, 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูลซ้ำ'))
         setLoading(false)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
       setLoading(false)
     }
     
     if (step === 2) {
-      if (!validateStep2(form, licenseFile, shopImgFile, setError)) return
+      if (!validateStep2(form, licenseFile, shopImgFile, setError)) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
       
       setLoading(true)
       try {
-        await api.post('/pub/check-email', { taxNumber: form.taxNumber })
+        const res = await api.post('/pub/check-email', { 
+          taxNumber: form.taxNumber, 
+          bankAccountNo: form.bankAccountNo 
+        })
+        if (res.status >= 400 || res.data?.success === false || res.data?.error) {
+          setError(res.data?.error || res.data?.message || 'เลขผู้เสียภาษีหรือเลขบัญชีธนาคารนี้ถูกใช้งานแล้วในระบบ')
+          setLoading(false)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          return
+        }
       } catch (err: unknown) {
-        setError(parseApiError(err, 'เกิดข้อผิดพลาดในการตรวจสอบเลขผู้เสียภาษี'))
+        setError(parseApiError(err, 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูลซ้ำ'))
         setLoading(false)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
       setLoading(false)
     }
     setStep(step + 1)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleBack = (): void => {
@@ -150,10 +176,37 @@ export default function RegisterPubPage() {
   }
 
   const handleSubmit = async (): Promise<void> => {
-    if (!validateStep3(form, termsAccepted, setError)) return
+    setError('')
+
+    // Validate Step 1
+    if (!validateStep1(form, setError)) {
+      setStep(1)
+      return
+    }
+
+    // Validate Step 2
+    if (!validateStep2(form, licenseFile, shopImgFile, setError)) {
+      setStep(2)
+      return
+    }
+
+    // Validate Step 3
+    if (!validateStep3(form, termsAccepted, setError)) {
+      setStep(3)
+      return
+    }
 
     setLoading(true)
     try {
+      // Check username duplicate before uploading
+      const userCheck = await api.post('/pub/check-email', { username: form.username })
+      if (userCheck.status >= 400 || userCheck.data?.success === false || userCheck.data?.error) {
+        setError(userCheck.data?.error || userCheck.data?.message || 'ชื่อผู้ใช้นี้ถูกใช้งานแล้วในระบบ')
+        setLoading(false)
+        setStep(3)
+        return
+      }
+
       const fd = new FormData()
       Object.entries(form).forEach(([k, v]) => {
         if (v !== undefined && v !== '') fd.append(k, String(v))
@@ -162,14 +215,34 @@ export default function RegisterPubPage() {
       if (licenseFile) fd.append('regisImagePath', licenseFile)
       if (shopImgFile)  fd.append('pubImagePath',  shopImgFile)
 
-      await api.post('/pub/register', fd, {
+      const res = await api.post('/pub/register', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
 
-      localStorage.removeItem('pub_draft_form')
-      router.push('/login?registered=1')
+      if (res.data && res.data.success) {
+        localStorage.removeItem('pub_draft_form')
+        router.push('/login?registered=1')
+      } else {
+        const msg = res.data?.error || res.data?.message || 'เกิดข้อผิดพลาดในการลงทะเบียน กรุณาตรวจสอบข้อมูลและลองใหม่อีกครั้ง'
+        setError(msg)
+        if (msg.includes('อีเมล') || msg.includes('โทรศัพท์') || msg.includes('ร้าน') || msg.includes('แผนที่') || msg.includes('ปักหมุด')) {
+          setStep(1)
+        } else if (msg.includes('ผู้เสียภาษี') || msg.includes('บัญชี') || msg.includes('ใบอนุญาต') || msg.includes('รูปหน้าร้าน')) {
+          setStep(2)
+        } else if (msg.includes('ชื่อผู้ใช้') || msg.includes('รหัสผ่าน') || msg.includes('เงื่อนไข')) {
+          setStep(3)
+        }
+      }
     } catch (err: unknown) {
-      setError(parseApiError(err, 'เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง'))
+      const msg = parseApiError(err, 'เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง')
+      setError(msg)
+      if (msg.includes('อีเมล') || msg.includes('โทรศัพท์') || msg.includes('ร้าน') || msg.includes('แผนที่') || msg.includes('ปักหมุด')) {
+        setStep(1)
+      } else if (msg.includes('ผู้เสียภาษี') || msg.includes('บัญชี') || msg.includes('ใบอนุญาต') || msg.includes('รูปหน้าร้าน')) {
+        setStep(2)
+      } else if (msg.includes('ชื่อผู้ใช้') || msg.includes('รหัสผ่าน') || msg.includes('เงื่อนไข')) {
+        setStep(3)
+      }
     } finally {
       setLoading(false)
     }
@@ -194,7 +267,7 @@ export default function RegisterPubPage() {
           />
           <div style={{
             ...styles.heroOverlay,
-            background: 'linear-gradient(160deg, rgba(5,7,20,0.85) 0%, rgba(124,58,237,0.4) 100%)',
+            background: 'linear-gradient(160deg, rgba(5,7,20,0.85) 0%, rgba(35,64,167,0.4) 100%)',
           }} />
           <div style={styles.heroContent}>
             <div style={styles.heroBadge}>🏪 พาร์ทเนอร์สถานบริการ</div>
@@ -203,7 +276,7 @@ export default function RegisterPubPage() {
             </h1>
             <p style={styles.heroDesc}>
               เชื่อมต่อกับแพลตฟอร์มที่ดูแลลูกค้าของคุณ<br />
-              หลังจากปิดร้าน — ปลอดภัยทุกเส้นทาง
+              หลังจากปิดสถานบันเทิง — ปลอดภัยทุกเส้นทาง
             </p>
 
             {}
@@ -281,24 +354,28 @@ export default function RegisterPubPage() {
               />
             </div>
 
+            {error && (
+              <div style={{ ...styles.errorBox, marginBottom: '20px' }}>
+                ⚠️ {error}
+              </div>
+            )}
+
             {}
             {step === 1 && (
               <StepShopInfo
                 form={form}
                 onChange={handleChange}
-                onPin={(lat: number, lng: number) => {
+                onPin={(lat: number, lng: number, label?: string) => {
                   const updated = {
                     ...form,
-                    pubAddress: `พิกัด: ${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+                    pubAddress: label || `พิกัด: ${lat.toFixed(4)}, ${lng.toFixed(4)}`,
                     pubAddressLat: lat,
                     pubAddressLng: lng,
                   }
                   setForm(updated)
-                  try {
-                    localStorage.setItem('pub_draft_form', JSON.stringify(updated))
-                  } catch {}
                 }}
                 inputStyle={styles.input}
+                errorMessage={error}
               />
             )}
 
@@ -313,6 +390,7 @@ export default function RegisterPubPage() {
                 shopImgRef={shopImgRef}
                 onLicenseChange={handleLicenseChange}
                 onShopImgChange={handleShopImgChange}
+                errorMessage={error}
               />
             )}
 
@@ -325,10 +403,9 @@ export default function RegisterPubPage() {
                 onTogglePassword={() => setShowPassword(!showPassword)}
                 termsAccepted={termsAccepted}
                 onToggleTerms={() => setTermsAccepted(!termsAccepted)}
+                errorMessage={error}
               />
             )}
-
-            {error && <div style={styles.errorBox}>⚠️ {error}</div>}
 
             {}
             <div style={styles.btnRow}>

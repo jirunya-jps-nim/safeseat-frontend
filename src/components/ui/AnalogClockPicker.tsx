@@ -94,7 +94,7 @@ export default function AnalogClockPicker({
   return createPortal(
     <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fade-in font-inter overflow-y-auto">
       <div className="bg-[#111827] border border-[#374151] rounded-3xl p-6 w-full max-w-sm shadow-2xl text-white flex flex-col items-center gap-5 relative overflow-hidden my-auto">
-        <div className="absolute -top-16 -left-16 w-36 h-36 bg-[#7C3AED]/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute -top-16 -left-16 w-36 h-36 bg-[#2340A7]/20 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="w-full flex items-center justify-between border-b border-gray-800 pb-3">
           <div className="flex items-center gap-2">
@@ -109,13 +109,13 @@ export default function AnalogClockPicker({
           </button>
         </div>
 
-        {}
+        {/* ส่วนแสดงเวลา Digital ด้านบนที่กำลังปรับ */}
         <div className="flex items-center justify-center gap-2 bg-[#1F2937] p-3 rounded-2xl w-full border border-gray-700/60 shadow-inner">
           <button
             onClick={() => setMode('hour')}
             className={`text-3xl font-extrabold px-3 py-1 rounded-xl transition-all ${
               mode === 'hour'
-                ? 'bg-[#7C3AED] text-white shadow-lg shadow-[#7C3AED]/40 scale-105'
+                ? 'bg-[#2340A7] text-white shadow-lg shadow-[#2340A7]/40 scale-105'
                 : 'text-gray-300 hover:bg-gray-700/50'
             }`}
           >
@@ -128,20 +128,20 @@ export default function AnalogClockPicker({
             onClick={() => setMode('minute')}
             className={`text-3xl font-extrabold px-3 py-1 rounded-xl transition-all ${
               mode === 'minute'
-                ? 'bg-[#7C3AED] text-white shadow-lg shadow-[#7C3AED]/40 scale-105'
+                ? 'bg-[#2340A7] text-white shadow-lg shadow-[#2340A7]/40 scale-105'
                 : 'text-gray-300 hover:bg-gray-700/50'
             }`}
           >
             {String(minute).padStart(2, '0')}
           </button>
 
-          {}
+          {/* สลับ AM / PM */}
           <div className="flex flex-col gap-1 ml-3">
             <button
               onClick={() => setPeriod('AM')}
               className={`text-xs font-bold px-2.5 py-1 rounded-md transition-all ${
                 period === 'AM'
-                  ? 'bg-[#1D4ED8] text-white'
+                  ? 'bg-[#2563EB] text-white'
                   : 'bg-gray-800 text-gray-400 hover:text-white'
               }`}
             >
@@ -151,7 +151,7 @@ export default function AnalogClockPicker({
               onClick={() => setPeriod('PM')}
               className={`text-xs font-bold px-2.5 py-1 rounded-md transition-all ${
                 period === 'PM'
-                  ? 'bg-[#7C3AED] text-white'
+                  ? 'bg-[#2340A7] text-white'
                   : 'bg-gray-800 text-gray-400 hover:text-white'
               }`}
             >
@@ -160,12 +160,12 @@ export default function AnalogClockPicker({
           </div>
         </div>
 
-        {}
+        {/* แท็บสลับเลือก ชั่วโมง หรือ นาที */}
         <div className="flex bg-[#1F2937] rounded-full p-1 border border-gray-700 text-xs font-bold w-full">
           <button
             onClick={() => setMode('hour')}
             className={`flex-1 py-1.5 rounded-full transition-all text-center ${
-              mode === 'hour' ? 'bg-[#7C3AED] text-white' : 'text-gray-400 hover:text-white'
+              mode === 'hour' ? 'bg-[#2340A7] text-white' : 'text-gray-400 hover:text-white'
             }`}
           >
             เข็มชั่วโมง (Hour)
@@ -173,21 +173,21 @@ export default function AnalogClockPicker({
           <button
             onClick={() => setMode('minute')}
             className={`flex-1 py-1.5 rounded-full transition-all text-center ${
-              mode === 'minute' ? 'bg-[#7C3AED] text-white' : 'text-gray-400 hover:text-white'
+              mode === 'minute' ? 'bg-[#2340A7] text-white' : 'text-gray-400 hover:text-white'
             }`}
           >
             เข็มนาที (Minute)
           </button>
         </div>
 
-        {}
+        {/* หน้าปัดนาฬิกาจำลอง (Analog Clock Face) */}
         <div className="relative w-60 h-60 rounded-full bg-gradient-to-b from-[#1F2937] to-[#111827] border-4 border-[#374151] shadow-2xl flex items-center justify-center select-none">
-          {}
-          <div className="absolute w-4 h-4 rounded-full bg-[#7C3AED] z-30 border-2 border-white shadow-md"></div>
+          {/* จุดหมุนแกนกลาง (Center Pivot) */}
+          <div className="absolute w-4 h-4 rounded-full bg-[#2340A7] z-30 border-2 border-white shadow-md"></div>
 
-          {}
+          {/* เข็มชั่วโมง (Hour Hand) */}
           <div
-            className="absolute origin-bottom bg-gradient-to-t from-[#7C3AED] to-[#A78BFA] rounded-full z-20 transition-transform duration-300 shadow-lg"
+            className="absolute origin-bottom bg-gradient-to-t from-[#2340A7] to-[#60A5FA] rounded-full z-20 transition-transform duration-300 shadow-lg"
             style={{
               width: '6px',
               height: '55px',
@@ -198,7 +198,7 @@ export default function AnalogClockPicker({
             }}
           ></div>
 
-          {}
+          {/* เข็มนาที (Minute Hand) */}
           <div
             className="absolute origin-bottom bg-blue-400 rounded-full z-10 transition-transform duration-300 shadow-lg"
             style={{
@@ -211,7 +211,7 @@ export default function AnalogClockPicker({
             }}
           ></div>
 
-          {}
+          {/* ตัวเลขบนหน้าปัด */}
           {mode === 'hour' ? (
             hoursList.map((h, i) => {
               const angleDeg = i * 30 
@@ -231,7 +231,7 @@ export default function AnalogClockPicker({
                   style={{ left: `${x}px`, top: `${y}px` }}
                   className={`absolute w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold transition-all z-40 ${
                     isSelected
-                      ? 'bg-[#7C3AED] text-white scale-125 shadow-lg shadow-[#7C3AED]/60 ring-2 ring-white'
+                      ? 'bg-[#2340A7] text-white scale-125 shadow-lg shadow-[#2340A7]/60 ring-2 ring-white'
                       : 'text-gray-300 hover:bg-gray-700/80 hover:text-white'
                   }`}
                 >
@@ -266,7 +266,7 @@ export default function AnalogClockPicker({
           )}
         </div>
 
-        {}
+        {/* แถบปุ่มทางลัดยอดนิยม */}
         <div className="w-full">
           <div className="text-[11px] font-bold text-gray-400 mb-1.5">⚡ เลือกเวลาด่วนยอดนิยม:</div>
           <div className="grid grid-cols-3 gap-1.5">
@@ -282,7 +282,7 @@ export default function AnalogClockPicker({
           </div>
         </div>
 
-        {}
+        {/* ปุ่มกดยืนยัน / ยกเลิก */}
         <div className="flex items-center gap-2.5 w-full pt-1">
           <button
             onClick={onClose}
@@ -292,7 +292,7 @@ export default function AnalogClockPicker({
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 py-2.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white text-xs font-bold rounded-xl transition-all shadow-md"
+            className="flex-1 py-2.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] text-white text-xs font-bold rounded-xl transition-all shadow-md"
           >
             ตกลง ({String(get24Hour(hour12, period)).padStart(2, '0')}:{String(minute).padStart(2, '0')})
           </button>

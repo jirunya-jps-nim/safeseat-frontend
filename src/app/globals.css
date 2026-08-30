@@ -5,11 +5,12 @@
 
 
 :root, html.dark {
-  --accent-purple: #7C3AED;
-  --accent-blue: #1D4ED8;
-  --accent-cyan: #3B82F6;
-  --accent-gradient: linear-gradient(135deg, #7C3AED 0%, #1D4ED8 50%, #3B82F6 100%);
-  --accent-glow: rgba(124, 58, 237, 0.45);
+  --accent-purple: #2340A7;
+  --accent-blue: #2340A7;
+  --accent-cyan: #2563EB;
+  --accent-deep: #0044C9;
+  --accent-gradient: linear-gradient(135deg, #2340A7 0%, #2563EB 50%, #0044C9 100%);
+  --accent-glow: rgba(35, 64, 167, 0.45);
   
   --color-bg: #050714;
   --color-card: #0c1024;
@@ -18,40 +19,41 @@
   --color-text: #ffffff;
   --color-text-muted: #94a3b8;
   --color-text-subtle: #64748b;
-  --color-border: rgba(124, 58, 237, 0.25);
-  --color-border-light: rgba(124, 58, 237, 0.12);
-  --color-accent: #7C3AED;
-  --color-accent-hover: #6D28D9;
+  --color-border: rgba(35, 64, 167, 0.25);
+  --color-border-light: rgba(35, 64, 167, 0.12);
+  --color-accent: #2340A7;
+  --color-accent-hover: #1D358F;
   --color-accent-text: #ffffff;
   --glass-bg: rgba(5, 7, 20, 0.82);
-  --glass-border: rgba(124, 58, 237, 0.25);
-  --glow-overlay: radial-gradient(circle at center, rgba(124, 58, 237, 0.15) 0%, transparent 70%);
+  --glass-border: rgba(35, 64, 167, 0.25);
+  --glow-overlay: radial-gradient(circle at center, rgba(35, 64, 167, 0.15) 0%, transparent 70%);
 
   color-scheme: dark;
 }
 
 html.light {
-  --accent-purple: #7C3AED;
-  --accent-blue: #1D4ED8;
+  --accent-purple: #2340A7;
+  --accent-blue: #2340A7;
   --accent-cyan: #2563EB;
-  --accent-gradient: linear-gradient(135deg, #7C3AED 0%, #1D4ED8 50%, #2563EB 100%);
-  --accent-glow: rgba(124, 58, 237, 0.2);
+  --accent-deep: #0044C9;
+  --accent-gradient: linear-gradient(135deg, #2340A7 0%, #2563EB 50%, #0044C9 100%);
+  --accent-glow: rgba(35, 64, 167, 0.2);
   
-  --color-bg: #FFFFFF;           
+  --color-bg: #F8FAFC;           
   --color-card: #FFFFFF;         
-  --color-card-hover: #F5F3FF;   
-  --color-surface: #EDE9FE;      
-  --color-text: #0F172A;         
-  --color-text-muted: #334155;   
-  --color-text-subtle: #64748B;  
-  --color-border: rgba(124, 58, 237, 0.18);
-  --color-border-light: rgba(124, 58, 237, 0.1);
-  --color-accent: #7C3AED;
-  --color-accent-hover: #6D28D9;
+  --color-card-hover: #EFF6FF;   
+  --color-surface: #F1F5F9;      
+  --color-text: #1E293B;         
+  --color-text-muted: #64748B;   
+  --color-text-subtle: #94A3B8;  
+  --color-border: #E2E8F0;
+  --color-border-light: #F1F5F9;
+  --color-accent: #2340A7;
+  --color-accent-hover: #1D358F;
   --color-accent-text: #ffffff;
   --glass-bg: rgba(255, 255, 255, 0.95);
-  --glass-border: rgba(124, 58, 237, 0.2);
-  --glow-overlay: radial-gradient(circle at center, rgba(124, 58, 237, 0.05) 0%, transparent 70%);
+  --glass-border: rgba(35, 64, 167, 0.2);
+  --glow-overlay: radial-gradient(circle at center, rgba(35, 64, 167, 0.05) 0%, transparent 70%);
 
   color-scheme: light;
 }
@@ -69,6 +71,15 @@ body, input, button, select, textarea {
   scroll-behavior: smooth;
   transition: background-color 0.3s ease, color 0.3s ease;
   overflow-x: hidden;
+}
+
+input, select, textarea {
+  font-size: 16px;
+}
+
+input::placeholder, textarea::placeholder {
+  font-size: 14.5px;
+  opacity: 0.75;
 }
 
 .font-manrope { font-family: 'Manrope', 'Kanit', sans-serif; }
@@ -102,7 +113,7 @@ body, input, button, select, textarea {
   border-radius: 9999px;
   padding: 1rem 2.5rem;
   background: linear-gradient(var(--color-card), var(--color-card)) padding-box,
-  conic-gradient(from var(--gradient-angle), transparent 0%, #7C3AED 10%, #1D4ED8 25%, #3B82F6 40%, transparent 50%, transparent 100%) border-box;
+  conic-gradient(from var(--gradient-angle), transparent 0%, #2340A7 10%, #2563EB 25%, #0044C9 40%, transparent 50%, transparent 100%) border-box;
   border: 2px solid transparent;
   cursor: pointer;
   isolation: isolate;
@@ -112,14 +123,14 @@ body, input, button, select, textarea {
 
 .shiny-cta:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 0 30px rgba(124, 58, 237, 0.45);
+  box-shadow: 0 0 30px rgba(35, 64, 167, 0.45);
 }
 
 .shiny-cta::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, #7C3AED 0.5px, transparent 0);
+  background: radial-gradient(circle at 50% 50%, #2340A7 0.5px, transparent 0);
   background-size: 4px 4px;
   opacity: 0.12;
   z-index: 0;
@@ -129,8 +140,8 @@ body, input, button, select, textarea {
 html.dark .stars-1 { box-shadow: 234px 124px #fff, 654px 345px #fff, 876px 12px #fff, 1200px 800px #fff, 400px 1500px #fff, 1800px 200px #fff, 100px 1000px #fff, 900px 1900px #fff, 500px 600px #fff, 1400px 100px #fff, 300px 400px #fff, 1600px 1200px #fff; }
 html.dark .stars-2 { box-shadow: 123px 456px #fff, 789px 234px #fff, 456px 890px #fff, 1100px 300px #fff, 200px 1200px #fff, 1500px 500px #fff, 600px 1700px #fff, 1300px 900px #fff; }
 
-html.light .stars-1 { box-shadow: 234px 124px #7C3AED, 654px 345px #7C3AED, 876px 12px #7C3AED, 1200px 800px #7C3AED, 400px 1500px #7C3AED; opacity: 0.2; }
-html.light .stars-2 { box-shadow: 123px 456px #1D4ED8, 789px 234px #1D4ED8, 456px 890px #1D4ED8, 1100px 300px #1D4ED8; opacity: 0.2; }
+html.light .stars-1 { box-shadow: 234px 124px #2340A7, 654px 345px #2340A7, 876px 12px #2340A7, 1200px 800px #2340A7, 400px 1500px #2340A7; opacity: 0.2; }
+html.light .stars-2 { box-shadow: 123px 456px #2563EB, 789px 234px #2563EB, 456px 890px #2563EB, 1100px 300px #2563EB; opacity: 0.2; }
 
 .gradient-blur {
   position: fixed;
@@ -145,22 +156,22 @@ html.light .stars-2 { box-shadow: 123px 456px #1D4ED8, 789px 234px #1D4ED8, 456p
 
 
 .selection-purple::selection {
-  background-color: #7C3AED;
+  background-color: #2340A7;
   color: #ffffff;
 }
 .selection-purple ::selection {
-  background-color: #7C3AED;
+  background-color: #2340A7;
   color: #ffffff;
 }
 
 
 html.dark .text-stroke {
-  -webkit-text-stroke: 1px rgba(124, 58, 237, 0.3);
+  -webkit-text-stroke: 1px rgba(35, 64, 167, 0.3);
   color: transparent;
 }
 
 html.light .text-stroke {
-  -webkit-text-stroke: 1.5px rgba(124, 58, 237, 0.4);
+  -webkit-text-stroke: 1.5px rgba(35, 64, 167, 0.4);
   color: transparent;
 }
 
@@ -187,7 +198,7 @@ html.light .text-stroke {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7C3AED 0%, #1D4ED8 100%);
+  background: linear-gradient(135deg, #2340A7 0%, #2563EB 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -198,4 +209,12 @@ html.light .text-stroke {
 
 html.light .theme-switch-thumb {
   transform: translateX(24px);
+}
+
+/* Hide browser default/native password reveal & clear buttons */
+input::-ms-reveal,
+input::-ms-clear,
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  display: none !important;
 }

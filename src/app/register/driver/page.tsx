@@ -19,6 +19,8 @@ import { registerStyles as styles } from '@/lib/styles/registerStyles'
 import {
   validateDriverStep1,
   validateDriverStep2,
+  validateDriverStep3,
+  validateDriverStep4,
   validateDriverFile,
 } from '@/lib/validation/driverRegisterValidation'
 
@@ -123,23 +125,22 @@ export default function RegisterDriverPage() {
   }, [files.driverLicensePath])
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('driver_draft_form')
-      if (saved) {
-        const parsed = JSON.parse(saved)
-        setForm((prev) => ({ ...prev, ...parsed }))
-      }
-    } catch (e) {
-      console.error("Failed to load driver draft", e)
+    // Clear saved draft from localStorage on reload or fresh mount so form is always reset
+    localStorage.removeItem('driver_draft_form')
+
+    const handleBeforeUnload = () => {
+      localStorage.removeItem('driver_draft_form')
     }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
-    const updated = { ...form, [e.target.name]: e.target.value }
+    const { name, value } = e.target
+    const numericFields = ['idCard', 'phoneNo', 'bankAccountNo']
+    const finalValue = numericFields.includes(name) ? value.replace(/\D/g, '') : value
+    const updated = { ...form, [name]: finalValue }
     setForm(updated)
-    try {
-      localStorage.setItem('driver_draft_form', JSON.stringify(updated))
-    } catch {}
     setError('')
   }
 
@@ -161,10 +162,19 @@ export default function RegisterDriverPage() {
 
   const handleToggleSkill = (skill: string): void => {
     const currentSkills = [...form.driverSkills]
-    if (currentSkills.includes(skill)) {
+    const hasSkill = currentSkills.some(s => 
+      s.toLowerCase() === skill.toLowerCase() || 
+      (skill === 'Auto' && s.toLowerCase() === 'autometric') ||
+      (skill === 'Electric' && s.toLowerCase() === 'ev')
+    )
+    if (hasSkill) {
       setForm({
         ...form,
-        driverSkills: currentSkills.filter((s) => s !== skill),
+        driverSkills: currentSkills.filter((s) => 
+          s.toLowerCase() !== skill.toLowerCase() && 
+          !(skill === 'Auto' && s.toLowerCase() === 'autometric') &&
+          !(skill === 'Electric' && s.toLowerCase() === 'ev')
+        ),
       })
     } else {
       setForm({
@@ -209,79 +219,69 @@ export default function RegisterDriverPage() {
     setError('')
 
     if (step === 1) {
-      if (!validateDriverStep1(form, setError)) return
-      if (!form.password) {
-        setError('กรุณากรอกรหัสผ่าน')
-        return
-      }
-      if (!/^[a-zA-Z0-9!#_.]{6,50}$/.test(form.password)) {
-        setError('รหัสผ่านต้องเป็นภาษาอังกฤษ ตัวเลข และอักขระพิเศษ [!#_.] เท่านั้น ความยาว 6 - 50 ตัวอักษร และต้องไม่มีช่องว่าง')
-        return
-      }
-      if (!files.regisImagePath) {
-        setError('กรุณาแนบรูปภาพใบหน้าตนเอง')
-        return
-      }
-      if (form.driverSkills.length === 0) {
-        setError('กรุณาเลือกความสามารถในการขับรถอย่างน้อย 1 ประเภท')
+      if (!validateDriverStep1(form, files.regisImagePath, setError)) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
 
       setLoading(true)
       try {
-        await api.post('/auth/check-credentials', {
+        const res = await api.post('/auth/check-credentials', {
           email: form.email,
           phoneNo: form.phoneNo,
           idCard: form.idCard,
+          bankAccountNo: form.bankAccountNo,
         })
+        if (res.status >= 400 || res.data?.success === false || res.data?.error) {
+          setError(res.data?.error || res.data?.message || 'ข้อมูลนี้มีในระบบแล้ว กรุณาตรวจสอบข้อมูลอีกครั้ง')
+          setLoading(false)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          return
+        }
       } catch (err: unknown) {
         setError(parseApiError(err, 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูลซ้ำ'))
         setLoading(false)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
       setLoading(false)
     }
 
     if (step === 2) {
-      if (!validateDriverStep2(form, setError)) return
-      if (!files.carImagePath) {
-        setError('กรุณาแนบรูปภาพรถยนต์ของคุณ')
-        return
-      }
-      if (!termsAccepted) {
-        setError('กรุณายอมรับนโยบายข้อมูลส่วนตัวก่อนดำเนินการต่อ')
+      if (!validateDriverStep2(form, files.carImagePath, termsAccepted, setError)) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
 
       setLoading(true)
       try {
-        await api.post('/auth/check-credentials', {
+        const res = await api.post('/auth/check-credentials', {
           carPlate: form.carPlate,
         })
+        if (res.status >= 400 || res.data?.success === false || res.data?.error) {
+          setError(res.data?.error || res.data?.message || 'ทะเบียนยานพาหนะนี้ถูกใช้งานแล้วในระบบ กรุณาใช้ทะเบียนอื่น')
+          setLoading(false)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          return
+        }
       } catch (err: unknown) {
         setError(parseApiError(err, 'เกิดข้อผิดพลาดในการตรวจสอบทะเบียนรถยนต์'))
         setLoading(false)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
       setLoading(false)
     }
 
     if (step === 3) {
-      if (!files.driverLicensePath) {
-        setError('กรุณาแนบรูปภาพใบขับขี่')
-        return
-      }
-      if (!files.criminalRecordPath) {
-        setError('กรุณาแนบประวัติอาชญากรรม')
-        return
-      }
-      if (!files.medicalCertificatePath) {
-        setError('กรุณาแนบใบรับรองแพทย์ตรวจสุขภาพ')
+      if (!validateDriverStep3(files, setError)) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
     }
 
     setStep(step + 1)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleBack = (): void => {
@@ -292,24 +292,23 @@ export default function RegisterDriverPage() {
   const handleSubmit = async (): Promise<void> => {
     setError('')
 
-    if (!files.driverLicensePath) {
-      setError('กรุณาแนบรูปภาพใบขับขี่')
+    if (!validateDriverStep1(form, files.regisImagePath, setError)) {
+      setStep(1)
       return
     }
-    if (!files.criminalRecordPath) {
-      setError('กรุณาแนบประวัติอาชญากรรม')
+
+    if (!validateDriverStep2(form, files.carImagePath, termsAccepted, setError)) {
+      setStep(2)
       return
     }
-    if (!files.medicalCertificatePath) {
-      setError('กรุณาแนบใบรับรองแพทย์ตรวจสุขภาพ')
+
+    if (!validateDriverStep3(files, setError)) {
+      setStep(3)
       return
     }
-    if (!files.trainingCert1) {
-      setError('กรุณาแนบเกียรติบัตรการอบรม คอร์สที่ 1')
-      return
-    }
-    if (!files.trainingCert2) {
-      setError('กรุณาแนบเกียรติบัตรการอบรม คอร์สที่ 2')
+
+    if (!validateDriverStep4(files, setError)) {
+      setStep(4)
       return
     }
 
@@ -350,11 +349,18 @@ export default function RegisterDriverPage() {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
 
+      if (response.status >= 400 || response.data?.success === false || response.data?.error) {
+        setError(response.data?.error || response.data?.message || 'เกิดข้อผิดพลาดในการลงทะเบียน')
+        setLoading(false)
+        return
+      }
+
       if (response.data && response.data.success) {
         localStorage.removeItem('driver_draft_form')
         setIsRegistered(true)
       } else {
-        setError(response.data?.message || 'เกิดข้อผิดพลาดในการลงทะเบียน')
+        const errDetail = response.data?.error || response.data?.message || (typeof response.data === 'string' ? response.data : '')
+        setError(errDetail || 'เกิดข้อผิดพลาดในการลงทะเบียน กรุณาตรวจสอบข้อมูลให้ถูกต้องแล้วลองใหม่อีกครั้ง')
       }
     } catch (err: unknown) {
       setError(parseApiError(err, 'เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง'))
@@ -525,7 +531,7 @@ export default function RegisterDriverPage() {
               <button
                 onClick={() => router.push('/')}
                 style={{
-                  background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                  background: 'linear-gradient(135deg, #2340A7, #2563EB)',
                   border: 'none',
                   color: '#ffffff',
                   padding: '14px 28px',
@@ -534,7 +540,7 @@ export default function RegisterDriverPage() {
                   fontSize: '14.5px',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
-                  boxShadow: '0 4px 12px rgba(79, 70, 229, 0.2)',
+                  boxShadow: '0 4px 12px rgba(35, 64, 167, 0.2)',
                 }}
               >
                 🏠 กลับสู่หน้าหลัก
@@ -557,10 +563,10 @@ export default function RegisterDriverPage() {
 
       <Navbar />
 
-      {}
+      {/* Main Container Form & Preview Split */}
       <div style={styles.main}>
 
-        {}
+        {/* Left Side: Futuristic Hero Banner */}
         <div style={styles.heroPanel}>
           <img
             src="/images/safeseat_futuristic_dashboard_preview.png"
@@ -569,7 +575,7 @@ export default function RegisterDriverPage() {
           />
           <div style={{
             ...styles.heroOverlay,
-            background: 'linear-gradient(160deg, rgba(5,7,20,0.85) 0%, rgba(124,58,237,0.4) 100%)',
+            background: 'linear-gradient(160deg, rgba(5,7,20,0.85) 0%, rgba(35,64,167,0.4) 100%)',
           }} />
           <div style={styles.heroContent}>
             <div style={styles.heroBadge}>🚗 สมัครเป็นคนขับ SafeSeat</div>
@@ -660,6 +666,12 @@ export default function RegisterDriverPage() {
               />
             </div>
 
+            {error && (
+              <div style={{ ...styles.errorBox, marginBottom: '20px' }}>
+                ⚠️ {error}
+              </div>
+            )}
+
             {}
             {step === 1 && (
               <StepDriverPersonalInfo
@@ -669,6 +681,7 @@ export default function RegisterDriverPage() {
                 profileFile={files.regisImagePath}
                 profileRef={profileRef}
                 onProfileChange={(e) => handleFileSelect('regisImagePath', e.target.files?.[0] || null)}
+                errorMessage={error}
               />
             )}
 
@@ -702,8 +715,6 @@ export default function RegisterDriverPage() {
                 onFileSelect={handleFileSelect}
               />
             )}
-
-            {error && <div style={styles.errorBox}>⚠️ {error}</div>}
 
             {}
             <div style={styles.btnRow}>

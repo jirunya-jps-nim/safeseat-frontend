@@ -76,7 +76,7 @@ function TripTrackingContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center text-[var(--color-text)] font-inter">
-        <RefreshCw className="w-8 h-8 text-[#7C3AED] animate-spin mb-3" />
+        <RefreshCw className="w-8 h-8 text-[#2340A7] animate-spin mb-3" />
         <p className="text-sm font-bold">กำลังโหลดข้อมูลความคืบหน้าการเดินทาง...</p>
       </div>
     )
@@ -113,11 +113,18 @@ function TripTrackingContent() {
 
   const normalizedStatus = requeststatus ? requeststatus.trim() : ''
 
-  const currentStep = (normalizedStatus === 'กำลังไปรับ') ? 1
-                    : (normalizedStatus === 'ถึงจุดนัดหมาย' || normalizedStatus === 'ถึงจุดรับแล้ว') ? 2
-                    : (normalizedStatus === 'กำลังเดินทาง' || normalizedStatus === 'ระหว่างเดินทาง' || normalizedStatus === 'accepted') ? 3
-                    : (normalizedStatus === 'เสร็จสิ้น' || normalizedStatus === 'completed') ? 4
-                    : 0;
+  const getStep = (s: string) => {
+    if (!s) return 0
+    const str = s.toLowerCase().trim()
+    if (['accepted', 'คนขับรับงาน', 'กำลังไปรับ', 'รับงานแล้ว'].includes(str) || str.includes('กำลังไปรับ') || str.includes('accepted') || str.includes('คนขับรับงาน')) return 1
+    if (['ถึงจุดรับแล้ว', 'ถึงจุดรับ', 'ถึงจุดนัดหมาย', 'arrived'].includes(str) || str.includes('ถึงจุดรับ') || str.includes('ถึงจุดนัดหมาย')) return 2
+    if (['ระหว่างเดินทาง', 'กำลังเดินทาง', 'in_transit', 'driving'].includes(str) || str.includes('ระหว่างเดินทาง') || str.includes('กำลังเดินทาง')) return 3
+    if (['เสร็จสิ้น', 'completed', 'ถึงจุดหมายปลายทาง', 'finished'].includes(str) || str.includes('เสร็จสิ้น') || str.includes('completed') || str.includes('ถึงจุดหมาย')) return 4
+    if (['cancelled', 'ยกเลิก', 'ปฏิเสธ', 'rejected'].includes(str) || str.includes('ยกเลิก') || str.includes('ปฏิเสธ')) return -1
+    return 0
+  }
+
+  const currentStep = getStep(requeststatus)
 
   const realLat = buddyteam?.currentloclat
   const realLng = buddyteam?.currentloclng
@@ -144,37 +151,40 @@ function TripTrackingContent() {
   }
 
   let statusText = 'กำลังดำเนินการ'
-  let statusBadgeBg = 'bg-[#7C3AED]/15 text-[#7C3AED] border-[#7C3AED]/30'
+  let statusBadgeBg = 'bg-[#2340A7]/15 text-[#2340A7] border-[#2340A7]/30'
 
-  if (normalizedStatus === 'กำลังค้นหาคนขับ' || normalizedStatus === 'รอคนขับ' || normalizedStatus === 'pending') {
-    statusText = 'กำลังจับคู่ทีมคนขับ SafeSeat'
-    statusBadgeBg = 'bg-amber-500/15 text-amber-500 border-amber-500/30'
-  } else if (normalizedStatus === 'กำลังไปรับ') {
-    statusText = 'คนขับกำลังเดินทางไปรับคุณ'
+  if (currentStep === 1) {
+    statusText = 'คนขับรับงานแล้ว (กำลังเดินทางไปรับ)'
     statusBadgeBg = 'bg-blue-500/15 text-blue-500 border-blue-500/30'
-  } else if (normalizedStatus === 'ถึงจุดนัดหมาย' || normalizedStatus === 'ถึงจุดรับแล้ว') {
+  } else if (currentStep === 2) {
     statusText = 'คนขับเดินทางมาถึงตำแหน่งของคุณแล้ว'
-    statusBadgeBg = 'bg-purple-500/15 text-purple-400 border-purple-500/30'
-  } else if (normalizedStatus === 'กำลังเดินทาง' || normalizedStatus === 'ระหว่างเดินทาง' || normalizedStatus === 'accepted') {
+    statusBadgeBg = 'bg-blue-600/15 text-blue-400 border-blue-500/30'
+  } else if (currentStep === 3) {
     statusText = 'อยู่ระหว่างเดินทางไปยังจุดหมายปลายทาง'
     statusBadgeBg = 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30'
-  } else if (normalizedStatus === 'เสร็จสิ้น' || normalizedStatus === 'completed') {
+  } else if (currentStep === 4) {
     statusText = 'เดินทางถึงที่หมายอย่างปลอดภัยเรียบร้อยแล้ว'
     statusBadgeBg = 'bg-emerald-500/15 text-emerald-500 border-emerald-500/30'
-  } else if (normalizedStatus === 'ยกเลิก' || normalizedStatus === 'cancelled') {
+  } else if (currentStep === -1) {
     statusText = 'การเดินทางนี้ถูกยกเลิกแล้ว'
     statusBadgeBg = 'bg-red-500/15 text-red-500 border-red-500/30'
+  } else {
+    statusText = 'กำลังจับคู่ทีมคนขับ SafeSeat'
+    statusBadgeBg = 'bg-amber-500/15 text-amber-500 border-amber-500/30'
   }
 
-  const driver1Name = leader
-    ? `คุณ${leader.firstname} ${leader.lastname || ''}`
-    : 'ผู้ให้บริการ SafeSeat'
-  const rawDriver1Phone = leader?.phone_no || leader?.phoneno || ''
+  const leaderObj = leader || reqData.leader || reqData.buddyteam?.leader
+  const followerObj = follower || reqData.follower || reqData.buddyteam?.follower
 
-  const driver2Name = follower
-    ? `คุณ${follower.firstname} ${follower.lastname || ''}`
+  const driver1Name = leaderObj && (leaderObj.firstname || leaderObj.name)
+    ? `คุณ${leaderObj.firstname || leaderObj.name} ${leaderObj.lastname || ''}`.trim()
+    : 'ผู้ให้บริการ SafeSeat'
+  const rawDriver1Phone = leaderObj?.phone_no || leaderObj?.phoneno || leaderObj?.phone || reqData.leader_phone || ''
+
+  const driver2Name = followerObj && (followerObj.firstname || followerObj.name)
+    ? `คุณ${followerObj.firstname || followerObj.name} ${followerObj.lastname || ''}`.trim()
     : 'ผู้ช่วยคนขับ SafeSeat (บัดดี้)'
-  const rawDriver2Phone = follower?.phone_no || follower?.phoneno || ''
+  const rawDriver2Phone = followerObj?.phone_no || followerObj?.phoneno || followerObj?.phone || reqData.follower_phone || ''
 
   const getPhoneDisplay = (phone: string) => {
     if (phone) return phone
@@ -191,57 +201,75 @@ function TripTrackingContent() {
 
   const isCompleted = normalizedStatus === 'เสร็จสิ้น' || normalizedStatus === 'completed'
 
-  const stepsList = [
-    { label: 'รับงาน', step: 1 },
-    { label: 'ถึงจุดรับ', step: 2 },
-    { label: 'ระหว่างเดินทาง', step: 3 },
-    { label: 'เสร็จสิ้น', step: 4 },
-  ]
-
   return (
-    <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
+    <div className="selection-blue min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {}
+      {/* Ambient Glow */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#2340A7]/10 rounded-full blur-[140px]"></div>
       </div>
 
       <div className="gradient-blur"></div>
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-10 pb-20 flex flex-col gap-8">
         
-        {}
-        <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col gap-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-muted)] font-mono">สถานะการบริการเรียลไทม์ (Live Trip Status)</span>
-              <h1 className="text-2xl md:text-3xl font-extrabold font-manrope text-[var(--color-text)] mt-1">{statusText}</h1>
-            </div>
-            <div className={`px-5 py-2.5 rounded-full border text-xs font-bold font-manrope flex items-center gap-2.5 shadow-md ${statusBadgeBg}`}>
-              <span className="w-2.5 h-2.5 rounded-full bg-current animate-ping"></span>
-              <span>{statusText}</span>
-            </div>
+        {/* Status Header Card */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--color-card)] border border-[var(--color-border)] p-6 rounded-2xl shadow-xl">
+          <div>
+            <span className="text-xs font-bold text-[#2340A7] tracking-wider uppercase font-manrope">TRIP TRACKING SERVICE</span>
+            <h1 className="text-2xl sm:text-3xl font-bold font-manrope text-[var(--color-text)] mt-1">ติดตามสถานะการเดินทาง (Realtime Tracking)</h1>
           </div>
-
-          {}
-          <div className="grid grid-cols-4 gap-2 pt-4 border-t border-[var(--color-border)]">
-            {stepsList.map(s => {
-              const active = currentStep >= s.step
-              return (
-                <div key={s.step} className="flex flex-col items-center gap-2">
-                  <div className={`w-full h-2 rounded-full transition-all duration-500 ease-in-out ${
-                    active ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] scale-y-110 shadow-sm' : 'bg-[var(--color-surface)] border border-[var(--color-border)]'
-                  }`} />
-                  <span className={`text-[11px] font-bold transition-colors duration-300 ${active ? 'text-[#7C3AED]' : 'text-[var(--color-text-muted)]'}`}>
-                    {s.label}
-                  </span>
-                </div>
-              )
-            })}
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => {
+                if (typeof window !== 'undefined' && window.history.length > 1) {
+                  router.back()
+                } else {
+                  router.push('/')
+                }
+              }}
+              className="px-4 py-2 border border-[var(--color-border)] bg-[var(--color-surface)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[#2340A7] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              ← ย้อนกลับ
+            </button>
           </div>
         </div>
 
-        {}
+        {/* Status Notification Alert Box */}
+        <div>
+          <div className={`p-4.5 rounded-2xl border flex items-center gap-4 shadow-md transition-all duration-300 ${
+            currentStep === 1 ? 'bg-blue-500/10 border-blue-500/30 text-blue-500' :
+            currentStep === 2 ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' :
+            currentStep === 3 ? 'bg-purple-500/10 border-purple-500/30 text-purple-400' :
+            currentStep === 4 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' :
+            requeststatus?.includes('ยกเลิก') || requeststatus?.includes('cancelled') ? 'bg-red-500/10 border-red-500/30 text-red-500' :
+            'bg-slate-500/10 border-slate-500/30 text-slate-400'
+          }`}>
+            <div className="w-12 h-12 rounded-xl bg-current/15 flex items-center justify-center shrink-0 text-2xl">
+              {currentStep === 1 && '🚘'}
+              {currentStep === 2 && '📍'}
+              {currentStep === 3 && '🚗'}
+              {currentStep === 4 && '✅'}
+              {requeststatus?.includes('ยกเลิก') || requeststatus?.includes('cancelled') ? '❌' : ''}
+              {currentStep === 0 && !requeststatus?.includes('ยกเลิก') && '⏳'}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-base font-extrabold font-manrope">
+                {statusText}
+              </span>
+              <span className="text-xs text-[var(--color-text-muted)] mt-0.5 font-medium">
+                {currentStep === 1 && 'พนักงานขับรถรับงานเรียบร้อยแล้ว กำลังเดินทางไปรับลูกค้าที่จุดนัดหมาย'}
+                {currentStep === 2 && 'พนักงานขับรถเดินทางมาถึงจุดรับลูกค้าเรียบร้อยแล้ว'}
+                {currentStep === 3 && 'พนักงานขับรถกำลังพาลูกค้าเดินทางไปยังจุดหมายปลายทางอย่างปลอดภัย'}
+                {currentStep === 4 && 'เดินทางถึงจุดหมายปลายทางเรียบร้อยแล้ว ขอบคุณที่ใช้บริการ SafeSeat'}
+                {requeststatus?.includes('ยกเลิก') || requeststatus?.includes('cancelled') ? 'รายการเรียกรถนี้ถูกยกเลิกแล้ว' : ''}
+                {currentStep === 0 && !requeststatus?.includes('ยกเลิก') && 'ระบบกำลังค้นหาพนักงานขับรถบริเวณใกล้เคียง กรุณารอสักครู่'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Live Route Tracking Map */}
         <div className="h-96 relative rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-xl">
           <RouteMap
             pickupLat={pickuplatitude}
@@ -250,20 +278,15 @@ function TripTrackingContent() {
             dropoffLng={dropofflongitude}
             driverLat={driverLat}
             driverLng={driverLng}
+            currentStep={currentStep}
+            distance={reqdistance ? parseFloat(reqdistance) : undefined}
           />
-          <div className="absolute left-4 bottom-4 z-20 bg-[var(--color-card)]/90 backdrop-blur-md px-4 py-2.5 rounded-xl border border-[var(--color-border)] text-xs font-bold shadow-lg">
-            <span className="text-[var(--color-text-muted)] text-[10px] uppercase font-mono block">สถานะปัจจุบัน</span>
-            <span className={`text-sm font-manrope font-bold flex items-center gap-2 ${isCompleted ? 'text-emerald-500' : 'text-[#7C3AED]'}`}>
-              <span className="w-2 h-2 rounded-full bg-current animate-ping"></span>
-              {statusText}
-            </span>
-          </div>
         </div>
 
-        {}
+        {/* Service Details Card */}
         <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col gap-8">
           
-          {}
+          {/* Quick Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6 border-b border-[var(--color-border)] pb-6">
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">รหัสการเรียก</span>
@@ -279,7 +302,7 @@ function TripTrackingContent() {
             </div>
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ค่าบริการ</span>
-              <span className="text-base font-extrabold font-manrope text-[#7C3AED]">฿{requestfee || '-'}</span>
+              <span className="text-base font-extrabold font-manrope text-[#2340A7]">฿{requestfee || '-'}</span>
             </div>
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">แชร์การเดินทาง</span>
@@ -294,7 +317,7 @@ function TripTrackingContent() {
                 className={`mt-1 py-1.5 px-4 rounded-full text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer ${
                   copied
                     ? 'bg-emerald-500 text-white'
-                    : 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white'
+                    : 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white'
                 }`}
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -303,18 +326,18 @@ function TripTrackingContent() {
             </div>
           </div>
 
-          {}
+          {/* Contact Details */}
           <div className="flex flex-col gap-6">
             <h3 className="text-xl font-bold font-manrope text-[var(--color-text)] flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-[#7C3AED]" /> ข้อมูลการติดต่อทีมงานคนขับ
+              <UserCheck className="w-5 h-5 text-[#2340A7]" /> ข้อมูลการติดต่อทีมงานคนขับ
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              {}
+              {/* Driver 1 Card */}
               <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-[#7C3AED]/15 rounded-xl text-[#7C3AED] text-xl">👨‍✈️</div>
+                  <div className="p-3 bg-[#2340A7]/15 rounded-xl text-[#2340A7] text-xl">👨‍✈️</div>
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">คนขับหลัก (Driver 1)</span>
                     <div className="text-sm font-bold text-[var(--color-text)]">{driver1Name}</div>
@@ -329,7 +352,7 @@ function TripTrackingContent() {
                   {rawDriver1Phone && (
                     <a 
                       href={`tel:${rawDriver1Phone}`}
-                      className="px-4 py-2 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:opacity-90 transition-opacity"
+                      className="px-4 py-2 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:opacity-90 transition-opacity"
                     >
                       <PhoneCall className="w-3.5 h-3.5" /> โทรหาคนขับ
                     </a>
@@ -337,7 +360,7 @@ function TripTrackingContent() {
                 </div>
               </div>
 
-              {}
+              {/* Driver 2 Card */}
               <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-blue-500/15 rounded-xl text-blue-500 text-xl">👩‍✈️</div>
@@ -379,7 +402,7 @@ export default function TripTrackingPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center text-[var(--color-text)] font-inter">
-        <RefreshCw className="w-8 h-8 text-[#7C3AED] animate-spin" />
+        <RefreshCw className="w-8 h-8 text-[#2340A7] animate-spin" />
       </div>
     }>
       <TripTrackingContent />

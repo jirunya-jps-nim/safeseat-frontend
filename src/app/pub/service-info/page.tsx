@@ -1,13 +1,12 @@
 'use client'
 
-
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import api from '@/services/api'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
 import FloatingNav from '@/components/ui/FloatingNav'
-import { Search, RefreshCw, Plus, FileText, ArrowRight, QrCode, Copy, Check } from 'lucide-react'
+import { Search, RefreshCw, Plus, FileText, ArrowRight, QrCode } from 'lucide-react'
 
 interface RequestRecord {
   requestId?: number
@@ -26,6 +25,16 @@ interface RequestRecord {
   note?: string
 }
 
+function parseThaiDate(dateStr: string): Date {
+  if (!dateStr) return new Date()
+  if (dateStr.endsWith('Z') || dateStr.includes('+')) {
+    return new Date(dateStr)
+  }
+  const isoWithTz = dateStr.includes('T') ? `${dateStr}+07:00` : `${dateStr.replace(' ', 'T')}+07:00`
+  const d = new Date(isoWithTz)
+  return isNaN(d.getTime()) ? new Date(dateStr) : d
+}
+
 export default function ServiceInfoPage() {
   const router = useRouter()
   const [pubUser, setPubUser] = useState<any>(null)
@@ -33,7 +42,7 @@ export default function ServiceInfoPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState<'pending' | 'completed'>('pending')
   const [selectedQrRecord, setSelectedQrRecord] = useState<{ url: string; id: number; custName: string } | null>(null)
   const [copied, setCopied] = useState(false)
 
@@ -68,24 +77,25 @@ export default function ServiceInfoPage() {
     }
   }
 
-  const statusConfig: { [k: string]: { label: string; color: string; bg: string; step: number } } = {
-    pending:          { label: 'รอรับงาน', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', step: 0 },
-    'รอคนขับ':        { label: 'รอรับงาน', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', step: 0 },
-    accepted:         { label: 'คนขับรับงาน', color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/30', step: 1 },
-    'กำลังไปรับ':     { label: 'คนขับรับงาน', color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/30', step: 1 },
-    'ถึงจุดรับแล้ว':   { label: 'ถึงจุดรับ', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/30', step: 2 },
-    'ระหว่างเดินทาง': { label: 'กำลังเดินทาง', color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/30', step: 3 },
-    completed:        { label: 'ถึงจุดหมายปลายทาง', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', step: 4 },
-    'เสร็จสิ้น':       { label: 'ถึงจุดหมายปลายทาง', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', step: 4 },
-    cancelled:        { label: 'ยกเลิก', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', step: -1 },
-    'ยกเลิก':         { label: 'ยกเลิก', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', step: -1 },
-    'ปฏิเสธ':         { label: 'ปฏิเสธ/เรียกรถใหม่', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', step: -1 },
+  const getStep = (s?: string) => {
+    if (!s) return 0
+    const str = s.toLowerCase().trim()
+    if (['accepted', 'คนขับรับงาน', 'กำลังไปรับ', 'รับงานแล้ว'].includes(str) || str.includes('กำลังไปรับ') || str.includes('accepted') || str.includes('คนขับรับงาน')) return 1
+    if (['ถึงจุดรับแล้ว', 'ถึงจุดรับ', 'ถึงจุดนัดหมาย', 'arrived'].includes(str) || str.includes('ถึงจุดรับ') || str.includes('ถึงจุดนัดหมาย')) return 2
+    if (['ระหว่างเดินทาง', 'กำลังเดินทาง', 'in_transit', 'driving'].includes(str) || str.includes('ระหว่างเดินทาง') || str.includes('กำลังเดินทาง')) return 3
+    if (['เสร็จสิ้น', 'completed', 'ถึงจุดหมายปลายทาง', 'finished', 'done', 'success'].includes(str) || str.includes('เสร็จสิ้น') || str.includes('completed') || str.includes('ถึงจุดหมาย')) return 4
+    if (['cancelled', 'ยกเลิก', 'ปฏิเสธ', 'rejected', 'cancel'].includes(str) || str.includes('ยกเลิก') || str.includes('ปฏิเสธ') || str.includes('cancel')) return -1
+    return 0
   }
 
-  const getStatus = (status: string) => {
-    if (!status) return { label: 'รอรับงาน', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', step: 0 }
-    const s = status.toLowerCase()
-    return statusConfig[status] || statusConfig[s] || { label: status, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', step: 0 }
+  const getStatus = (status?: string) => {
+    const step = getStep(status)
+    if (step === 1) return { label: 'คนขับรับงาน', color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/30', step: 1 }
+    if (step === 2) return { label: 'ถึงจุดรับ', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', step: 2 }
+    if (step === 3) return { label: 'กำลังเดินทาง', color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/30', step: 3 }
+    if (step === 4) return { label: 'ถึงจุดหมายปลายทาง', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', step: 4 }
+    if (step === -1) return { label: 'ยกเลิก', color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/30', step: -1 }
+    return { label: 'รอรับงาน', color: 'text-slate-400', bg: 'bg-slate-500/10 border-slate-500/30', step: 0 }
   }
 
   const paymentLabel = (m: number) => m === 1 ? '💵 เงินสด' : '📲 โอนเงิน'
@@ -95,44 +105,46 @@ export default function ServiceInfoPage() {
     return 'Auto'
   }
 
-  const pendingStatuses = ['pending', 'รอคนขับ', 'กำลังไปรับ', 'ถึงจุดรับแล้ว', 'ระหว่างเดินทาง', 'accepted']
-  const completedStatuses = ['completed', 'เสร็จสิ้น']
-  const cancelledStatuses = ['cancelled', 'ยกเลิก', 'ปฏิเสธ', 'rejected']
-
-  const isPending = (status: string) => {
-    if (!status) return true
-    const s = status.toLowerCase()
-    return pendingStatuses.includes(s) || pendingStatuses.includes(status)
-  }
-  const isCompleted = (status: string) => {
-    if (!status) return false
-    const s = status.toLowerCase()
-    return completedStatuses.includes(s) || completedStatuses.includes(status)
-  }
-  const isCancelled = (status: string) => {
-    if (!status) return false
-    const s = status.toLowerCase()
-    return cancelledStatuses.includes(s) || cancelledStatuses.includes(status)
+  const isPending = (status?: string) => {
+    const step = getStep(status)
+    return step >= 0 && step < 4
   }
 
-  const getPriorityRank = (status: string) => {
-    if (!status) return 1
-    const s = status.toLowerCase()
-    if (s === 'รอคนขับ' || s === 'pending') return 1 
-    if (['กำลังไปรับ', 'ถึงจุดรับแล้ว', 'ระหว่างเดินทาง', 'accepted', 'คนขับรับงาน'].includes(s) || ['กำลังไปรับ', 'ถึงจุดรับแล้ว', 'ระหว่างเดินทาง', 'accepted', 'คนขับรับงาน'].includes(status)) {
-      return 2 
-    }
+  const isCompleted = (status?: string) => {
+    const step = getStep(status)
+    return step === 4
+  }
+
+  const isCancelled = (status?: string) => {
+    const step = getStep(status)
+    return step === -1
+  }
+
+  const getPriorityRank = (status?: string) => {
+    const step = getStep(status)
+    if (step === 0) return 1 
+    if (step === 1 || step === 2 || step === 3) return 2 
     return 3 
   }
 
-  const filtered = records
+  const validRecords = records.filter(r => !isCancelled(r.requeststatus))
+
+  const counts = {
+    pending: validRecords.filter(r => isPending(r.requeststatus)).length,
+    completed: validRecords.filter(r => isCompleted(r.requeststatus)).length,
+  }
+
+  const tabDefs = [
+    { key: 'pending', label: 'กำลังดำเนินการ', count: counts.pending },
+    { key: 'completed', label: 'เสร็จสิ้น', count: counts.completed },
+  ]
+
+  const filtered = validRecords
     .filter(r => {
       const matchSearch = !searchQuery || r.custname?.toLowerCase().includes(searchQuery.toLowerCase()) || r.phoneno?.includes(searchQuery)
       let matchStatus = false
-      if (statusFilter === 'all') matchStatus = true
-      else if (statusFilter === 'pending') matchStatus = isPending(r.requeststatus)
+      if (statusFilter === 'pending') matchStatus = isPending(r.requeststatus)
       else if (statusFilter === 'completed') matchStatus = isCompleted(r.requeststatus)
-      else if (statusFilter === 'cancelled') matchStatus = isCancelled(r.requeststatus)
       return matchSearch && matchStatus
     })
     .sort((a, b) => {
@@ -146,28 +158,13 @@ export default function ServiceInfoPage() {
       return bId - aId 
     })
 
-  const counts = {
-    all: records.length,
-    pending: records.filter(r => isPending(r.requeststatus)).length,
-    completed: records.filter(r => isCompleted(r.requeststatus)).length,
-    cancelled: records.filter(r => isCancelled(r.requeststatus)).length,
-  }
-
-  const tabDefs = [
-    { key: 'all', label: 'ทั้งหมด', count: counts.all },
-    { key: 'pending', label: 'รอรับงาน/กำลังดำเนินการ', count: counts.pending },
-    { key: 'completed', label: 'เสร็จสิ้น', count: counts.completed },
-    { key: 'cancelled', label: 'ยกเลิก', count: counts.cancelled },
-  ]
-
   if (!pubUser) return null
 
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#2340A7]/10 rounded-full blur-[140px]"></div>
       </div>
 
       <div className="gradient-blur"></div>
@@ -176,58 +173,77 @@ export default function ServiceInfoPage() {
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 pt-48 pb-24 flex flex-col gap-8">
         
-        {}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--color-card)] border border-[var(--color-border)] p-6 rounded-2xl shadow-xl">
           <div>
-            <span className="text-xs font-bold text-[#7C3AED] tracking-wider uppercase font-manrope">SERVICE HISTORY</span>
+            <span className="text-xs font-bold text-[#2340A7] tracking-wider uppercase font-manrope">SERVICE HISTORY</span>
             <h1 className="text-2xl sm:text-3xl font-bold font-manrope text-[var(--color-text)] mt-1">ประวัติการเรียกใช้บริการ (Service History)</h1>
           </div>
           <div className="flex items-center gap-3">
             <button 
               onClick={() => router.push('/pub/dashboard')}
-              className="px-4 py-2 border border-[var(--color-border)] bg-[var(--color-surface)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[#7C3AED] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              className="px-4 py-2 border border-[var(--color-border)] bg-[var(--color-surface)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[#2340A7] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
             >
               ← ย้อนกลับ
             </button>
             <button 
               onClick={() => router.push('/pub/request-driver')}
-              className="px-5 py-2 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] rounded-full text-xs font-bold text-white shadow-md hover:from-[#6D28D9] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-1.5"
+              className="px-5 py-2 bg-gradient-to-r from-[#2340A7] to-[#2563EB] rounded-full text-xs font-bold text-white shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" /> เรียกรถใหม่
             </button>
           </div>
         </div>
 
-        {}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: 'คำขอทั้งหมด', value: counts.all, color: 'text-[#7C3AED]' },
-            { label: 'รอรับงาน', value: counts.pending, color: 'text-amber-500' },
-            { label: 'เสร็จสิ้น', value: counts.completed, color: 'text-emerald-500' },
-            { label: 'ยกเลิก', value: counts.cancelled, color: 'text-red-500' },
-          ].map((stat, i) => (
-            <div key={i} className="p-5 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-md flex flex-col">
-              <span className={`text-3xl font-extrabold font-manrope ${stat.color}`}>{stat.value}</span>
-              <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mt-1">{stat.label}</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div 
+            onClick={() => setStatusFilter('pending')}
+            className={`p-5 bg-[var(--color-card)] border rounded-2xl shadow-md flex items-center justify-between cursor-pointer transition-all ${
+              statusFilter === 'pending'
+                ? 'border-[#2340A7] ring-2 ring-[#2340A7]/20 shadow-lg'
+                : 'border-[var(--color-border)] hover:border-[#2340A7]/50'
+            }`}
+          >
+            <div className="flex flex-col">
+              <span className="text-3xl font-extrabold font-manrope text-[#2340A7]">{counts.pending}</span>
+              <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mt-1">กำลังดำเนินการ</span>
             </div>
-          ))}
+            <div className="p-3 bg-[#2340A7]/10 text-[#2340A7] rounded-xl text-2xl font-bold">
+              ⏳
+            </div>
+          </div>
+
+          <div 
+            onClick={() => setStatusFilter('completed')}
+            className={`p-5 bg-[var(--color-card)] border rounded-2xl shadow-md flex items-center justify-between cursor-pointer transition-all ${
+              statusFilter === 'completed'
+                ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-lg'
+                : 'border-[var(--color-border)] hover:border-emerald-500/50'
+            }`}
+          >
+            <div className="flex flex-col">
+              <span className="text-3xl font-extrabold font-manrope text-emerald-500">{counts.completed}</span>
+              <span className="text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mt-1">เสร็จสิ้น</span>
+            </div>
+            <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl text-2xl font-bold">
+              ✅
+            </div>
+          </div>
         </div>
 
-        {}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-[var(--color-card)] border border-[var(--color-border)] p-4 rounded-2xl shadow-md">
           <div className="flex flex-wrap gap-2 w-full md:w-auto">
             {tabDefs.map(tab => (
               <button
                 key={tab.key}
-                onClick={() => setStatusFilter(tab.key)}
+                onClick={() => setStatusFilter(tab.key as 'pending' | 'completed')}
                 className={`px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
                   statusFilter === tab.key
-                    ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white shadow-md'
-                    : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#7C3AED]'
+                    ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white shadow-md'
+                    : 'bg-[var(--color-surface)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#2340A7]'
                 }`}
               >
                 {tab.label}
-                <span className={`px-2 py-0.5 rounded-full text-[10px] ${statusFilter === tab.key ? 'bg-white/20 text-white' : 'bg-[var(--color-card)] text-[var(--color-text)]'}`}>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] ${statusFilter === tab.key ? 'bg-white/20 text-white font-mono' : 'bg-[var(--color-card)] text-[var(--color-text)] font-mono'}`}>
                   {tab.count}
                 </span>
               </button>
@@ -235,7 +251,7 @@ export default function ServiceInfoPage() {
           </div>
 
           <div className="flex items-center gap-2 px-4 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-full w-full md:w-72">
-            <Search className="w-4 h-4 text-[#7C3AED]" />
+            <Search className="w-4 h-4 text-[#2340A7]" />
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -247,20 +263,19 @@ export default function ServiceInfoPage() {
 
         {error && <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm font-semibold">{error}</div>}
 
-        {}
         {loading ? (
           <div className="p-16 text-center bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-3">
-            <RefreshCw className="w-8 h-8 text-[#7C3AED] animate-spin" />
+            <RefreshCw className="w-8 h-8 text-[#2340A7] animate-spin" />
             <p className="text-sm font-bold text-[var(--color-text-muted)]">กำลังโหลดข้อมูลประวัติการเรียกรถ...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-16 text-center bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-3 shadow-md">
-            <FileText className="w-12 h-12 text-[#7C3AED]" />
+            <FileText className="w-12 h-12 text-[#2340A7]" />
             <h3 className="text-base font-bold text-[var(--color-text)]">
               {searchQuery ? 'ไม่พบรายการที่ตรงกับการค้นหา' : 'ยังไม่มีประวัติการเรียกรถ'}
             </h3>
             <p className="text-xs text-[var(--color-text-muted)]">
-              {searchQuery ? 'ลองค้นหาด้วยชื่อหรือเบอร์โทรศัพท์อื่น' : 'กดปุ่มเรียกรถใหม่เพื่อเรียกรถให้ลูกค้าของร้านได้เลย'}
+              {searchQuery ? 'ลองค้นหาด้วยชื่อหรือเบอร์โทรศัพท์อื่น' : 'กดปุ่มเรียกรถใหม่เพื่อเรียกรถให้ลูกค้าของสถานบันเทิงได้เลย'}
             </p>
           </div>
         ) : (
@@ -287,12 +302,12 @@ export default function ServiceInfoPage() {
                       <td className="p-4">
                         <div className="font-bold text-[var(--color-text)]">
                           {item.reqdatetime
-                            ? new Date(item.reqdatetime).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
+                            ? parseThaiDate(item.reqdatetime).toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', year: '2-digit' })
                             : '—'}
                         </div>
-                        <div className="text-[11px] text-[var(--color-text-muted)]">
+                        <div className="text-[11px] text-[var(--color-text-muted)] font-semibold mt-0.5">
                           {item.reqdatetime
-                            ? new Date(item.reqdatetime).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+                            ? parseThaiDate(item.reqdatetime).toLocaleTimeString('th-TH', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', hour12: false }) + ' น.'
                             : ''}
                         </div>
                       </td>
@@ -322,13 +337,11 @@ export default function ServiceInfoPage() {
                           {st.label}
                         </span>
                         {st.step > 0 && (
-                          <div className="flex items-center gap-1 mt-2 w-28" title={`สถานะการเดินทาง: ขั้นที่ ${st.step}/4 (${st.label})`}>
-                            {[1, 2, 3, 4].map(sNum => (
-                              <div 
-                                key={sNum} 
-                                className={`h-1.5 flex-1 rounded-full transition-colors ${sNum <= st.step ? 'bg-[#7C3AED]' : 'bg-[var(--color-border)]'}`}
-                              />
-                            ))}
+                          <div className="mt-1.5 text-[11px] font-semibold text-[var(--color-text-muted)] flex items-center gap-1">
+                            {st.step === 1 && '🚘 คนขับรับงานแล้ว'}
+                            {st.step === 2 && '📍 ถึงจุดรับแล้ว'}
+                            {st.step === 3 && '🚗 กำลังเดินทาง'}
+                            {st.step === 4 && '✅ ถึงจุดหมายปลายทาง'}
                           </div>
                         )}
                       </td>
@@ -341,10 +354,10 @@ export default function ServiceInfoPage() {
                               const tUrl = `${originUrl}/tracking?id=${recordId}`
                               setSelectedQrRecord({ url: tUrl, id: recordId, custName: item.custname })
                             }}
-                            className="px-3.5 py-1.5 bg-[var(--color-surface)] border border-[#7C3AED]/30 text-[#7C3AED] hover:bg-[#7C3AED]/10 rounded-full text-xs font-bold cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-xs"
+                            className="px-3.5 py-1.5 bg-[var(--color-surface)] border border-[#2340A7]/30 text-[#2340A7] hover:bg-[#2340A7]/10 rounded-full text-xs font-bold cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-xs"
                             title="แสดง QR Code สำหรับติดตาม"
                           >
-                            <QrCode className="w-3.5 h-3.5 text-[#7C3AED]" /> QR Code
+                            <QrCode className="w-3.5 h-3.5 text-[#2340A7]" /> QR Code
                           </button>
                         ) : '—'}
                       </td>
@@ -352,7 +365,7 @@ export default function ServiceInfoPage() {
                         <button
                           type="button"
                           onClick={() => router.push(`/pub/tracking?id=${recordId}`)}
-                          className="px-4 py-1.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white rounded-full text-xs font-bold shadow-md cursor-pointer transition-all inline-flex items-center gap-1"
+                          className="px-4 py-1.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white rounded-full text-xs font-bold shadow-md cursor-pointer transition-all inline-flex items-center gap-1"
                         >
                           ดูรายละเอียด <ArrowRight className="w-3 h-3" />
                         </button>
@@ -368,10 +381,9 @@ export default function ServiceInfoPage() {
 
       <Footer />
 
-      {}
       {selectedQrRecord && (
         <div className="fixed inset-0 z-[99999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setSelectedQrRecord(null)}>
-          <div className="bg-[var(--color-card)] border border-[#7C3AED]/40 rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl flex flex-col items-center gap-5 text-center relative" onClick={e => e.stopPropagation()}>
+          <div className="bg-[var(--color-card)] border border-[#2340A7]/40 rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl flex flex-col items-center gap-5 text-center relative" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setSelectedQrRecord(null)}
               className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-bold text-lg p-1 cursor-pointer"
@@ -379,7 +391,7 @@ export default function ServiceInfoPage() {
               ✕
             </button>
 
-            <div className="w-12 h-12 bg-[#7C3AED]/15 rounded-full flex items-center justify-center text-[#7C3AED] text-2xl">
+            <div className="w-12 h-12 bg-[#2340A7]/15 rounded-full flex items-center justify-center text-[#2340A7] text-2xl">
               📲
             </div>
 
@@ -392,7 +404,6 @@ export default function ServiceInfoPage() {
               </p>
             </div>
 
-            {}
             <div className="p-4 bg-white rounded-2xl shadow-xl border border-gray-200 my-1">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(selectedQrRecord.url)}`}
@@ -411,7 +422,7 @@ export default function ServiceInfoPage() {
                   setCopied(true)
                   setTimeout(() => setCopied(false), 2500)
                 }}
-                className="px-3 py-1.5 bg-[#7C3AED] text-white rounded-lg font-bold text-[11px] shrink-0 hover:bg-[#6D28D9] transition-colors cursor-pointer"
+                className="px-3 py-1.5 bg-[#2340A7] text-white rounded-lg font-bold text-[11px] shrink-0 hover:bg-[#1D358F] transition-colors cursor-pointer"
               >
                 {copied ? 'คัดลอกแล้ว' : 'คัดลอก'}
               </button>

@@ -7,7 +7,7 @@ import api from '@/services/api'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
 import FloatingNav from '@/components/ui/FloatingNav'
-import { Car, Phone, Copy, Check, Clock, ShieldCheck, MapPin, RefreshCw, AlertCircle, QrCode } from 'lucide-react'
+import { Car, Phone, Copy, Check, Clock, ShieldCheck, MapPin, RefreshCw, AlertCircle, QrCode, UserCheck, PhoneCall } from 'lucide-react'
 
 const RouteMap = dynamic(() => import('@/components/ui/RouteMap'), { ssr: false })
 
@@ -22,6 +22,16 @@ const decodeId = (input: string) => {
   if (!isNaN(num)) return num;
   return null;
 };
+
+function parseThaiDate(dateStr: string): Date {
+  if (!dateStr) return new Date()
+  if (dateStr.endsWith('Z') || dateStr.includes('+')) {
+    return new Date(dateStr)
+  }
+  const isoWithTz = dateStr.includes('T') ? `${dateStr}+07:00` : `${dateStr.replace(' ', 'T')}+07:00`
+  const d = new Date(isoWithTz)
+  return isNaN(d.getTime()) ? new Date(dateStr) : d
+}
 
 function TrackingContent() {
   const router = useRouter()
@@ -54,7 +64,7 @@ function TrackingContent() {
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('safeseat_reject_notice', 'รายการเรียกรถถูกยกเลิกหรือปฏิเสธ กรุณาเริ่มเรียกรถใหม่อีกครั้ง')
         }
-        router.push('/pub/request-driver?step=1')
+        router.push('/pub/dashboard')
       }
     }
   }, [reqData, router])
@@ -65,7 +75,7 @@ function TrackingContent() {
       return
     }
     const checkTimeout = () => {
-      const createdTime = new Date(reqData.reqdatetime).getTime()
+      const createdTime = parseThaiDate(reqData.reqdatetime).getTime()
       const now = new Date().getTime()
       const elapsedSeconds = (now - createdTime) / 1000
       setIsRequestTimeout(elapsedSeconds >= 300)
@@ -95,6 +105,104 @@ function TrackingContent() {
       setTrackingUrl(`${window.location.origin}/tracking?id=${trackingParam}`)
     }
   }, [trackingParam])
+
+  const [dropoffAddress, setDropoffAddress] = useState<string>('')
+  const [pickupAddress, setPickupAddress] = useState<string>('')
+
+  useEffect(() => {
+    if (!reqData) return
+    const { requestid, note, dropoffname, destination_name, pickuplatitude, pickuplongitude, dropofflatitude, dropofflongitude } = reqData
+
+    // 1. Priority 1: Direct backend dropoffname field
+    if (dropoffname || destination_name) {
+      setDropoffAddress(dropoffname || destination_name)
+      return
+    }
+
+    // 2. Priority 2: Parse [DEST:...] from note column
+    if (note && note.includes('[DEST:')) {
+      const match = note.match(/\[DEST:(.*?)\]/)
+      if (match && match[1] && match[1].trim()) {
+        setDropoffAddress(match[1].trim())
+        return
+      }
+    }
+
+    // 3. Priority 3: Local storage pinned label
+    if (requestid) {
+      try {
+        const localSavedName = localStorage.getItem(`safeseat_dest_name_${requestid}`)
+        if (localSavedName && localSavedName.trim()) {
+          setDropoffAddress(localSavedName.trim())
+          return
+        }
+      } catch (e) {}
+    }
+
+    // 4. Priority 4: Reverse geocoding fetch
+    if (dropofflatitude && dropofflongitude) {
+      let active = true
+      const fetchDestName = async () => {
+        // 1. Nominatim API
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${dropofflatitude}&lon=${dropofflongitude}&format=json&accept-language=th`)
+          if (res.ok) {
+            const data = await res.json()
+            if (active && data) {
+              const nameCandidate = data.name || data.address?.tourism || data.address?.building || data.address?.amenity || data.address?.shop || data.address?.road || data.address?.suburb || data.address?.city || data.display_name?.split(',')[0]
+              if (nameCandidate && nameCandidate.trim()) {
+                const district = data.address?.city || data.address?.suburb || data.address?.province || ''
+                const fullName = district && !nameCandidate.includes(district) ? `${nameCandidate.trim()}, ${district}` : nameCandidate.trim()
+                setDropoffAddress(fullName)
+                return
+              }
+            }
+          }
+        } catch (e) {}
+
+        // 2. Photon API
+        try {
+          const pRes = await fetch(`https://photon.komoot.io/reverse?lat=${dropofflatitude}&lon=${dropofflongitude}&lang=th`)
+          if (pRes.ok) {
+            const pData = await pRes.json()
+            if (active && pData?.features?.[0]?.properties) {
+              const prop = pData.features[0].properties
+              const nameCandidate = prop.name || prop.street || prop.district || prop.city
+              if (nameCandidate && nameCandidate.trim()) {
+                const cityStr = prop.city || prop.district || ''
+                const fullName = cityStr && !nameCandidate.includes(cityStr) ? `${nameCandidate.trim()}, ${cityStr}` : nameCandidate.trim()
+                setDropoffAddress(fullName)
+                return
+              }
+            }
+          }
+        } catch (e) {}
+
+        // 3. BigDataCloud API
+        try {
+          const bRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${dropofflatitude}&longitude=${dropofflongitude}&localityLanguage=th`)
+          if (bRes.ok) {
+            const bData = await bRes.json()
+            if (active && bData) {
+              const locName = bData.locality || bData.city || bData.principalSubdivision
+              if (locName) {
+                setDropoffAddress(`${locName}, ${bData.principalSubdivision || ''}`.replace(/,\s*$/, ''))
+                return
+              }
+            }
+          }
+        } catch (e) {}
+
+        // 4. Default Place Name Fallback
+        if (active) {
+          setDropoffAddress('เชียงใหม่ (จุดหมายปลายทาง)')
+        }
+      }
+
+      fetchDestName()
+      return () => { active = false }
+    }
+  }, [reqData])
 
   const fetchRequestData = async () => {
     if (!requestId) return
@@ -132,7 +240,7 @@ function TrackingContent() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--color-bg)] flex flex-col items-center justify-center text-[var(--color-text)] font-inter">
-        <RefreshCw className="w-8 h-8 text-[#7C3AED] animate-spin mb-3" />
+        <RefreshCw className="w-8 h-8 text-[#2340A7] animate-spin mb-3" />
         <p className="text-sm font-bold">กำลังโหลดข้อมูลการบริการ...</p>
       </div>
     )
@@ -147,7 +255,7 @@ function TrackingContent() {
           <p className="text-xs text-[var(--color-text-muted)]">{error}</p>
           <button 
             onClick={goBack}
-            className="w-full py-3 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md cursor-pointer"
+            className="w-full py-3 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md cursor-pointer"
           >
             {isPubLoggedIn ? 'กลับ Dashboard' : 'กลับหน้าแรก'}
           </button>
@@ -157,7 +265,7 @@ function TrackingContent() {
   }
 
   const {
-    custname, phoneno,
+    custname, phoneno, phoneemer,
     pickuplatitude, pickuplongitude,
     dropofflatitude, dropofflongitude,
     requeststatus, reqdistance, requestfee,
@@ -167,25 +275,39 @@ function TrackingContent() {
   const carTypeLabel = requiredcartype === 1 ? 'EV' : (requiredcartype === 2 ? 'Manual' : 'Auto')
   const payLabel = paymentmethod === 1 ? 'เงินสด' : 'โอนเงิน / PromptPay'
 
-  const currentStep = (requeststatus === 'กำลังไปรับ') ? 1
-                    : (requeststatus === 'ถึงจุดรับแล้ว') ? 2
-                    : (requeststatus === 'ระหว่างเดินทาง') ? 3
-                    : (requeststatus === 'เสร็จสิ้น' || requeststatus === 'completed') ? 4
-                    : 0;
+  const getStep = (s: string) => {
+    if (!s) return 0
+    const str = s.toLowerCase().trim()
+    if (['accepted', 'คนขับรับงาน', 'กำลังไปรับ', 'รับงานแล้ว'].includes(str) || str.includes('กำลังไปรับ') || str.includes('accepted') || str.includes('คนขับรับงาน')) return 1
+    if (['ถึงจุดรับแล้ว', 'ถึงจุดรับ', 'ถึงจุดนัดหมาย', 'arrived'].includes(str) || str.includes('ถึงจุดรับ') || str.includes('ถึงจุดนัดหมาย')) return 2
+    if (['ระหว่างเดินทาง', 'กำลังเดินทาง', 'in_transit', 'driving'].includes(str) || str.includes('ระหว่างเดินทาง') || str.includes('กำลังเดินทาง')) return 3
+    if (['เสร็จสิ้น', 'completed', 'ถึงจุดหมายปลายทาง', 'finished'].includes(str) || str.includes('เสร็จสิ้น') || str.includes('completed') || str.includes('ถึงจุดหมาย')) return 4
+    if (['cancelled', 'ยกเลิก', 'ปฏิเสธ', 'rejected'].includes(str) || str.includes('ยกเลิก') || str.includes('ปฏิเสธ')) return -1
+    return 0
+  }
+
+  const currentStep = getStep(requeststatus)
 
   let displayStatus = requeststatus
-  if (requeststatus === 'รอคนขับ') displayStatus = 'รอคนขับตอบรับงาน...'
-  else if (requeststatus === 'กำลังไปรับ') displayStatus = 'กำลังรอคนขับเดินทางมาหา'
-  else if (requeststatus === 'ถึงจุดรับแล้ว') displayStatus = 'คนขับถึงจุดรับแล้ว (กำลังออกเดินทาง)'
-  else if (requeststatus === 'ระหว่างเดินทาง') displayStatus = 'กำลังเดินทางไปยังจุดหมายปลายทาง'
-  else if (requeststatus === 'เสร็จสิ้น' || requeststatus === 'completed') displayStatus = 'เสร็จสิ้นการบริการ (ถึงที่หมายเรียบร้อย)'
+  if (currentStep === 1) displayStatus = 'คนขับรับงานแล้ว (กำลังเดินทางไปรับ)'
+  else if (currentStep === 2) displayStatus = 'คนขับถึงจุดรับแล้ว (กำลังออกเดินทาง)'
+  else if (currentStep === 3) displayStatus = 'กำลังเดินทางไปยังจุดหมายปลายทาง'
+  else if (currentStep === 4) displayStatus = 'เสร็จสิ้นการบริการ (ถึงที่หมายเรียบร้อย)'
+  else if (currentStep === -1) displayStatus = 'การเดินทางถูกยกเลิก'
+  else displayStatus = 'กำลังค้นหาพนักงานขับรถ...'
 
-  const driver1Name = reqData.leader 
-    ? `${reqData.leader.firstname} ${reqData.leader.lastname}`
+  const leader = reqData.leader || reqData.buddyteam?.leader
+  const follower = reqData.follower || reqData.buddyteam?.follower
+
+  const driver1Name = leader && (leader.firstname || leader.name)
+    ? `คุณ${leader.firstname || leader.name} ${leader.lastname || ''}`.trim()
     : 'ผู้ให้บริการ SafeSeat'
-  const driver2Name = reqData.follower
-    ? `${reqData.follower.firstname} ${reqData.follower.lastname}`
-    : 'ผู้ช่วยคนขับ SafeSeat'
+  const driver1Phone = leader?.phone_no || leader?.phoneno || leader?.phone || reqData.leader_phone || ''
+
+  const driver2Name = follower && (follower.firstname || follower.name)
+    ? `คุณ${follower.firstname || follower.name} ${follower.lastname || ''}`.trim()
+    : 'ผู้ช่วยคนขับ SafeSeat (บัดดี้)'
+  const driver2Phone = follower?.phone_no || follower?.phoneno || follower?.phone || reqData.follower_phone || ''
 
   const realLat = reqData.buddyteam?.currentloclat
   const realLng = reqData.buddyteam?.currentloclng
@@ -225,7 +347,7 @@ function TrackingContent() {
       
       {}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#2340A7]/10 rounded-full blur-[140px]"></div>
       </div>
 
       <div className="gradient-blur"></div>
@@ -237,16 +359,55 @@ function TrackingContent() {
         {}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--color-card)] border border-[var(--color-border)] p-6 rounded-2xl shadow-xl">
           <div>
-            <span className="text-xs font-bold text-[#7C3AED] tracking-wider uppercase font-manrope">TRACKING SERVICE</span>
+            <span className="text-xs font-bold text-[#2340A7] tracking-wider uppercase font-manrope">TRACKING SERVICE</span>
             <h1 className="text-2xl sm:text-3xl font-bold font-manrope text-[var(--color-text)] mt-1">ติดตามสถานะการเดินทาง (Realtime Tracking)</h1>
           </div>
           <div className="flex items-center gap-3">
             <button 
               onClick={() => router.push('/pub/dashboard')}
-              className="px-4 py-2 border border-[var(--color-border)] bg-[var(--color-surface)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[#7C3AED] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              className="px-4 py-2 border border-[var(--color-border)] bg-[var(--color-surface)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[#2340A7] transition-colors cursor-pointer flex items-center justify-center gap-1.5"
             >
               ← ย้อนกลับ
             </button>
+          </div>
+        </div>
+
+        {}
+        <div>
+          <div className={`p-4.5 rounded-2xl border flex items-center gap-4 shadow-md transition-all duration-300 ${
+            currentStep === 1 ? 'bg-blue-500/10 border-blue-500/30 text-blue-500' :
+            currentStep === 2 ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' :
+            currentStep === 3 ? 'bg-purple-500/10 border-purple-500/30 text-purple-400' :
+            currentStep === 4 ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500' :
+            requeststatus?.includes('ยกเลิก') || requeststatus?.includes('cancelled') ? 'bg-red-500/10 border-red-500/30 text-red-500' :
+            'bg-slate-500/10 border-slate-500/30 text-slate-400'
+          }`}>
+            <div className="w-12 h-12 rounded-xl bg-current/15 flex items-center justify-center shrink-0 text-2xl">
+              {currentStep === 1 && '🚘'}
+              {currentStep === 2 && '📍'}
+              {currentStep === 3 && '🚗'}
+              {currentStep === 4 && '✅'}
+              {requeststatus?.includes('ยกเลิก') || requeststatus?.includes('cancelled') ? '❌' : ''}
+              {currentStep === 0 && !requeststatus?.includes('ยกเลิก') && '⏳'}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-base font-extrabold font-manrope">
+                {currentStep === 1 && 'คนขับรับงานแล้ว'}
+                {currentStep === 2 && 'ถึงจุดรับแล้ว'}
+                {currentStep === 3 && 'กำลังเดินทาง'}
+                {currentStep === 4 && 'ถึงจุดหมายปลายทางแล้ว'}
+                {requeststatus?.includes('ยกเลิก') || requeststatus?.includes('cancelled') ? 'การเดินทางถูกยกเลิก' : ''}
+                {currentStep === 0 && !requeststatus?.includes('ยกเลิก') && 'กำลังค้นหาคนขับ...'}
+              </span>
+              <span className="text-xs text-[var(--color-text-muted)] mt-0.5 font-medium">
+                {currentStep === 1 && 'พนักงานขับรถรับงานเรียบร้อยแล้ว กำลังเดินทางไปรับลูกค้าที่จุดนัดหมาย'}
+                {currentStep === 2 && 'พนักงานขับรถเดินทางมาถึงจุดรับลูกค้าเรียบร้อยแล้ว'}
+                {currentStep === 3 && 'พนักงานขับรถกำลังพาลูกค้าเดินทางไปยังจุดหมายปลายทางอย่างปลอดภัย'}
+                {currentStep === 4 && 'เดินทางถึงจุดหมายปลายทางเรียบร้อยแล้ว ขอบคุณที่ใช้บริการ SafeSeat'}
+                {requeststatus?.includes('ยกเลิก') || requeststatus?.includes('cancelled') ? 'รายการเรียกรถนี้ถูกยกเลิกแล้ว' : ''}
+                {currentStep === 0 && !requeststatus?.includes('ยกเลิก') && 'ระบบกำลังค้นหาพนักงานขับรถบริเวณใกล้เคียง กรุณารอสักครู่'}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -257,35 +418,12 @@ function TrackingContent() {
             dropoffLat={dropofflatitude} dropoffLng={dropofflongitude} 
             driverLat={driverLat} driverLng={driverLng}
             currentStep={currentStep}
+            distance={reqdistance}
           />
-          <div className="absolute left-4 bottom-4 z-20 bg-[var(--color-card)]/90 backdrop-blur-md px-4 py-2.5 rounded-xl border border-[var(--color-border)] text-xs font-bold shadow-lg">
-            <span className="text-[var(--color-text-muted)] text-[10px] uppercase font-mono block">สถานะปัจจุบัน</span>
-            <span className={`text-sm font-manrope font-bold flex items-center gap-2 ${isCompleted ? 'text-emerald-500' : 'text-[#7C3AED]'}`}>
-              <span className="w-2 h-2 rounded-full bg-current animate-ping"></span>
-              {displayStatus}
-            </span>
-          </div>
         </div>
 
         {}
         <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col gap-8">
-          
-          {}
-          <div className="grid grid-cols-4 gap-3 pb-6 border-b border-[var(--color-border)]">
-            {stepsList.map(s => {
-              const active = currentStep >= s.step
-              return (
-                <div key={s.step} className="flex flex-col items-center gap-2">
-                  <div className={`w-full h-2.5 rounded-full transition-all duration-500 ease-in-out ${
-                    active ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] shadow-sm scale-y-110' : 'bg-[var(--color-surface)] border border-[var(--color-border)]'
-                  }`} />
-                  <span className={`text-[11px] font-bold text-center transition-colors duration-300 ${active ? 'text-[#7C3AED]' : 'text-[var(--color-text-muted)]'}`}>
-                    {s.label}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
 
           {}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 border-b border-[var(--color-border)] pb-6">
@@ -303,113 +441,170 @@ function TrackingContent() {
             </div>
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ค่าบริการ</span>
-              <span className="text-base font-extrabold font-manrope text-[#7C3AED]">฿{requestfee || '-'} ({payLabel})</span>
+              <span className="text-base font-extrabold font-manrope text-[#2340A7]">฿{requestfee || '-'} ({payLabel})</span>
+            </div>
+          </div>
+
+          {/* 📍 ตำแหน่งจุดรับเเละจุดหมายปลายทาง (Pickup & Destination) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-b border-[var(--color-border)] pb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-emerald-500/15 text-emerald-500 shrink-0 font-bold text-lg">
+                📍
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-500">
+                  จุดรับ (Pickup)
+                </span>
+                <span className="text-base font-extrabold text-[var(--color-text)] mt-0.5">
+                  {reqData?.pub?.pubname || reqData?.pub_id || 'สถานบันเทิง (จุดรับ)'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-red-500/15 text-red-500 shrink-0 font-bold text-lg">
+                🏁
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-red-500">
+                  จุดหมายปลายทาง (Destination)
+                </span>
+                <span className="text-base font-extrabold text-[var(--color-text)] mt-0.5">
+                  {dropoffAddress || 'เชียงใหม่ (จุดหมายปลายทาง)'}
+                </span>
+              </div>
             </div>
           </div>
 
           {}
-          {(reqData?.pub_id || reqData?.pub) && (
-            <div className="p-5 bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-500/20 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="p-3 bg-blue-500/10 text-blue-500 rounded-xl text-xl font-bold">
-                  🏪
+          {/* ข้อมูลสถานบันเทิงผู้เรียกใช้บริการ */}
+          <div className="p-5 bg-gradient-to-r from-blue-500/5 to-purple-500/5 border border-blue-500/20 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 bg-blue-500/10 text-blue-500 rounded-xl text-xl font-bold">
+                🏪
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">สถานบันเทิงผู้เรียกใช้บริการ</span>
+                <div className="text-sm font-bold text-[var(--color-text)]">
+                  {reqData?.pub?.pubname || reqData?.pub_id || 'สถานบันเทิงพาร์ทเนอร์ SafeSeat'}
                 </div>
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ร้านค้า / ผับผู้เรียกใช้บริการ</span>
-                  <div className="text-sm font-bold text-[var(--color-text)]">
-                    {reqData?.pub?.pubname || reqData?.pub_id || 'ร้านค้าพาร์ทเนอร์ SafeSeat'}
-                  </div>
-                  {reqData?.pub?.pubemail && (
-                    <div className="text-xs text-[var(--color-text-muted)] mt-0.5 font-mono">
-                      {reqData.pub.pubemail}
-                    </div>
-                  )}
+                <div className="text-xs text-[var(--color-text-muted)] mt-0.5 font-mono">
+                  {reqData?.pub?.pubemail || (reqData?.pub_id ? `${reqData.pub_id}@gmail.com` : 'pubemail@safeseat.com')}
                 </div>
               </div>
+            </div>
 
-              {reqData?.pub?.pubphone && (
-                <div className="flex items-center gap-3 border-t sm:border-t-0 sm:border-l border-[var(--color-border)] pt-3 sm:pt-0 sm:pl-6">
-                  <div>
-                    <span className="text-[10px] font-mono text-[var(--color-text-muted)] block">เบอร์โทรศัพท์ร้านค้า</span>
-                    <span className="text-xs font-bold font-mono text-[var(--color-text)]">{reqData.pub.pubphone}</span>
-                  </div>
-                  <a
-                    href={`tel:${reqData.pub.pubphone}`}
-                    className="ml-1 px-3.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 border border-blue-500/30 rounded-full text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    📞 โทรออก
-                  </a>
-                </div>
+            <div className="flex items-center gap-3 border-t sm:border-t-0 sm:border-l border-[var(--color-border)] pt-3 sm:pt-0 sm:pl-6">
+              <div>
+                <span className="text-[10px] font-mono text-[var(--color-text-muted)] block">เบอร์โทรศัพท์สถานบันเทิง</span>
+                <span className="text-xs font-bold font-mono text-[var(--color-text)]">
+                  {reqData?.pub?.pubphone || reqData?.pubphone || '0812345695'}
+                </span>
+              </div>
+              <a
+                href={`tel:${reqData?.pub?.pubphone || reqData?.pubphone || '0812345695'}`}
+                className="ml-1 px-3.5 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 border border-blue-500/30 rounded-full text-xs font-bold transition-colors inline-flex items-center gap-1 cursor-pointer"
+              >
+                📞 โทรออก
+              </a>
+            </div>
+          </div>
+          {/* 👥 ข้อมูลการติดต่อทีมงานคนขับ & เบอร์ฉุกเฉิน (Driver Team & Emergency Contact) */}
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h3 className="text-xl font-bold font-manrope text-[var(--color-text)] flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-[#2340A7]" /> ข้อมูลการติดต่อทีมงานคนขับ &amp; เบอร์ฉุกเฉิน
+              </h3>
+              {trackingUrl && (
+                <button
+                  onClick={() => setShowQrModal(true)}
+                  className="py-2.5 px-6 rounded-full text-xs font-bold bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white transition-all shadow-md flex items-center gap-2 cursor-pointer shrink-0"
+                >
+                  <QrCode className="w-4 h-4" />
+                  📲 แสดง QR Code &amp; ลิงก์ติดตามส่งให้ลูกค้า
+                </button>
               )}
             </div>
-          )}
-          {trackingUrl && (
-            <div className="flex justify-end">
-              <button
-                onClick={() => setShowQrModal(true)}
-                className="py-2.5 px-6 rounded-full text-xs font-bold bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white transition-all shadow-md flex items-center gap-2 cursor-pointer"
-              >
-                <QrCode className="w-4 h-4" />
-                📲 แสดง QR Code & ลิงก์ติดตามส่งให้ลูกค้า
-              </button>
-            </div>
-          )}
 
-          {}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-            
-            {}
-            <div className="md:col-span-8 flex flex-col gap-4">
-              <h3 className="text-xl font-bold font-manrope text-[var(--color-text)]">ข้อมูลทีมพนักงานขับรถแทน</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-[#7C3AED]/15 rounded-xl text-[#7C3AED]">👨‍✈️</div>
-                    <div>
-                      <div className="text-xs font-bold text-[var(--color-text)]">{driver1Name}</div>
-                      <div className="text-[11px] text-[var(--color-text-muted)] font-mono">{reqData.leader?.phone_no || reqData.leader?.phoneno || 'คนขับรถ'}</div>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* คนขับหลัก */}
+              <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-[#2340A7]/15 rounded-xl text-[#2340A7] text-xl">👨‍✈️</div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">คนขับหลัก (Driver 1)</span>
+                    <div className="text-sm font-bold text-[var(--color-text)]">{driver1Name}</div>
                   </div>
-                  {(reqData.leader?.phone_no || reqData.leader?.phoneno) && (
-                    <a href={`tel:${reqData.leader?.phone_no || reqData.leader?.phoneno}`} className="p-2 bg-[#7C3AED] text-white rounded-lg shadow-md">
-                      <Phone className="w-4 h-4" />
+                </div>
+
+                <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3 mt-1">
+                  <div>
+                    <span className="text-[10px] font-mono text-[var(--color-text-muted)] block">เบอร์โทรติดต่อ</span>
+                    <span className="text-xs font-bold font-mono text-[var(--color-text)]">{driver1Phone || 'ไม่ได้ระบุ'}</span>
+                  </div>
+                  {driver1Phone && (
+                    <a 
+                      href={`tel:${driver1Phone}`}
+                      className="px-4 py-2 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:opacity-90 transition-opacity"
+                    >
+                      <PhoneCall className="w-3.5 h-3.5" /> โทรหาคนขับ
                     </a>
                   )}
                 </div>
+              </div>
 
-                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-blue-500/15 rounded-xl text-blue-500">👩‍✈️</div>
-                    <div>
-                      <div className="text-xs font-bold text-[var(--color-text)]">{driver2Name}</div>
-                      <div className="text-[11px] text-[var(--color-text-muted)] font-mono">{reqData.follower?.phone_no || reqData.follower?.phoneno || 'ผู้ช่วยคนขับ'}</div>
-                    </div>
+              {/* ผู้ช่วยคนขับ */}
+              <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-blue-500/15 rounded-xl text-blue-500 text-xl">👩‍✈️</div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ผู้ช่วยคนขับ (Driver 2)</span>
+                    <div className="text-sm font-bold text-[var(--color-text)]">{driver2Name}</div>
                   </div>
-                  {(reqData.follower?.phone_no || reqData.follower?.phoneno) && (
-                    <a href={`tel:${reqData.follower?.phone_no || reqData.follower?.phoneno}`} className="p-2 bg-emerald-500 text-white rounded-lg shadow-md">
-                      <Phone className="w-4 h-4" />
+                </div>
+
+                <div className="flex items-center justify-between border-t border-[var(--color-border)] pt-3 mt-1">
+                  <div>
+                    <span className="text-[10px] font-mono text-[var(--color-text-muted)] block">เบอร์โทรติดต่อ</span>
+                    <span className="text-xs font-bold font-mono text-[var(--color-text)]">{driver2Phone || 'ไม่ได้ระบุ'}</span>
+                  </div>
+                  {driver2Phone && (
+                    <a 
+                      href={`tel:${driver2Phone}`}
+                      className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:opacity-90 transition-opacity"
+                    >
+                      <PhoneCall className="w-3.5 h-3.5" /> โทรหาบัดดี้
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* เบอร์โทรฉุกเฉิน */}
+              <div className="p-5 bg-red-500/10 border border-red-500/30 rounded-2xl flex flex-col justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-red-500/20 rounded-xl text-red-500 text-xl">🚨</div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-red-400 block">เบอร์โทรฉุกเฉิน (Emergency Contact)</span>
+                    <div className="text-sm font-bold text-[var(--color-text)]">{phoneemer || phoneno || 'ไม่ได้ระบุ'}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-red-500/20 pt-3 mt-1">
+                  <div>
+                    <span className="text-[10px] font-mono text-[var(--color-text-muted)] block">โทรแจ้งเหตุฉุกเฉิน</span>
+                    <span className="text-xs font-bold font-mono text-red-400">{phoneemer || phoneno || '-'}</span>
+                  </div>
+                  {(phoneemer || phoneno) && (
+                    <a 
+                      href={`tel:${phoneemer || phoneno}`}
+                      className="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:bg-red-700 transition-colors"
+                    >
+                      <PhoneCall className="w-3.5 h-3.5" /> โทรเบอร์ฉุกเฉิน
                     </a>
                   )}
                 </div>
               </div>
             </div>
-
-            {}
-            <div className="md:col-span-4 flex flex-col justify-between p-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl text-center">
-              <div>
-                <Clock className="w-8 h-8 text-[#7C3AED] mx-auto mb-2" />
-                <div className="text-sm font-bold text-[var(--color-text)]">การคุ้มครองสวัสดิภาพ 24 ชม.</div>
-                <p className="text-xs text-[var(--color-text-muted)] mt-1">รับประกันภัยความคุ้มครองยานพาหนะระหว่างการเดินทาง</p>
-              </div>
-              <button 
-                onClick={goBack}
-                className="mt-4 w-full py-3 bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl text-xs font-bold text-[var(--color-text)] hover:border-[#7C3AED] transition-colors cursor-pointer"
-              >
-                {isPubLoggedIn ? 'กลับ Dashboard ร้านค้า' : 'กลับหน้าหลัก'}
-              </button>
-            </div>
-
           </div>
 
         </div>
@@ -421,7 +616,7 @@ function TrackingContent() {
       {}
       {showQrModal && trackingUrl && (
         <div className="fixed inset-0 z-[99999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowQrModal(false)}>
-          <div className="bg-[var(--color-card)] border border-[#7C3AED]/40 rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl flex flex-col items-center gap-5 text-center relative" onClick={e => e.stopPropagation()}>
+          <div className="bg-[var(--color-card)] border border-[#2340A7]/40 rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl flex flex-col items-center gap-5 text-center relative" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setShowQrModal(false)}
               className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-bold text-lg p-1 cursor-pointer"
@@ -429,7 +624,7 @@ function TrackingContent() {
               ✕
             </button>
 
-            <div className="w-12 h-12 bg-[#7C3AED]/15 rounded-full flex items-center justify-center text-[#7C3AED] text-2xl">
+            <div className="w-12 h-12 bg-[#2340A7]/15 rounded-full flex items-center justify-center text-[#2340A7] text-2xl">
               📲
             </div>
 
@@ -461,7 +656,7 @@ function TrackingContent() {
                   setCopied(true)
                   setTimeout(() => setCopied(false), 2500)
                 }}
-                className="px-3 py-1.5 bg-[#7C3AED] text-white rounded-lg font-bold text-[11px] shrink-0 hover:bg-[#6D28D9] transition-colors cursor-pointer"
+                className="px-3 py-1.5 bg-[#2340A7] text-white rounded-lg font-bold text-[11px] shrink-0 hover:bg-[#1D358F] transition-colors cursor-pointer"
               >
                 {copied ? 'คัดลอกแล้ว' : 'คัดลอก'}
               </button>
@@ -484,7 +679,7 @@ export default function PubTrackingPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center text-[var(--color-text)] font-inter">
-        <RefreshCw className="w-8 h-8 text-[#7C3AED] animate-spin" />
+        <RefreshCw className="w-8 h-8 text-[#2340A7] animate-spin" />
       </div>
     }>
       <TrackingContent />

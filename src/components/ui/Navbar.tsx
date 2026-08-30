@@ -82,19 +82,19 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
   return (
     <>
       <header className="fixed top-0 left-0 w-full z-50 pt-6 px-4">
-        <nav className="max-w-5xl mx-auto flex items-center justify-between bg-[var(--color-card)]/90 backdrop-blur-xl border border-[var(--color-border)] rounded-full px-6 py-3 shadow-[0_10px_30px_rgba(124,58,237,0.12)] transition-all">
+        <nav className="max-w-5xl mx-auto flex items-center justify-between bg-[var(--color-card)]/90 backdrop-blur-xl border border-[var(--color-border)] rounded-full px-6 py-3 shadow-[0_10px_30px_rgba(35,64,167,0.12)] transition-all">
           
           {}
           <div 
             onClick={() => { closeMobile(); router.push(pubUser ? '/pub/dashboard' : (driverUser ? '/driver-status' : '/')) }}
             className="flex items-center gap-3 cursor-pointer group"
           >
-            <div className="w-5 h-5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] rounded-sm rotate-45 group-hover:rotate-180 transition-transform duration-500 shadow-[0_0_15px_rgba(124,58,237,0.7)]"></div>
+            <div className="w-5 h-5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] rounded-sm rotate-45 group-hover:rotate-180 transition-transform duration-500 shadow-[0_0_15px_rgba(35,64,167,0.7)]"></div>
             <span className="text-lg font-bold font-manrope tracking-tight text-[var(--color-text)]">
-              Safe<span className="text-[#7C3AED]">Seat</span>
+              Safe<span className="text-[#2340A7]">Seat</span>
             </span>
             {(pubUser || driverUser) && (
-              <span className="text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white">
+              <span className="text-[9px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white">
                 {pubUser ? 'VENUE' : 'DRIVER'}
               </span>
             )}
@@ -107,15 +107,15 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
                 {pubUser && (
                   <button
                     onClick={() => { closeMobile(); router.push('/pub/dashboard') }}
-                    className={`text-sm font-semibold hover:text-[#7C3AED] transition-colors cursor-pointer ${pathname === '/pub/dashboard' ? 'text-[#7C3AED] font-bold' : 'text-[var(--color-text-muted)]'}`}
+                    className={`text-sm font-semibold hover:text-[#2340A7] transition-colors cursor-pointer ${pathname === '/pub/dashboard' ? 'text-[#2340A7] font-bold' : 'text-[var(--color-text-muted)]'}`}
                   >
-                    🏠 หน้าหลักร้านค้า
+                    🏠 หน้าหลักสถานบันเทิง
                   </button>
                 )}
                 {driverUser && (
                   <button
                     onClick={() => { closeMobile(); router.push('/driver-status') }}
-                    className={`text-sm font-semibold hover:text-[#7C3AED] transition-colors cursor-pointer ${pathname === '/driver-status' ? 'text-[#7C3AED] font-bold' : 'text-[var(--color-text-muted)]'}`}
+                    className={`text-sm font-semibold hover:text-[#2340A7] transition-colors cursor-pointer ${pathname === '/driver-status' ? 'text-[#2340A7] font-bold' : 'text-[var(--color-text-muted)]'}`}
                   >
                     📋 สถานะการสมัคร
                   </button>
@@ -125,7 +125,7 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
               <>
                 <button
                   onClick={() => { closeMobile(); router.push('/') }}
-                  className={`text-sm font-semibold hover:text-[#7C3AED] transition-colors cursor-pointer ${pathname === '/' ? 'text-[var(--color-text)] font-bold' : 'text-[var(--color-text-muted)]'}`}
+                  className={`text-sm font-semibold hover:text-[#2340A7] transition-colors cursor-pointer ${pathname === '/' ? 'text-[var(--color-text)] font-bold' : 'text-[var(--color-text-muted)]'}`}
                 >
                   หน้าแรก
                 </button>
@@ -135,29 +135,29 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
                   <button
                     type="button"
                     onClick={() => setShowDropdown(!showDropdown)}
-                    className={`text-sm font-semibold transition-colors flex items-center gap-1 py-1 cursor-pointer focus:outline-none ${showDropdown ? 'text-[#7C3AED] font-bold' : 'text-[var(--color-text-muted)] hover:text-[#7C3AED]'}`}
+                    className={`text-sm font-semibold transition-colors flex items-center gap-1 py-1 cursor-pointer focus:outline-none ${showDropdown ? 'text-[#2340A7] font-bold' : 'text-[var(--color-text-muted)] hover:text-[#2340A7]'}`}
                   >
-                    พาร์ทเนอร์ &amp; บริการ <span className={`text-[10px] transition-transform duration-200 ${showDropdown ? 'rotate-180 text-[#7C3AED]' : ''}`}>▼</span>
+                    พาร์ทเนอร์ &amp; บริการ <span className={`text-[10px] transition-transform duration-200 ${showDropdown ? 'rotate-180 text-[#2340A7]' : ''}`}>▼</span>
                   </button>
                   {showDropdown && (
                     <div className="absolute top-full left-0 w-60 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl py-2 shadow-2xl z-50 flex flex-col mt-2 animate-fade-up">
                       <button
                         onClick={() => { setShowDropdown(false); closeMobile(); router.push('/register/documents') }}
-                        className="px-4 py-2.5 text-left text-xs font-bold text-[var(--color-text)] hover:text-[#7C3AED] hover:bg-[var(--color-card-hover)] transition-all flex items-center gap-2 cursor-pointer"
+                        className="px-4 py-2.5 text-left text-xs font-bold text-[var(--color-text)] hover:text-[#2340A7] hover:bg-[var(--color-card-hover)] transition-all flex items-center gap-2 cursor-pointer"
                       >
                         📄 คู่มือการเตรียมเอกสาร
                       </button>
                       <button
                         onClick={() => { setShowDropdown(false); closeMobile(); router.push('/register/driver') }}
-                        className="px-4 py-2.5 text-left text-xs font-bold text-[var(--color-text)] hover:text-[#7C3AED] hover:bg-[var(--color-card-hover)] transition-all flex items-center gap-2 cursor-pointer"
+                        className="px-4 py-2.5 text-left text-xs font-bold text-[var(--color-text)] hover:text-[#2340A7] hover:bg-[var(--color-card-hover)] transition-all flex items-center gap-2 cursor-pointer"
                       >
                         🚗 สมัครเป็นพนักงานขับรถ
                       </button>
                       <button
                         onClick={() => { setShowDropdown(false); closeMobile(); router.push('/register/pub') }}
-                        className="px-4 py-2.5 text-left text-xs font-bold text-[var(--color-text)] hover:text-[#7C3AED] hover:bg-[var(--color-card-hover)] transition-all flex items-center gap-2 cursor-pointer"
+                        className="px-4 py-2.5 text-left text-xs font-bold text-[var(--color-text)] hover:text-[#2340A7] hover:bg-[var(--color-card-hover)] transition-all flex items-center gap-2 cursor-pointer"
                       >
-                        🏪 สมัครพาร์ทเนอร์ร้านค้า
+                        🏪 สมัครพาร์ทเนอร์สถานบันเทิง
                       </button>
                     </div>
                   )}
@@ -165,13 +165,13 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
 
                 <button
                   onClick={() => { closeMobile(); router.push('/about') }}
-                  className={`text-sm font-semibold hover:text-[#7C3AED] transition-colors cursor-pointer ${pathname === '/about' ? 'text-[var(--color-text)] font-bold' : 'text-[var(--color-text-muted)]'}`}
+                  className={`text-sm font-semibold hover:text-[#2340A7] transition-colors cursor-pointer ${pathname === '/about' ? 'text-[var(--color-text)] font-bold' : 'text-[var(--color-text-muted)]'}`}
                 >
                   เกี่ยวกับเรา
                 </button>
                 <button
                   onClick={() => { closeMobile(); router.push('/help') }}
-                  className={`text-sm font-semibold hover:text-[#7C3AED] transition-colors cursor-pointer ${pathname === '/help' ? 'text-[var(--color-text)] font-bold' : 'text-[var(--color-text-muted)]'}`}
+                  className={`text-sm font-semibold hover:text-[#2340A7] transition-colors cursor-pointer ${pathname === '/help' ? 'text-[var(--color-text)] font-bold' : 'text-[var(--color-text-muted)]'}`}
                 >
                   ความปลอดภัย &amp; ช่วยเหลือ
                 </button>
@@ -221,7 +221,7 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
                   {}
                   <button
                     onClick={() => { closeMobile(); router.push('/login') }}
-                    className="px-5 py-2 rounded-full bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(124,58,237,0.4)]"
+                    className="px-5 py-2 rounded-full bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(35,64,167,0.4)]"
                   >
                     เข้าสู่ระบบ
                   </button>
@@ -271,7 +271,7 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
               onClick={() => { closeMobile(); router.push('/register/pub') }}
               className="text-left text-sm font-semibold text-[var(--color-text)] py-1.5 cursor-pointer"
             >
-              🏪 สมัครพาร์ทเนอร์ร้านค้า
+              🏪 สมัครพาร์ทเนอร์สถานบันเทิง
             </button>
             <button
               onClick={() => { closeMobile(); router.push('/help') }}

@@ -47,14 +47,14 @@ export default function AlertModal({
     },
     info: {
       icon: Info,
-      color: 'text-[#7C3AED]',
-      bgIcon: 'bg-[#7C3AED]/15 border-[#7C3AED]/30',
+      color: 'text-[#2340A7]',
+      bgIcon: 'bg-[#2340A7]/15 border-[#2340A7]/30',
       title: 'แจ้งเตือน (Notice)',
     },
     confirm: {
       icon: HelpCircle,
-      color: 'text-[#7C3AED]',
-      bgIcon: 'bg-[#7C3AED]/15 border-[#7C3AED]/30',
+      color: 'text-[#2340A7]',
+      bgIcon: 'bg-[#2340A7]/15 border-[#2340A7]/30',
       title: 'ยืนยันรายการ (Confirmation)',
     }
   }
@@ -69,7 +69,7 @@ export default function AlertModal({
         onClick={e => e.stopPropagation()}
         className="w-auto max-w-2xl bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-8 shadow-2xl flex flex-col items-center text-center gap-6 relative overflow-hidden"
       >
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8]" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#2340A7] to-[#2563EB]" />
 
         {}
         <div className={`p-4 rounded-full border ${c.bgIcon} ${c.color} shadow-lg`}>
@@ -92,7 +92,7 @@ export default function AlertModal({
             <>
               <button
                 onClick={onConfirm || onClose}
-                className="flex-1 py-3 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-md transition-all cursor-pointer"
+                className="flex-1 py-3 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-md transition-all cursor-pointer"
               >
                 {confirmText}
               </button>
@@ -106,7 +106,7 @@ export default function AlertModal({
           ) : (
             <button
               onClick={onClose}
-              className="w-full py-3 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-md transition-all cursor-pointer"
+              className="w-full py-3 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-md transition-all cursor-pointer"
             >
               {confirmText}
             </button>

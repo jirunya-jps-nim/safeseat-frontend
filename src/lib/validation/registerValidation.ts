@@ -7,23 +7,38 @@ export function validateStep1(
   form: RegisterForm,
   setError: (msg: string) => void
 ): boolean {
-  if (!form.pubName || !form.pubOpen || !form.pubClose || !form.pubEmail || !form.pubPhone) {
-    setError('กรุณากรอกข้อมูลให้ครบถ้วน')
+  if (!form.pubName || !form.pubName.trim()) {
+    setError('กรุณากรอกชื่อสถานประกอบการ')
     return false
   }
 
-  if (!form.pubAddress || form.pubAddressLat === undefined || form.pubAddressLng === undefined) {
-    setError('กรุณาปักหมุดตำแหน่งร้านผ่านแผนที่')
+  if (!form.pubOpen || !form.pubClose) {
+    setError('กรุณาระบุเวลาเปิด-ปิดสถานประกอบการ')
     return false
   }
 
-  if (!/^0[0-9]{8,9}$/.test(form.pubPhone)) {
-    setError('หมายเลขโทรศัพท์ต้องขึ้นต้นด้วย 0 และมี 9–10 หลัก')
+  if (!form.pubEmail || !form.pubEmail.trim()) {
+    setError('กรุณากรอกอีเมล')
     return false
   }
 
-  if (!/^[a-z0-9_.]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(form.pubEmail)) {
-    setError('อีเมลต้องเป็นรูปแบบมาตรฐานสากลเท่านั้น')
+  if (!/^[a-z0-9_.]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(form.pubEmail.toLowerCase().trim())) {
+    setError('อีเมลต้องเป็นรูปแบบมาตรฐานสากลเท่านั้น (เช่น example@domain.com)')
+    return false
+  }
+
+  if (!form.pubPhone || !form.pubPhone.trim()) {
+    setError('กรุณากรอกหมายเลขโทรศัพท์')
+    return false
+  }
+
+  if (!/^0[689][0-9]{8}$/.test(form.pubPhone.trim())) {
+    setError('หมายเลขโทรศัพท์ต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 06, 08 หรือ 09 เท่านั้น')
+    return false
+  }
+
+  if (!form.pubAddress || !form.pubAddress.trim() || form.pubAddressLat === undefined || form.pubAddressLng === undefined) {
+    setError('กรุณาปักหมุดตำแหน่งสถานบันเทิงผ่านแผนที่')
     return false
   }
 
@@ -37,32 +52,42 @@ export function validateStep2(
   setError: (msg: string) => void
 ): boolean {
   if (!licenseFile) {
-    setError('กรุณาแนบใบอนุญาตประกอบการ')
+    setError('กรุณาแนบหลักฐานใบอนุญาตประกอบการ')
     return false
   }
 
   if (!shopImgFile) {
-    setError('กรุณาแนบรูปภาพหน้าร้าน')
+    setError('กรุณาแนบรูปภาพหน้าสถานบันเทิง')
     return false
   }
 
-  if (!form.taxNumber || !form.bankAccountName || !form.bankAccountNo) {
-    setError('กรุณากรอกข้อมูลให้ครบถ้วน')
+  if (!form.taxNumber || !form.taxNumber.trim()) {
+    setError('กรุณากรอกเลขประจำตัวผู้เสียภาษี')
     return false
   }
 
-  if (!/^[0-9]{13}$/.test(form.taxNumber)) {
-    setError('เลขผู้เสียภาษีต้องเป็นตัวเลข 13 หลัก')
+  if (!/^[0-9]{13}$/.test(form.taxNumber.trim())) {
+    setError('เลขประจำตัวผู้เสียภาษีต้องเป็นตัวเลข 13 หลัก')
     return false
   }
 
-  if (!form.bankAccountNo.trim() || !/^[0-9]{10,12}$/.test(form.bankAccountNo)) {
-    setError('เลขที่บัญชีต้องเป็นตัวเลข 10–12 หลักเท่านั้น')
+  if (!form.bankAccountName || !form.bankAccountName.trim()) {
+    setError('กรุณากรอกชื่อบัญชีธนาคาร')
     return false
   }
 
-  if (!form.bankAccountName.trim() || !/^[ก-๙a-zA-Z\s]{1,150}$/.test(form.bankAccountName)) {
+  if (!/^[ก-๙a-zA-Z\s]{1,150}$/.test(form.bankAccountName.trim())) {
     setError('ชื่อบัญชีต้องเป็นภาษาไทยหรืออังกฤษเท่านั้น และห้ามใช้อักขระพิเศษ')
+    return false
+  }
+
+  if (!form.bankAccountNo || !form.bankAccountNo.trim()) {
+    setError('กรุณากรอกเลขที่บัญชีธนาคาร')
+    return false
+  }
+
+  if (!/^[0-9]{10,12}$/.test(form.bankAccountNo.trim())) {
+    setError('เลขที่บัญชีต้องเป็นตัวเลข 10–12 หลักเท่านั้น')
     return false
   }
 
@@ -74,22 +99,28 @@ export function validateStep3(
   termsAccepted: boolean,
   setError: (msg: string) => void
 ): boolean {
-  if (!termsAccepted) {
-    setError('กรุณายอมรับเงื่อนไขการให้บริการและนโยบายความเป็นส่วนตัวก่อนสมัครสมาชิก')
-    return false
-  }
-  if (!form.username || !form.password) {
-    setError('กรุณากรอกข้อมูลให้ครบถ้วน')
+  if (!form.username || !form.username.trim()) {
+    setError('กรุณากรอกชื่อผู้ใช้งาน')
     return false
   }
 
-  if (!/^[a-zA-Z0-9]{8,50}$/.test(form.username)) {
+  if (!/^[a-zA-Z0-9]{8,50}$/.test(form.username.trim())) {
     setError('ชื่อผู้ใช้งานต้องเป็นตัวอักษรภาษาอังกฤษหรือตัวเลขเท่านั้น และมีความยาว 8-50 ตัวอักษร')
+    return false
+  }
+
+  if (!form.password) {
+    setError('กรุณากรอกรหัสผ่าน')
     return false
   }
 
   if (!/^(?=.*[!#_.])[a-zA-Z0-9!#_.]{8,50}$/.test(form.password)) {
     setError('รหัสผ่านต้องเป็นอักษรภาษาอังกฤษ ตัวเลข และรวมอักขระพิเศษ [!#_.] มีความยาว 8-50 ตัวอักษร')
+    return false
+  }
+
+  if (!termsAccepted) {
+    setError('กรุณายอมรับเงื่อนไขการให้บริการและนโยบายความเป็นส่วนตัวก่อนสมัครสมาชิก')
     return false
   }
 
@@ -122,12 +153,12 @@ export function validateShopImageFile(
   const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
 
   if (!['jpg', 'jpeg', 'png'].includes(ext)) {
-    setError('รูปหน้าร้าน: รองรับเฉพาะไฟล์ JPG, PNG เท่านั้น')
+    setError('รูปหน้าสถานบันเทิง: รองรับเฉพาะไฟล์ JPG, PNG เท่านั้น')
     return false
   }
 
   if (file.size > MAX_FILE_SIZE) {
-    setError('รูปหน้าร้าน: ขนาดไฟล์ต้องไม่เกิน 10 MB')
+    setError('รูปหน้าสถานบันเทิง: ขนาดไฟล์ต้องไม่เกิน 10 MB')
     return false
   }
 

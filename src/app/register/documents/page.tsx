@@ -101,9 +101,9 @@ export default function ExampleDocumentsPage() {
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
       
-      {}
+      {/* Ambient background glow */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#2340A7]/10 rounded-full blur-[140px]"></div>
       </div>
 
       <div className="gradient-blur"></div>
@@ -111,9 +111,9 @@ export default function ExampleDocumentsPage() {
       <FloatingNav />
 
       <main className="relative z-10 max-w-6xl mx-auto px-6 pt-44 pb-24 flex flex-col md:flex-row gap-8">
-        {}
+        {/* Sidebar Steps Navigation */}
         <aside className="w-full md:w-72 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-6 shrink-0 h-fit shadow-xl">
-          <div className="text-xs font-bold tracking-widest text-[#7C3AED] border-b border-[var(--color-border)] pb-3 mb-4 font-manrope">
+          <div className="text-xs font-bold tracking-widest text-[#2340A7] border-b border-[var(--color-border)] pb-3 mb-4 font-manrope">
             REGISTRATION STEPS
           </div>
           <ul className="flex flex-col gap-2">
@@ -125,7 +125,7 @@ export default function ExampleDocumentsPage() {
                   onClick={() => setActiveStepIndex(index)}
                   className={`px-4 py-3 rounded-xl text-xs font-bold tracking-wider cursor-pointer transition-all ${
                     isActive
-                      ? 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] text-white shadow-md'
+                      ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white shadow-md'
                       : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]'
                   }`}
                 >

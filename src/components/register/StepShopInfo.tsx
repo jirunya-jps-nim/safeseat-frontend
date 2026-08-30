@@ -11,9 +11,10 @@ const MapPicker = dynamic(() => import('@/components/ui/MapPicker'), { ssr: fals
 interface StepShopInfoProps {
   form: RegisterForm
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  onPin?: (lat: number, lng: number) => void
+  onPin?: (lat: number, lng: number, label?: string) => void
   inputStyle: React.CSSProperties
   labelColor?: string 
+  errorMessage?: string
 }
 
 function formatDisplayTime(val: string): string {
@@ -29,9 +30,15 @@ function formatDisplayTime(val: string): string {
   return `${String(h12).padStart(2, '0')}:${m} ${period}`
 }
 
-export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelColor }: StepShopInfoProps) {
+export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelColor, errorMessage }: StepShopInfoProps) {
   const [isMapOpen, setIsMapOpen] = useState(false)
   const [activeClock, setActiveClock] = useState<'pubOpen' | 'pubClose' | null>(null)
+
+  const isPubNameError = errorMessage?.includes('สถานประกอบการ') || errorMessage?.includes('ชื่อสถานบันเทิง')
+  const isTimeError = errorMessage?.includes('เวลาเปิด') || errorMessage?.includes('เวลาปิด') || errorMessage?.includes('เวลา')
+  const isEmailError = errorMessage?.includes('อีเมล')
+  const isPhoneError = errorMessage?.includes('โทรศัพท์')
+  const isAddressError = errorMessage?.includes('แผนที่') || errorMessage?.includes('ปักหมุด') || errorMessage?.includes('ตำแหน่ง')
 
   const handleClockChange = (timeStr: string) => {
     if (!activeClock) return
@@ -47,18 +54,28 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
 
-      {}
+      {/* ชื่อสถานประกอบการ */}
       <Field label="ชื่อสถานประกอบการ *" icon="🏪" color={labelColor}>
         <input
           name="pubName"
           value={form.pubName}
           onChange={onChange}
-          style={inputStyle}
-          placeholder="ชื่อร้านของคุณ"
+          autoComplete="off"
+          style={{
+            ...inputStyle,
+            borderColor: isPubNameError ? '#ef4444' : (inputStyle.borderColor || 'var(--color-border)'),
+            backgroundColor: isPubNameError ? 'rgba(239, 68, 68, 0.05)' : (inputStyle.backgroundColor || 'var(--color-surface)'),
+          }}
+          placeholder="ชื่อสถานบันเทิงของคุณ"
         />
+        {isPubNameError && (
+          <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600, marginTop: '4px', display: 'block' }}>
+            ⚠️ {errorMessage}
+          </span>
+        )}
       </Field>
 
-      {}
+      {/* เวลาเปิด-ปิด ให้เลือกด้วย Analog Clock Picker */}
       <div style={{ display: 'flex', gap: 12 }}>
         <div style={{ flex: 1 }}>
           <Field label="เวลาเปิด *" icon="🕐" color={labelColor}>
@@ -85,7 +102,7 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
                   e.stopPropagation()
                   setActiveClock('pubOpen')
                 }}
-                className="absolute right-3 p-1 text-gray-400 group-hover:text-[#7C3AED] transition-colors"
+                className="absolute right-3 p-1 text-gray-400 group-hover:text-[#2340A7] transition-colors"
                 title="เลือกเวลาด้วยเข็มนาฬิกา"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,7 +138,7 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
                   e.stopPropagation()
                   setActiveClock('pubClose')
                 }}
-                className="absolute right-3 p-1 text-gray-400 group-hover:text-[#7C3AED] transition-colors"
+                className="absolute right-3 p-1 text-gray-400 group-hover:text-[#2340A7] transition-colors"
                 title="เลือกเวลาด้วยเข็มนาฬิกา"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,42 +150,62 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
         </div>
       </div>
 
-      {}
+      {/* Clock Modal */}
       <AnalogClockPicker
         isOpen={activeClock !== null}
         onClose={() => setActiveClock(null)}
         value={activeClock === 'pubOpen' ? (form.pubOpen || '18:00') : (form.pubClose || '02:00')}
         onChange={handleClockChange}
-        title={activeClock === 'pubOpen' ? 'ตั้งค่าเวลาเปิดร้าน (เข็มนาฬิกา)' : 'ตั้งค่าเวลาปิดร้าน (เข็มนาฬิกา)'}
+        title={activeClock === 'pubOpen' ? 'ตั้งค่าเวลาเปิดสถานบันเทิง (เข็มนาฬิกา)' : 'ตั้งค่าเวลาปิดสถานบันเทิง (เข็มนาฬิกา)'}
       />
 
-      {}
+      {/* อีเมล */}
       <Field label="อีเมล *" icon="📧" color={labelColor}>
         <input
           name="pubEmail"
           type="email"
           value={form.pubEmail}
           onChange={onChange}
-          style={inputStyle}
+          autoComplete="off"
+          style={{
+            ...inputStyle,
+            borderColor: isEmailError ? '#ef4444' : (inputStyle.borderColor || 'var(--color-border)'),
+            backgroundColor: isEmailError ? 'rgba(239, 68, 68, 0.05)' : (inputStyle.backgroundColor || 'var(--color-surface)'),
+          }}
           placeholder="example@email.com"
         />
+        {isEmailError && (
+          <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600, marginTop: '4px', display: 'block' }}>
+            ⚠️ {errorMessage}
+          </span>
+        )}
       </Field>
 
-      {}
-      <Field label="หมายเลขโทรศัพท์ * (ขึ้นต้นด้วย 0, 9–10 หลัก)" icon="📱" color={labelColor}>
+      {/* เบอร์โทรศัพท์ */}
+      <Field label="หมายเลขโทรศัพท์ *" icon="📱" color={labelColor}>
         <input
           name="pubPhone"
           value={form.pubPhone}
           onChange={onChange}
-          style={inputStyle}
+          autoComplete="off"
+          style={{
+            ...inputStyle,
+            borderColor: isPhoneError ? '#ef4444' : (inputStyle.borderColor || 'var(--color-border)'),
+            backgroundColor: isPhoneError ? 'rgba(239, 68, 68, 0.05)' : (inputStyle.backgroundColor || 'var(--color-surface)'),
+          }}
           placeholder="0812345678"
           maxLength={10}
           inputMode="numeric"
         />
+        {isPhoneError && (
+          <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600, marginTop: '4px', display: 'block' }}>
+            ⚠️ {errorMessage}
+          </span>
+        )}
       </Field>
 
-      {}
-      <Field label="ตำแหน่งร้าน *" icon="📍" color={labelColor}>
+      {/* ปักหมุดแผนที่ */}
+      <Field label="ตำแหน่งสถานบันเทิง *" icon="📍" color={labelColor}>
         <div style={{ display: 'flex', gap: 10 }}>
           <input
             value={form.pubAddress}
@@ -176,9 +213,9 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
             className="placeholder:text-[var(--color-text-muted)] opacity-90 font-medium"
             style={{
               ...inputStyle,
-              backgroundColor: 'var(--color-surface)',
+              backgroundColor: isAddressError ? 'rgba(239, 68, 68, 0.05)' : 'var(--color-surface)',
               color: 'var(--color-text)',
-              borderColor: 'var(--color-border)',
+              borderColor: isAddressError ? '#ef4444' : 'var(--color-border)',
               cursor: 'pointer',
             }}
             placeholder="กรุณาปักหมุดผ่านแผนที่"
@@ -193,6 +230,11 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
             ปักหมุด
           </button>
         </div>
+        {isAddressError && (
+          <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600, marginTop: '4px', display: 'block' }}>
+            ⚠️ {errorMessage}
+          </span>
+        )}
 
         {form.pubAddressLat && form.pubAddressLng && (
           <div style={{ ...styles.coordText, color: labelColor || '#64748b' }}>
@@ -207,8 +249,8 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
         <MapPicker
           defaultLat={form.pubAddressLat as number}
           defaultLng={form.pubAddressLng as number}
-          onConfirm={(lat, lng) => {
-            if (onPin) onPin(lat, lng)
+          onConfirm={(lat, lng, label) => {
+            if (onPin) onPin(lat, lng, label)
             setIsMapOpen(false)
           }}
           onCancel={() => setIsMapOpen(false)}
@@ -220,15 +262,23 @@ export default function StepShopInfo({ form, onChange, onPin, inputStyle, labelC
 
 const styles: Record<string, React.CSSProperties> = {
   pinBtn: {
-    padding: '0 16px',
-    borderRadius: 10,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    textAlign: 'center',
+    padding: '0 20px',
+    borderRadius: 12,
     border: 'none',
-    backgroundColor: '#4f46e5',
+    backgroundColor: '#2340A7',
     color: '#fff',
     cursor: 'pointer',
     fontWeight: 600,
-    fontFamily: "'Prompt', sans-serif",
+    fontSize: '15px',
+    lineHeight: 1,
     whiteSpace: 'nowrap',
+    height: '100%',
+    minHeight: '48px',
+    boxSizing: 'border-box',
   },
   coordText: {
     marginTop: 8,

@@ -9,8 +9,9 @@ import api from '@/services/api'
 import { loginStyles as styles } from '@/lib/styles/loginStyles'
 import { validateLogin } from '@/lib/validation/loginValidation'
 import { LoginForm } from '@/types'
+import { Eye, EyeOff } from 'lucide-react'
 
-// หน้าเข้าสู่ระบบ (สำหรับ พาร์ทเนอร์ร้านค้า, พนักงานขับรถ, และ ผู้ดูแลระบบ)
+// หน้าเข้าสู่ระบบ (สำหรับ พาร์ทเนอร์สถานบันเทิง, พนักงานขับรถ, และ ผู้ดูแลระบบ)
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -59,10 +60,21 @@ function LoginContent() {
     if (!validateLogin(form, setError, role)) return
 
     setLoading(true)
+    setError('')
     try {
       if (role === 'pub') {
         const res = await api.post('/pub/login', form)
+        if (!res.data || res.data.success === false || res.status >= 400) {
+          setError(res.data?.error || res.data?.message || 'ไม่พบข้อมูลผู้ใช้งานในระบบ หรือชื่อผู้ใช้/รหัสผ่านไม่ถูกต้อง')
+          setLoading(false)
+          return
+        }
         const userData = res.data.data
+        if (!userData || !userData.username) {
+          setError('ไม่พบข้อมูลผู้ใช้งานในระบบ')
+          setLoading(false)
+          return
+        }
         const token = res.data.token || userData?.token
         if (token) localStorage.setItem('token', token)
         localStorage.setItem('pub_user', JSON.stringify(userData))
@@ -75,7 +87,17 @@ function LoginContent() {
         }
       } else if (role === 'driver') {
         const res = await api.post('/auth/login', form)
+        if (!res.data || res.data.success === false || res.data.error || res.status >= 400) {
+          setError(res.data?.error || res.data?.message || 'ไม่พบข้อมูลผู้ใช้งานในระบบ หรือเบอร์โทรศัพท์/รหัสผ่านไม่ถูกต้อง')
+          setLoading(false)
+          return
+        }
         const userData = res.data
+        if (!userData || (!userData.username && !userData.phoneno && !userData.driverid && !userData.id)) {
+          setError('ไม่พบข้อมูลผู้ใช้งานในระบบ')
+          setLoading(false)
+          return
+        }
         const token = res.data.token || userData?.token
         if (token) localStorage.setItem('token', token)
         localStorage.setItem('driver_user', JSON.stringify(userData))
@@ -88,7 +110,17 @@ function LoginContent() {
         }
       } else if (role === 'admin') {
         const res = await api.post('/admin/login', form)
+        if (!res.data || res.data.success === false || res.status >= 400) {
+          setError(res.data?.error || res.data?.message || 'ไม่พบข้อมูลผู้ดูแลระบบ หรือชื่อผู้ใช้/รหัสผ่านไม่ถูกต้อง')
+          setLoading(false)
+          return
+        }
         const userData = res.data.data
+        if (!userData) {
+          setError('ไม่พบข้อมูลผู้ดูแลระบบในระบบ')
+          setLoading(false)
+          return
+        }
         const token = res.data.token
         if (token) localStorage.setItem('token', token)
         localStorage.setItem('admin_user', JSON.stringify(userData))
@@ -96,7 +128,7 @@ function LoginContent() {
         router.push('/admin/dashboard')
       }
     } catch (err: any) {
-      setError(err?.response?.data?.error || err?.response?.data?.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง')
+      setError(err?.response?.data?.error || err?.response?.data?.message || 'ไม่พบข้อมูลในระบบ หรือเกิดข้อผิดพลาดในการเข้าสู่ระบบ')
     } finally {
       setLoading(false)
     }
@@ -114,13 +146,13 @@ function LoginContent() {
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 9999,
-          background: 'linear-gradient(135deg, #7C3AED, #1D4ED8)',
+          background: 'linear-gradient(135deg, #2340A7, #2563EB)',
           color: '#ffffff',
           padding: '13px 28px',
           borderRadius: 999,
           fontSize: 13.5,
           fontWeight: 700,
-          boxShadow: '0 8px 28px rgba(124, 58, 237, 0.40)',
+          boxShadow: '0 8px 28px rgba(35, 64, 167, 0.40)',
           whiteSpace: 'nowrap',
         }}>
           ✅ {toast}
@@ -188,7 +220,7 @@ function LoginContent() {
                   ...(role === 'pub' ? styles.roleBtnActive : {}),
                 }}
               >
-                🏪 ร้านค้า
+                🏪 สถานบันเทิง
               </button>
               <button
                 type="button"
@@ -235,6 +267,8 @@ function LoginContent() {
                   onKeyDown={handleKeyDown}
                   style={styles.input}
                   autoComplete="off"
+                  maxLength={role === 'driver' ? 10 : 50}
+                  inputMode={role === 'driver' ? 'numeric' : 'text'}
                 />
               </div>
             </div>
@@ -258,8 +292,9 @@ function LoginContent() {
                   onClick={() => setShowPassword(!showPassword)}
                   style={styles.eyeBtn}
                   type="button"
+                  title={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? <EyeOff size={18} color="#64748b" /> : <Eye size={18} color="#64748b" />}
                 </button>
               </div>
             </div>

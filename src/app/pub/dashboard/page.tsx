@@ -7,7 +7,7 @@ import Footer from '@/components/ui/Footer'
 import FloatingNav from '@/components/ui/FloatingNav'
 import { Car, FileText, BarChart3, Shield, Radio, CheckCircle2, ArrowRight } from 'lucide-react'
 
-// หน้าแดชบอร์ดหลักสำหรับร้านค้าพาร์ทเนอร์ (Pub / Venue Dashboard)
+// หน้าแดชบอร์ดหลักสำหรับสถานบันเทิงพาร์ทเนอร์ (Pub / Venue Dashboard)
 export default function PubDashboardPage() {
   const router = useRouter()
   const [pubUser, setPubUser] = useState<any>(null)
@@ -36,9 +36,9 @@ export default function PubDashboardPage() {
       desc: 'เรียกพนักงานขับรถแทนมืออาชีพให้ลูกค้าของคุณ รับส่งถึงที่หมายอย่างปลอดภัยตลอดเส้นทาง',
       btnLabel: 'เรียกคนขับแทนตอนนี้',
       icon: Car,
-      colorClass: 'text-[#7C3AED]',
-      borderHover: 'hover:border-[#7C3AED]',
-      btnBg: 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8]',
+      colorClass: 'text-[#2340A7]',
+      borderHover: 'hover:border-[#2340A7]',
+      btnBg: 'bg-gradient-to-r from-[#2340A7] to-[#2563EB]',
       path: '/pub/request-driver',
     },
     {
@@ -49,9 +49,9 @@ export default function PubDashboardPage() {
       desc: 'ตรวจสอบรายการ ติดตามสถานะการเดินทางแบบเรียลไทม์ และเช็คประวัติย้อนหลังของลูกค้า',
       btnLabel: 'ดูประวัติการเรียกรถ',
       icon: FileText,
-      colorClass: 'text-blue-500',
-      borderHover: 'hover:border-blue-500',
-      btnBg: 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8]',
+      colorClass: 'text-[#2563EB]',
+      borderHover: 'hover:border-[#2563EB]',
+      btnBg: 'bg-gradient-to-r from-[#2340A7] to-[#2563EB]',
       path: '/pub/service-info',
     },
     {
@@ -59,20 +59,20 @@ export default function PubDashboardPage() {
       code: 'SERVICE // 03',
       title: 'ผลสรุปบริการ',
       subtitle: 'ANALYTICS & REVENUE SUMMARY',
-      desc: 'ดูยอดรวมการใช้บริการ ส่วนแบ่งรายได้พาร์ทเนอร์ และสถิติสรุปประจำเดือนของร้านค้า',
+      desc: 'ดูยอดรวมการใช้บริการ ส่วนแบ่งรายได้พาร์ทเนอร์ และสถิติสรุปประจำเดือนของสถานบันเทิง',
       btnLabel: 'ดูผลสรุปรายได้',
       icon: BarChart3,
-      colorClass: 'text-emerald-500',
-      borderHover: 'hover:border-emerald-500',
-      btnBg: 'bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8]',
+      colorClass: 'text-[#059669]',
+      borderHover: 'hover:border-[#059669]',
+      btnBg: 'bg-gradient-to-r from-[#2340A7] to-[#2563EB]',
       path: '/pub/summary',
     },
   ]
 
   const badges = [
-    { icon: CheckCircle2, label: 'สถานะบัญชี', value: 'อนุมัติแล้ว (APPROVED)', color: 'text-emerald-500' },
-    { icon: Shield, label: 'ระดับความปลอดภัย', value: 'สูงสุด (MAXIMUM HIGH)', color: 'text-[#7C3AED]' },
-    { icon: Radio, label: 'ระบบจ่ายงาน', value: 'เปิดใช้งาน 24/7 ACTIVE', color: 'text-blue-500' },
+    { icon: CheckCircle2, label: 'สถานะบัญชี', value: 'อนุมัติแล้ว (APPROVED)', color: 'text-[#059669]' },
+    { icon: Shield, label: 'ระดับความปลอดภัย', value: 'สูงสุด (MAXIMUM HIGH)', color: 'text-[#2340A7]' },
+    { icon: Radio, label: 'ระบบจ่ายงาน', value: 'เปิดใช้งาน 24/7 ACTIVE', color: 'text-[#2563EB]' },
   ]
 
   return (
@@ -80,7 +80,7 @@ export default function PubDashboardPage() {
       
       {}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-violet-600/10 rounded-full blur-[140px]"></div>
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#2340A7]/10 rounded-full blur-[140px]"></div>
       </div>
 
       <div className="gradient-blur"></div>
@@ -92,20 +92,20 @@ export default function PubDashboardPage() {
         {}
         <section className="flex flex-col items-start">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] backdrop-blur-md mb-4">
-            <span className="w-2 h-2 rounded-full bg-[#7C3AED] animate-pulse"></span>
-            <span className="text-xs font-bold text-[#7C3AED] uppercase tracking-widest font-manrope">
+            <span className="w-2 h-2 rounded-full bg-[#2340A7] animate-pulse"></span>
+            <span className="text-xs font-bold text-[#2340A7] uppercase tracking-widest font-manrope">
               VENUE PARTNER DASHBOARD
             </span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-bold font-manrope tracking-tight leading-tight mb-3 text-[var(--color-text)]">
             ยินดีต้อนรับกลับ,{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8]">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2340A7] to-[#2563EB]">
               {pubName}
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-[var(--color-text-muted)] leading-relaxed font-light max-w-2xl">
+          <p className="text-base sm:text-lg text-[var(--color-text-muted)] leading-relaxed font-light max-w-none whitespace-nowrap">
             จัดการบริการเรียกรถแทนให้ลูกค้า ติดตามสถานะเดินทาง และดูสรุปผลสถิติรายได้ของสถานบริการ
           </p>
         </section>
@@ -122,7 +122,7 @@ export default function PubDashboardPage() {
               >
                 <div className="flex flex-col gap-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs font-mono font-bold tracking-widest text-[#7C3AED]">
+                    <span className="text-xs font-mono font-bold tracking-widest text-[#2340A7]">
                       {card.code}
                     </span>
                     <div className="p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl group-hover:scale-110 transition-transform">
@@ -145,7 +145,7 @@ export default function PubDashboardPage() {
 
                 <button
                   onClick={(e) => { e.stopPropagation(); router.push(card.path); }}
-                  className="w-full py-3.5 bg-gradient-to-r from-[#7C3AED] to-[#1D4ED8] hover:from-[#6D28D9] hover:to-[#1E40AF] text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {card.btnLabel} <ArrowRight className="w-4 h-4" />
                 </button>

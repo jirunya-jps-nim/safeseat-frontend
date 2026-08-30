@@ -102,12 +102,7 @@ function LoginContent() {
         if (token) localStorage.setItem('token', token)
         localStorage.setItem('driver_user', JSON.stringify(userData))
         setForm({ username: '', password: '' })
-
-        if (userData.registerstatus === 'อนุมัติแล้ว') {
-          showToast('คุณได้รับการอนุมัติแล้ว สามารถเริ่มงานได้ที่แอปพลิเคชันบนมือถือ (Mobile App)')
-        } else {
-          router.push('/driver-status')
-        }
+        router.push('/driver-status')
       } else if (role === 'admin') {
         const res = await api.post('/admin/login', form)
         if (!res.data || res.data.success === false || res.status >= 400) {

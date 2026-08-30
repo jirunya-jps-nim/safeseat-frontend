@@ -73,9 +73,14 @@ export default function StepDriverVehicleInfo({
             <input
               name="carPlate"
               value={form.carPlate}
-              onChange={onChange}
+              onChange={(e) => {
+                const val = e.target.value
+                if (/^[ก-๙0-9\s.-]*$/.test(val)) {
+                  onChange(e)
+                }
+              }}
               style={styles.input}
-              placeholder="เช่น 1กข-1234"
+              placeholder="เช่น 1กข 1234 หรือ กข 1234 เชียงใหม่"
             />
           </div>
         </div>

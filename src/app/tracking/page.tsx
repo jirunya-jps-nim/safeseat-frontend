@@ -25,10 +25,11 @@ const decodeId = (input: string) => {
 
 function parseThaiDate(dateStr: string): Date {
   if (!dateStr) return new Date()
-  if (dateStr.endsWith('Z') || dateStr.includes('+')) {
-    return new Date(dateStr)
-  }
-  const isoWithTz = dateStr.includes('T') ? `${dateStr}+07:00` : `${dateStr.replace(' ', 'T')}+07:00`
+  const s = String(dateStr).trim()
+  const cleanStr = s.replace(/Z$/i, '')
+  const isoWithTz = cleanStr.includes('T')
+    ? `${cleanStr.split('+')[0]}+07:00`
+    : `${cleanStr.replace(' ', 'T').split('+')[0]}+07:00`
   const d = new Date(isoWithTz)
   return isNaN(d.getTime()) ? new Date(dateStr) : d
 }
@@ -43,19 +44,10 @@ function TrackingContent() {
   const [reqData, setReqData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [copied, setCopied] = useState(false)
-  const [showQrModal, setShowQrModal] = useState(false)
-  const [trackingUrl, setTrackingUrl] = useState('')
   const prevStatusRef = React.useRef<string | null>(null)
 
   const [dropoffAddress, setDropoffAddress] = useState<string>('')
   const [pickupAddress, setPickupAddress] = useState<string>('')
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && trackingParam) {
-      setTrackingUrl(`${window.location.origin}/tracking?id=${trackingParam}`)
-    }
-  }, [trackingParam])
 
   useEffect(() => {
     if (!reqData) return
@@ -181,7 +173,7 @@ function TrackingContent() {
     }
 
     fetchRequestData()
-    const interval = setInterval(fetchRequestData, 4000)
+    const interval = setInterval(fetchRequestData, 2000)
     return () => clearInterval(interval)
   }, [requestId])
 
@@ -232,34 +224,40 @@ function TrackingContent() {
 
   const payLabel = paymentmethod === 1 ? 'เงินสด' : paymentmethod === 2 ? 'โอนเงิน (พร้อมเพย์)' : 'ไม่ระบุ'
 
-  let currentStep = 0
+  const getStep = (s?: string) => {
+    if (!s) return 0
+    const str = s.toLowerCase().trim()
+    if (['accepted', 'คนขับรับงาน', 'กำลังไปรับ', 'รับงานแล้ว', 'คนขับรับงานแล้ว', 'matched'].includes(str) || str.includes('กำลังไปรับ') || str.includes('accepted') || str.includes('คนขับรับงาน') || str.includes('รับงาน')) return 1
+    if (['ถึงจุดรับแล้ว', 'ถึงจุดรับ', 'ถึงจุดนัดหมาย', 'arrived'].includes(str) || str.includes('ถึงจุดรับ') || str.includes('ถึงจุดนัดหมาย') || str.includes('arrived')) return 2
+    if (['ระหว่างเดินทาง', 'กำลังเดินทาง', 'in_transit', 'driving', 'in_progress'].includes(str) || str.includes('ระหว่างเดินทาง') || str.includes('กำลังเดินทาง') || str.includes('เดินทาง')) return 3
+    if (['เสร็จสิ้น', 'completed', 'ถึงจุดหมายปลายทาง', 'finished', 'done', 'success'].includes(str) || str.includes('เสร็จสิ้น') || str.includes('completed') || str.includes('ถึงจุดหมาย')) return 4
+    if (['cancelled', 'ยกเลิก', 'ปฏิเสธ', 'rejected', 'cancel'].includes(str) || str.includes('ยกเลิก') || str.includes('ปฏิเสธ') || str.includes('cancel')) return -1
+    return 0
+  }
+
+  const currentStep = getStep(requeststatus)
+
   let displayStatus = 'กำลังค้นหาคนขับ'
   let statusBadgeBg = 'bg-slate-500/10 border-slate-500/30 text-slate-400'
 
-  if (requeststatus === 'รอคนขับ' || requeststatus === 'pending' || requeststatus === 'searching') {
-    currentStep = 0
-    displayStatus = 'กำลังค้นหาคนขับ'
-    statusBadgeBg = 'bg-slate-500/10 border-slate-500/30 text-slate-400'
-  } else if (requeststatus === 'คนขับรับงานแล้ว' || requeststatus === 'accepted' || requeststatus === 'matched') {
-    currentStep = 1
-    displayStatus = 'คนขับรับงานแล้ว'
+  if (currentStep === 1) {
+    displayStatus = 'คนขับรับงานแล้ว (กำลังเดินทางไปรับ)'
     statusBadgeBg = 'bg-blue-500/10 border-blue-500/30 text-blue-500'
-  } else if (requeststatus === 'ถึงจุดรับแล้ว' || requeststatus === 'arrived') {
-    currentStep = 2
+  } else if (currentStep === 2) {
     displayStatus = 'คนขับถึงจุดรับแล้ว'
     statusBadgeBg = 'bg-amber-500/10 border-amber-500/30 text-amber-500'
-  } else if (requeststatus === 'กำลังเดินทาง' || requeststatus === 'in_progress' || requeststatus === 'driving') {
-    currentStep = 3
+  } else if (currentStep === 3) {
     displayStatus = 'กำลังเดินทางไปส่ง'
     statusBadgeBg = 'bg-purple-500/10 border-purple-500/30 text-purple-400'
-  } else if (requeststatus === 'เสร็จสิ้น' || requeststatus === 'completed') {
-    currentStep = 4
+  } else if (currentStep === 4) {
     displayStatus = 'การเดินทางเสร็จสิ้น'
     statusBadgeBg = 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
-  } else if (requeststatus === 'ยกเลิก' || requeststatus === 'cancelled' || requeststatus === 'rejected' || requeststatus === 'ปฏิเสธ') {
-    currentStep = -1
+  } else if (currentStep === -1) {
     displayStatus = 'การเดินทางถูกยกเลิก'
     statusBadgeBg = 'bg-red-500/10 border-red-500/30 text-red-500'
+  } else {
+    displayStatus = 'กำลังค้นหาคนขับ'
+    statusBadgeBg = 'bg-slate-500/10 border-slate-500/30 text-slate-400'
   }
 
   const leader = reqData.leader || reqData.buddyteam?.leader
@@ -274,8 +272,8 @@ function TrackingContent() {
   const realLng = reqData.buddyteam?.currentloclng
   const hasRealGps = realLat && realLng && Number(realLat) !== 0 && Number(realLng) !== 0
 
-  let driverLat = undefined
-  let driverLng = undefined
+  let driverLat: number | undefined = undefined
+  let driverLng: number | undefined = undefined
   if (currentStep === 2) {
     driverLat = pickuplatitude
     driverLng = pickuplongitude
@@ -285,6 +283,12 @@ function TrackingContent() {
   } else if (hasRealGps) {
     driverLat = Number(realLat)
     driverLng = Number(realLng)
+  } else if (currentStep === 1) {
+    driverLat = pickuplatitude ? pickuplatitude + 0.003 : undefined
+    driverLng = pickuplongitude ? pickuplongitude - 0.003 : undefined
+  } else if (currentStep === 3 && pickuplatitude && dropofflatitude) {
+    driverLat = (pickuplatitude + dropofflatitude) / 2
+    driverLng = (pickuplongitude + dropofflongitude) / 2
   }
 
   return (
@@ -369,7 +373,7 @@ function TrackingContent() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 border-b border-[var(--color-border)] pb-6">
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">รหัสการบริการ</span>
-              <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">#{alphaCode}</span>
+              <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">{reqData?.requestid || requestId || alphaCode}</span>
             </div>
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ชื่อลูกค้า</span>
@@ -454,15 +458,6 @@ function TrackingContent() {
               <h3 className="text-xl font-bold font-manrope text-[var(--color-text)] flex items-center gap-2">
                 <UserCheck className="w-5 h-5 text-[#2340A7]" /> ข้อมูลการติดต่อทีมงานคนขับ &amp; เบอร์ฉุกเฉิน
               </h3>
-              {trackingUrl && (
-                <button
-                  onClick={() => setShowQrModal(true)}
-                  className="py-2.5 px-6 rounded-full text-xs font-bold bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white transition-all shadow-md flex items-center gap-2 cursor-pointer shrink-0"
-                >
-                  <QrCode className="w-4 h-4" />
-                  📲 แสดง QR Code &amp; ลิงก์แชร์การเดินทาง
-                </button>
-              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

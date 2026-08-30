@@ -27,10 +27,11 @@ interface RequestRecord {
 
 function parseThaiDate(dateStr: string): Date {
   if (!dateStr) return new Date()
-  if (dateStr.endsWith('Z') || dateStr.includes('+')) {
-    return new Date(dateStr)
-  }
-  const isoWithTz = dateStr.includes('T') ? `${dateStr}+07:00` : `${dateStr.replace(' ', 'T')}+07:00`
+  const s = String(dateStr).trim()
+  const cleanStr = s.replace(/Z$/i, '')
+  const isoWithTz = cleanStr.includes('T')
+    ? `${cleanStr.split('+')[0]}+07:00`
+    : `${cleanStr.replace(' ', 'T').split('+')[0]}+07:00`
   const d = new Date(isoWithTz)
   return isNaN(d.getTime()) ? new Date(dateStr) : d
 }
@@ -397,7 +398,7 @@ export default function ServiceInfoPage() {
 
             <div>
               <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">
-                QR Code ติดตามการเดินทาง #{selectedQrRecord.id}
+                QR Code ติดตามการเดินทาง {selectedQrRecord.id}
               </h3>
               <p className="text-xs text-[var(--color-text-muted)] mt-1.5 font-medium whitespace-nowrap overflow-x-auto px-2">
                 ให้ลูกค้าใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางของคนขับได้ทันทีเรียลไทม์ (ลูกค้า: {selectedQrRecord.custName})

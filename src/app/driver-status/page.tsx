@@ -86,16 +86,35 @@ function getStatusConfig(status: string | undefined, isDark: boolean = true) {
   }
 }
 
+function parseThaiDate(dateStr: string): Date {
+  if (!dateStr) return new Date()
+  const s = String(dateStr).trim()
+  const cleanStr = s.replace(/Z$/i, '')
+  const isoWithTz = cleanStr.includes('T')
+    ? `${cleanStr.split('+')[0]}+07:00`
+    : `${cleanStr.replace(' ', 'T').split('+')[0]}+07:00`
+  const d = new Date(isoWithTz)
+  return isNaN(d.getTime()) ? new Date(dateStr) : d
+}
+
 function formatDateThai(dateStr: string): string {
+  if (!dateStr) return '—'
   try {
-    const d = new Date(dateStr)
-    return d.toLocaleDateString('th-TH', {
+    const d = parseThaiDate(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    const datePart = d.toLocaleDateString('th-TH', {
+      timeZone: 'Asia/Bangkok',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+    })
+    const timePart = d.toLocaleTimeString('th-TH', {
+      timeZone: 'Asia/Bangkok',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     })
+    return `${datePart} เวลา ${timePart} น.`
   } catch {
     return dateStr
   }

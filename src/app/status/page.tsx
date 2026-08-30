@@ -89,16 +89,35 @@ function getStatusConfig(status: string | undefined, isDark: boolean = true) {
   }
 }
 
+function parseThaiDate(dateStr: string): Date {
+  if (!dateStr) return new Date()
+  const s = String(dateStr).trim()
+  const cleanStr = s.replace(/Z$/i, '')
+  const isoWithTz = cleanStr.includes('T')
+    ? `${cleanStr.split('+')[0]}+07:00`
+    : `${cleanStr.replace(' ', 'T').split('+')[0]}+07:00`
+  const d = new Date(isoWithTz)
+  return isNaN(d.getTime()) ? new Date(dateStr) : d
+}
+
 function formatDateThai(dateStr: string): string {
+  if (!dateStr) return '—'
   try {
-    const d = new Date(dateStr)
-    return d.toLocaleDateString('th-TH', {
+    const d = parseThaiDate(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    const datePart = d.toLocaleDateString('th-TH', {
+      timeZone: 'Asia/Bangkok',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+    })
+    const timePart = d.toLocaleTimeString('th-TH', {
+      timeZone: 'Asia/Bangkok',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     })
+    return `${datePart} เวลา ${timePart} น.`
   } catch {
     return dateStr
   }
@@ -440,6 +459,39 @@ export default function StatusPage() {
 
               <div style={styles.divider} />
             </>
+          )}
+
+          {!loading && ((statusData as any)?.regisstatus === 'approved' || (statusData as any)?.regisstatus === 'อนุมัติแล้ว') && (
+            <div style={{ ...styles.btnRow, justifyContent: 'center', flexWrap: 'wrap', gap: 16 }}>
+              <button
+                onClick={() => {
+                  try {
+                    const stored = localStorage.getItem('pub_user')
+                    if (stored) {
+                      const parsed = JSON.parse(stored)
+                      parsed.regisstatus = 'approved'
+                      localStorage.setItem('pub_user', JSON.stringify(parsed))
+                    }
+                  } catch (e) {}
+                  router.push('/pub/dashboard')
+                }}
+                style={{
+                  ...styles.refreshBtn,
+                  background: 'linear-gradient(135deg, #10B981, #059669)',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                  padding: '12px 28px',
+                  cursor: 'pointer',
+                  borderRadius: 14,
+                  fontSize: 14,
+                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
+                }}
+              >
+                🚀 เข้าสู่หน้าระบบสถานบันเทิง (Dashboard)
+              </button>
+            </div>
           )}
 
           {}

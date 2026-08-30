@@ -560,7 +560,7 @@ export default function HomePage() {
             <div className="flex justify-between items-center pb-4 border-b border-[var(--color-border)] mb-6">
               <div className="flex items-center gap-2 text-lg font-bold text-[var(--color-text)] font-manrope">
                 <span className="p-2 bg-blue-500/10 text-[#2340A7] rounded-xl"><Layers className="w-5 h-5" /></span>
-                พบข้อมูล 2 รายการซ้ำกัน (#{multipleMatches[0]?.requestid})
+                พบข้อมูล 2 รายการซ้ำกัน ({multipleMatches[0]?.requestid})
               </div>
               <button 
                 onClick={() => setMultipleMatches(null)}
@@ -571,7 +571,7 @@ export default function HomePage() {
             </div>
 
             <p className="text-xs text-[var(--color-text-muted)] mb-6 leading-relaxed">
-              เนื่องจากรหัสหมายเลข <span className="font-bold text-[#2340A7]">#{multipleMatches[0]?.requestid}</span> มีบันทึกอยู่ทั้งในระบบเรียกรถของผู้ใช้บริการ และระบบพาร์ทเนอร์สถานบันเทิง กรุณาเลือกรายการที่คุณต้องการติดตาม:
+              เนื่องจากรหัสหมายเลข <span className="font-bold text-[#2340A7]">{multipleMatches[0]?.requestid}</span> มีบันทึกอยู่ทั้งในระบบเรียกรถของผู้ใช้บริการ และระบบพาร์ทเนอร์สถานบันเทิง กรุณาเลือกรายการที่คุณต้องการติดตาม:
             </p>
 
             <div className="flex flex-col gap-4 mb-6">

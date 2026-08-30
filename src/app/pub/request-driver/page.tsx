@@ -221,6 +221,7 @@ function RequestDriverContent() {
     if (!carBrand.trim()) return 'กรุณากรอกยี่ห้อรถยนต์ของลูกค้า'
     if (!carModel.trim()) return 'กรุณากรอกรุ่นรถยนต์ของลูกค้า'
     if (!licensePlate.trim()) return 'กรุณากรอกทะเบียนรถยนต์ของลูกค้า'
+    if (!/^[ก-๙0-9\s.-]+$/.test(licensePlate.trim())) return 'ทะเบียนรถยนต์ต้องเป็นตัวเลขและภาษาไทยเท่านั้น (เช่น 1กข-1234 หรือ กข 1234)'
     if (!carType) return 'กรุณาเลือกชนิดระบบเกียร์รถยนต์'
     return ''
   }
@@ -292,6 +293,11 @@ function RequestDriverContent() {
         isLadyMode,
         note,
         paymentMethod,
+        reqdatetime: (() => {
+          const now = new Date()
+          const pad = (n: number) => String(n).padStart(2, '0')
+          return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.${String(now.getMilliseconds()).padStart(3, '0')}`
+        })(),
         dropoffLatitude: destination?.lat,
         dropoffLongitude: destination?.lng,
         dropoffName: destination?.label || ''
@@ -536,14 +542,19 @@ function RequestDriverContent() {
                   <label className="text-[15.5px] font-bold text-[var(--color-text)]">ทะเบียนรถยนต์ *</label>
                   <input 
                     value={licensePlate} 
-                    onChange={e => setLicensePlate(e.target.value)}
+                    onChange={e => {
+                      const val = e.target.value
+                      if (/^[ก-๙0-9\s.-]*$/.test(val)) {
+                        setLicensePlate(val)
+                      }
+                    }}
                     autoComplete="off"
                     className={`w-full px-4 py-3.5 bg-[var(--color-surface)] border rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none transition-colors ${
                       isLicensePlateError
                         ? 'border-red-500 bg-red-500/5 focus:border-red-500'
                         : 'border-[var(--color-border)] focus:border-[#2340A7]'
                     }`}
-                    placeholder="เช่น กข 1234 เชียงใหม่" 
+                    placeholder="เช่น 1กข 1234 หรือ กข 1234 เชียงใหม่" 
                   />
                   {isLicensePlateError && (
                     <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
@@ -701,23 +712,55 @@ function RequestDriverContent() {
                 </div>
               )}
 
+              {/* ข้อมูลลูกค้าและช่องทางการติดต่อ */}
+              <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col gap-3 shadow-xs">
+                <div className="text-sm font-extrabold text-[#2340A7] flex items-center gap-2 border-b border-[var(--color-border)] pb-2.5">
+                  <span>👤</span> ข้อมูลผู้ใช้บริการ &amp; ช่องทางการติดต่อ
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <div className="p-3 bg-[var(--color-card)] rounded-xl border border-[var(--color-border)]">
+                    <div className="text-xs text-[var(--color-text-muted)] font-medium">ชื่อ - นามสกุลลูกค้า</div>
+                    <div className="text-sm font-bold text-[var(--color-text)] mt-0.5">{custName || '—'}</div>
+                  </div>
+                  <div className="p-3 bg-[var(--color-card)] rounded-xl border border-[var(--color-border)]">
+                    <div className="text-xs text-[var(--color-text-muted)] font-medium">เบอร์โทรศัพท์ติดต่อ</div>
+                    <div className="text-sm font-bold text-[var(--color-text)] mt-0.5">{phoneNo || '—'}</div>
+                  </div>
+                  <div className="p-3 bg-[var(--color-card)] rounded-xl border border-[var(--color-border)]">
+                    <div className="text-xs text-[var(--color-text-muted)] font-medium">เบอร์โทรติดต่อฉุกเฉิน</div>
+                    <div className="text-sm font-bold text-[var(--color-text)] mt-0.5">{phoneEmer || '—'}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ข้อมูลรถยนต์และจุดหมายปลายทาง */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center gap-3">
-                  <div className="p-2.5 bg-indigo-500/15 rounded-lg text-indigo-500">🚗</div>
+                  <div className="p-2.5 bg-indigo-500/15 rounded-lg text-indigo-500 text-xl">🚗</div>
                   <div>
-                    <div className="text-xs text-[var(--color-text-muted)] font-medium">ระบบเกียร์ / รุ่นรถ</div>
-                    <div className="text-sm font-bold text-[var(--color-text)]">{carType} ({carModel})</div>
+                    <div className="text-xs text-[var(--color-text-muted)] font-medium">รถยนต์ / ทะเบียน / ระบบเกียร์</div>
+                    <div className="text-sm font-bold text-[var(--color-text)]">{carBrand} {carModel} ({licensePlate}) · {carType === 'Autometric' ? 'Auto' : carType}</div>
                   </div>
                 </div>
 
                 <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center gap-3">
-                  <div className="p-2.5 bg-indigo-500/15 rounded-lg text-indigo-500">📍</div>
+                  <div className="p-2.5 bg-indigo-500/15 rounded-lg text-indigo-500 text-xl">📍</div>
                   <div>
-                    <div className="text-xs text-[var(--color-text-muted)] font-medium">จุดหมายปลายทาง</div>
+                    <div className="text-xs text-[var(--color-text-muted)] font-medium">จุดหมายปลายทาง ({distance.toFixed(2)} กม.)</div>
                     <div className="text-sm font-bold text-[var(--color-text)]">{destination?.label || '-'}</div>
                   </div>
                 </div>
               </div>
+
+              {note && (
+                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-start gap-3">
+                  <div className="p-2 bg-amber-500/15 rounded-lg text-amber-500 text-lg shrink-0">📝</div>
+                  <div>
+                    <div className="text-xs text-[var(--color-text-muted)] font-medium">หมายเหตุเพิ่มเติม</div>
+                    <div className="text-sm font-semibold text-[var(--color-text)] mt-0.5">{note}</div>
+                  </div>
+                </div>
+              )}
 
               <div className="p-5 bg-[#2340A7]/10 border border-[#2340A7]/30 rounded-2xl flex items-center justify-between">
                 <div className="flex items-center gap-3">

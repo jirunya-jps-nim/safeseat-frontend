@@ -287,10 +287,10 @@ function TripTrackingContent() {
         <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col gap-8">
           
           {/* Quick Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 border-b border-[var(--color-border)] pb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 border-b border-[var(--color-border)] pb-6">
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">รหัสการเรียก</span>
-              <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">#{requestid}</span>
+              <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">{requestid}</span>
             </div>
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ผู้ใช้บริการ</span>
@@ -303,26 +303,6 @@ function TripTrackingContent() {
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ค่าบริการ</span>
               <span className="text-base font-extrabold font-manrope text-[#2340A7]">฿{requestfee || '-'}</span>
-            </div>
-            <div>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">แชร์การเดินทาง</span>
-              <button
-                onClick={() => {
-                  if (shareUrl) {
-                    navigator.clipboard.writeText(shareUrl)
-                    setCopied(true)
-                    setTimeout(() => setCopied(false), 2000)
-                  }
-                }}
-                className={`mt-1 py-1.5 px-4 rounded-full text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer ${
-                  copied
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white'
-                }`}
-              >
-                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                {copied ? 'คัดลอกแล้ว' : 'คัดลอกลิงก์'}
-              </button>
             </div>
           </div>
 

@@ -74,10 +74,11 @@ type TabType = 'home' | 'driver-app' | 'pub-app' | 'driver-report' | 'user-repor
 
 function parseThaiDate(dateStr: string): Date {
   if (!dateStr) return new Date()
-  if (dateStr.endsWith('Z') || dateStr.includes('+')) {
-    return new Date(dateStr)
-  }
-  const isoWithTz = dateStr.includes('T') ? `${dateStr}+07:00` : `${dateStr.replace(' ', 'T')}+07:00`
+  const s = String(dateStr).trim()
+  const cleanStr = s.replace(/Z$/i, '')
+  const isoWithTz = cleanStr.includes('T')
+    ? `${cleanStr.split('+')[0]}+07:00`
+    : `${cleanStr.replace(' ', 'T').split('+')[0]}+07:00`
   const d = new Date(isoWithTz)
   return isNaN(d.getTime()) ? new Date(dateStr) : d
 }

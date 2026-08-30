@@ -25,10 +25,11 @@ const decodeId = (input: string) => {
 
 function parseThaiDate(dateStr: string): Date {
   if (!dateStr) return new Date()
-  if (dateStr.endsWith('Z') || dateStr.includes('+')) {
-    return new Date(dateStr)
-  }
-  const isoWithTz = dateStr.includes('T') ? `${dateStr}+07:00` : `${dateStr.replace(' ', 'T')}+07:00`
+  const s = String(dateStr).trim()
+  const cleanStr = s.replace(/Z$/i, '')
+  const isoWithTz = cleanStr.includes('T')
+    ? `${cleanStr.split('+')[0]}+07:00`
+    : `${cleanStr.replace(' ', 'T').split('+')[0]}+07:00`
   const d = new Date(isoWithTz)
   return isNaN(d.getTime()) ? new Date(dateStr) : d
 }
@@ -429,7 +430,7 @@ function TrackingContent() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 border-b border-[var(--color-border)] pb-6">
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">รหัสการบริการ</span>
-              <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">#{alphaCode}</span>
+              <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">{reqData?.requestid || requestId || alphaCode}</span>
             </div>
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ชื่อลูกค้า</span>

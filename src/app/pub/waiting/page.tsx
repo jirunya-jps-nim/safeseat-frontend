@@ -260,7 +260,7 @@ function WaitingContent() {
               <div className="p-6 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col gap-4">
                 <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-3">
                   <span className="text-sm font-bold text-[var(--color-text)] flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#2340A7]" /> สรุปข้อมูลการเรียกรถ <span className="text-xs font-mono font-bold text-[#2340A7] px-2 py-0.5 rounded bg-[#2340A7]/10 font-mono">#{reqData.requestid || requestId}</span>
+                    <FileText className="w-4 h-4 text-[#2340A7]" /> สรุปข้อมูลการเรียกรถ <span className="text-xs font-mono font-bold text-[#2340A7] px-2 py-0.5 rounded bg-[#2340A7]/10 font-mono">{reqData.requestid || requestId}</span>
                   </span>
                   {reqData.isladymode && (
                     <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-400">

@@ -200,14 +200,15 @@ export default function HomePage() {
                 <button
                   type="submit"
                   disabled={searching}
-                  className={`w-full sm:w-auto px-7 py-3.5 text-white font-extrabold text-xs tracking-wider uppercase rounded-full transition-all shadow-lg flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
+                  style={{ color: '#ffffff' }}
+                  className={`w-full sm:w-auto px-7 py-3.5 !text-white font-extrabold text-xs tracking-wider uppercase rounded-full transition-all shadow-lg flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
                     isDark 
                       ? 'bg-gradient-to-r from-[#2563EB] to-cyan-600 hover:from-[#1D4ED8] hover:to-cyan-700 hover:shadow-[0_0_25px_rgba(34,211,238,0.5)]' 
                       : 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] hover:shadow-[0_0_25px_rgba(35,64,167,0.4)]'
                   }`}
                 >
-                  {searching ? 'กำลังค้นหา...' : 'ติดตามสถานะ'}
-                  <ArrowRight className="w-4 h-4" />
+                  <span style={{ color: '#ffffff' }}>{searching ? 'กำลังค้นหา...' : 'ติดตามสถานะ'}</span>
+                  <ArrowRight className="w-4 h-4 text-white" style={{ color: '#ffffff' }} />
                 </button>
               </form>
 
@@ -221,7 +222,7 @@ export default function HomePage() {
                     ? 'bg-slate-900/90 border-cyan-500/30 text-cyan-300' 
                     : 'bg-blue-50 border-blue-200 text-[#1D358F]'
                 }`}>
-                  ป้อนรหัสตัวเลขจากระบบ เช่น <strong className="font-black">79</strong> หรือ <strong className="font-black">#79</strong>
+                  ป้อนรหัสตัวเลขจากระบบ เช่น <strong className="font-black">79</strong>
                 </span>
               </div>
 
@@ -434,7 +435,7 @@ export default function HomePage() {
               ))}
             </div>
             <h3 className="text-3xl md:text-5xl font-extrabold font-manrope leading-tight">
-              "SafeSeat ยกระดับความปลอดภัยให้แก่ลูกค้าของสถานบันเทิงเราอย่างสมบูรณ์แบบ เรื่องที่เคยเป็นความเสี่ยงสูง กลายเป็นเรื่องง่ายและอุ่นใจในไม่กี่นาที"
+              "SafeSeat ยกระดับความปลอดภัยให้แก่ผู้ใช้บริการของสถานบันเทิงเราอย่างสมบูรณ์แบบ เรื่องที่เคยเป็นความเสี่ยงสูง กลายเป็นเรื่องง่ายและอุ่นใจในไม่กี่นาที"
             </h3>
           </div>
         </div>
@@ -488,7 +489,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold font-manrope mb-2 text-[var(--color-text)]">พาร์ทเนอร์สถานบริการ</h3>
-                  <p className="text-[var(--color-text-muted)] text-sm mb-8 h-10 font-normal">สำหรับสถานบันเทิง บาร์ คาราโอเกะ ที่ดูแลรถลูกค้าหน้าร้าน</p>
+                  <p className="text-[var(--color-text-muted)] text-sm mb-8 h-10 font-normal">สำหรับสถานบันเทิง บาร์ คาราโอเกะ ที่ดูแลรถผู้ใช้บริการหน้าร้าน</p>
                   <div className="mb-8 flex items-baseline gap-1">
                     <span className="text-[var(--color-text-muted)]">฿</span>
                     <span className="text-5xl font-extrabold text-[var(--color-text)]">0</span>
@@ -601,7 +602,7 @@ export default function HomePage() {
                           {isUser ? 'รายการของผู้ใช้บริการ (User Trip)' : 'รายการของสถานบันเทิง (Venue Order)'}
                         </div>
                         <div className="text-xs text-[var(--color-text-muted)] mt-0.5 font-medium">
-                          ลูกค้า: <span className="font-semibold text-[var(--color-text)]">{item.custname || '—'}</span> • สถานะ: <span className="font-semibold text-[#2340A7]">{item.requeststatus}</span>
+                          ผู้ใช้บริการ: <span className="font-semibold text-[var(--color-text)]">{item.custname || '—'}</span> • สถานะ: <span className="font-semibold text-[#2340A7]">{item.requeststatus}</span>
                         </div>
                       </div>
                     </div>

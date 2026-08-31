@@ -516,7 +516,7 @@ export default function SummaryPage() {
                             <div className="text-xs font-extrabold text-[var(--color-text)]">{dateInfo.time}</div>
                           </div>
                           <div>
-                            <div className="text-xs font-bold text-[var(--color-text)]">{job.custname || 'ลูกค้า SafeSeat'}</div>
+                            <div className="text-xs font-bold text-[var(--color-text)]">{job.custname || 'ผู้ใช้บริการ SafeSeat'}</div>
                             <div className="text-[10px] text-[var(--color-text-muted)] flex items-center gap-1.5 mt-0.5">
                               <span>ระยะทาง {distance.toFixed(1)} km</span>
                               <span>•</span>

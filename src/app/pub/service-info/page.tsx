@@ -276,7 +276,7 @@ export default function ServiceInfoPage() {
               {searchQuery ? 'ไม่พบรายการที่ตรงกับการค้นหา' : 'ยังไม่มีประวัติการเรียกรถ'}
             </h3>
             <p className="text-xs text-[var(--color-text-muted)]">
-              {searchQuery ? 'ลองค้นหาด้วยชื่อหรือเบอร์โทรศัพท์อื่น' : 'กดปุ่มเรียกรถใหม่เพื่อเรียกรถให้ลูกค้าของสถานบันเทิงได้เลย'}
+              {searchQuery ? 'ลองค้นหาด้วยชื่อหรือเบอร์โทรศัพท์อื่น' : 'กดปุ่มเรียกรถใหม่เพื่อเรียกรถให้ผู้ใช้บริการของสถานบันเทิงได้เลย'}
             </p>
           </div>
         ) : (
@@ -285,7 +285,7 @@ export default function ServiceInfoPage() {
               <thead>
                 <tr className="border-b border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)] text-[11px] font-bold uppercase tracking-wider">
                   <th className="p-4">วันที่/เวลา</th>
-                  <th className="p-4">ชื่อลูกค้า</th>
+                  <th className="p-4">ชื่อผู้ใช้บริการ</th>
                   <th className="p-4">เบอร์โทรศัพท์</th>
                   <th className="p-4">ประเภทรถ</th>
                   <th className="p-4">การชำระเงิน</th>
@@ -401,7 +401,7 @@ export default function ServiceInfoPage() {
                 QR Code ติดตามการเดินทาง {selectedQrRecord.id}
               </h3>
               <p className="text-xs text-[var(--color-text-muted)] mt-1.5 font-medium whitespace-nowrap overflow-x-auto px-2">
-                ให้ลูกค้าใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางของคนขับได้ทันทีเรียลไทม์ (ลูกค้า: {selectedQrRecord.custName})
+                ให้ผู้ใช้บริการใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางของคนขับได้ทันทีเรียลไทม์ (ผู้ใช้บริการ: {selectedQrRecord.custName})
               </p>
             </div>
 

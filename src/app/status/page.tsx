@@ -39,7 +39,7 @@ function getStatusConfig(status: string | undefined, isDark: boolean = true) {
       return {
         icon: '🎉',
         title: 'ยินดีด้วย! สถานบันเทิงของคุณได้รับการอนุมัติแล้ว',
-        desc: 'คุณสามารถเริ่มใช้งานระบบ SafeSeat ได้ทันที ลูกค้าของคุณจะปลอดภัยทุกเส้นทาง',
+        desc: 'คุณสามารถเริ่มใช้งานระบบ SafeSeat ได้ทันที ผู้ใช้บริการของคุณจะปลอดภัยทุกเส้นทาง',
         bannerBg: isDark
           ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.20) 0%, rgba(5, 150, 105, 0.12) 100%)'
           : 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',

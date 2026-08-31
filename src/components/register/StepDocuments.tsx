@@ -145,7 +145,7 @@ export default function StepDocuments({
       )}
 
       {}
-      <Field label="เลขที่ผู้เสียภาษี * (13 หลัก)" icon="🔢" color={labelColor}>
+      <Field label="เลขที่ผู้เสียภาษี *" icon="🔢" color={labelColor}>
         <input
           name="taxNumber"
           value={form.taxNumber}
@@ -156,7 +156,7 @@ export default function StepDocuments({
             borderColor: isTaxError ? '#ef4444' : (inputStyle.borderColor || 'var(--color-border)'),
             backgroundColor: isTaxError ? 'rgba(239, 68, 68, 0.05)' : (inputStyle.backgroundColor || 'var(--color-surface)'),
           }}
-          placeholder="1234567890123"
+          placeholder="เลขประจำตัวผู้เสียภาษี"
           maxLength={13}
           inputMode="numeric"
         />
@@ -167,27 +167,7 @@ export default function StepDocuments({
         )}
       </Field>
 
-      <Field label="ชื่อบัญชีธนาคาร *" icon="🏦" color={labelColor}>
-        <input
-          name="bankAccountName"
-          value={form.bankAccountName}
-          onChange={onChange}
-          autoComplete="off"
-          style={{
-            ...inputStyle,
-            borderColor: isBankNameError ? '#ef4444' : (inputStyle.borderColor || 'var(--color-border)'),
-            backgroundColor: isBankNameError ? 'rgba(239, 68, 68, 0.05)' : (inputStyle.backgroundColor || 'var(--color-surface)'),
-          }}
-          placeholder="ชื่อที่ปรากฏบนบัญชี"
-        />
-        {isBankNameError && (
-          <span style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600, marginTop: '4px', display: 'block' }}>
-            ⚠️ {errorMessage}
-          </span>
-        )}
-      </Field>
-
-      <Field label="เลขที่บัญชี *" icon="💳" color={labelColor}>
+      <Field label="เลขบัญชีธนาคารกสิกรไทย *" icon="💳" color={labelColor}>
         <input
           name="bankAccountNo"
           value={form.bankAccountNo}
@@ -198,7 +178,8 @@ export default function StepDocuments({
             borderColor: isBankNoError ? '#ef4444' : (inputStyle.borderColor || 'var(--color-border)'),
             backgroundColor: isBankNoError ? 'rgba(239, 68, 68, 0.05)' : (inputStyle.backgroundColor || 'var(--color-surface)'),
           }}
-          placeholder="เลขบัญชีธนาคาร"
+          placeholder="เลขบัญชีธนาคารกสิกรไทย"
+          maxLength={12}
           inputMode="numeric"
         />
         {isBankNoError && (

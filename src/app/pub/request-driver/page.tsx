@@ -200,12 +200,12 @@ function RequestDriverContent() {
   const isDestError = error.includes('จุดหมาย') || error.includes('ระยะทาง')
 
   const validateStep1 = () => {
-    if (!custName.trim()) return 'กรุณากรอกชื่อ - นามสกุลลูกค้า'
-    if (custName.trim().length < 2) return 'ชื่อ - นามสกุลลูกค้าต้องมีความยาวอย่างน้อย 2 ตัวอักษร'
-    if (!/^[ก-๙a-zA-Z\s.-]+$/.test(custName.trim())) return 'ชื่อ - นามสกุลลูกค้า ต้องเป็นอักษรภาษาไทยหรือภาษาอังกฤษเท่านั้น'
+    if (!custName.trim()) return 'กรุณากรอกชื่อ - นามสกุลผู้ใช้บริการ'
+    if (custName.trim().length < 2) return 'ชื่อ - นามสกุลผู้ใช้บริการต้องมีความยาวอย่างน้อย 2 ตัวอักษร'
+    if (!/^[ก-๙a-zA-Z\s.-]+$/.test(custName.trim())) return 'ชื่อ - นามสกุลผู้ใช้บริการ ต้องเป็นอักษรภาษาไทยหรือภาษาอังกฤษเท่านั้น'
     
-    // เบอร์โทรศัพท์ติดต่อของลูกค้า (10 หลัก ขึ้นต้นด้วย 06, 08, 09 เท่านั้น)
-    if (!phoneNo.trim()) return 'กรุณากรอกเบอร์โทรศัพท์ติดต่อของลูกค้า'
+    // เบอร์โทรศัพท์ติดต่อของผู้ใช้บริการ (10 หลัก ขึ้นต้นด้วย 06, 08, 09 เท่านั้น)
+    if (!phoneNo.trim()) return 'กรุณากรอกเบอร์โทรศัพท์ติดต่อของผู้ใช้บริการ'
     if (!/^0[689]\d{8}$/.test(phoneNo.trim()) || /^(\d)\1+$/.test(phoneNo.trim())) {
       return 'เบอร์โทรศัพท์ติดต่อไม่ถูกต้อง (ต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 06, 08 หรือ 09 เท่านั้น)'
     }
@@ -216,11 +216,11 @@ function RequestDriverContent() {
       return 'เบอร์โทรติดต่อฉุกเฉินไม่ถูกต้อง (ต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 06, 08 หรือ 09 เท่านั้น)'
     }
     
-    if (phoneNo.trim() === phoneEmer.trim()) return 'เบอร์โทรศัพท์ของลูกค้าและเบอร์โทรฉุกเฉินต้องห้ามซ้ำกัน'
+    if (phoneNo.trim() === phoneEmer.trim()) return 'เบอร์โทรศัพท์ของผู้ใช้บริการและเบอร์โทรฉุกเฉินต้องห้ามซ้ำกัน'
     
-    if (!carBrand.trim()) return 'กรุณากรอกยี่ห้อรถยนต์ของลูกค้า'
-    if (!carModel.trim()) return 'กรุณากรอกรุ่นรถยนต์ของลูกค้า'
-    if (!licensePlate.trim()) return 'กรุณากรอกทะเบียนรถยนต์ของลูกค้า'
+    if (!carBrand.trim()) return 'กรุณากรอกยี่ห้อรถยนต์ของผู้ใช้บริการ'
+    if (!carModel.trim()) return 'กรุณากรอกรุ่นรถยนต์ของผู้ใช้บริการ'
+    if (!licensePlate.trim()) return 'กรุณากรอกทะเบียนรถยนต์ของผู้ใช้บริการ'
     if (!/^[ก-๙0-9\s.-]+$/.test(licensePlate.trim())) return 'ทะเบียนรถยนต์ต้องเป็นตัวเลขและภาษาไทยเท่านั้น (เช่น 1กข-1234 หรือ กข 1234)'
     if (!carType) return 'กรุณาเลือกชนิดระบบเกียร์รถยนต์'
     return ''
@@ -247,7 +247,7 @@ function RequestDriverContent() {
       return
     }
     if (!destination) {
-      setError('กรุณาเลือกจุดหมายปลายทางของลูกค้า')
+      setError('กรุณาเลือกจุดหมายปลายทางของผู้ใช้บริการ')
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
@@ -270,7 +270,7 @@ function RequestDriverContent() {
       return
     }
     if (!destination || distance <= 0) {
-      setError('กรุณาเลือกจุดหมายปลายทางของลูกค้า')
+      setError('กรุณาเลือกจุดหมายปลายทางของผู้ใช้บริการ')
       setStep(2)
       window.scrollTo({ top: 0, behavior: 'smooth' })
       return
@@ -328,7 +328,7 @@ function RequestDriverContent() {
 
   const renderStepper = () => {
     const steps = [
-      { num: 1, label: 'ข้อมูลลูกค้า' },
+      { num: 1, label: 'ข้อมูลผู้ใช้บริการ' },
       { num: 2, label: 'เลือกจุดหมาย' },
       { num: 3, label: 'ตรวจสอบความปลอดภัย' },
       { num: 4, label: 'เลือกช่องทางชำระเงิน' }
@@ -387,7 +387,7 @@ function RequestDriverContent() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--color-card)] border border-[var(--color-border)] p-6 rounded-2xl shadow-xl">
           <div>
             <span className="text-xs font-bold text-[#2340A7] tracking-wider uppercase font-manrope">REQUEST SERVICE</span>
-            <h1 className="text-2xl sm:text-3xl font-bold font-manrope text-[var(--color-text)] mt-1">เรียกรถให้ลูกค้า (Create Driver Request)</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold font-manrope text-[var(--color-text)] mt-1">เรียกรถให้ผู้ใช้บริการ (Create Driver Request)</h1>
           </div>
           <div className="text-xs font-semibold px-4 py-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)]">
             🏪 สถานบันเทิง: <span className="text-[var(--color-text)] font-bold">{pubName}</span>
@@ -415,7 +415,7 @@ function RequestDriverContent() {
           {}
           {step === 1 && (
             <div className="flex flex-col gap-6">
-              <h2 className="text-2xl font-extrabold font-manrope text-[var(--color-text)]">กรุณากรอกข้อมูลส่วนตัวของลูกค้า</h2>
+              <h2 className="text-2xl font-extrabold font-manrope text-[var(--color-text)]">กรุณากรอกข้อมูลส่วนตัวของผู้ใช้บริการ</h2>
 
               {rejectNotice && (
                 <div className="p-4 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-500 text-sm font-semibold flex items-center justify-between shadow-md animate-fade-in">
@@ -430,7 +430,7 @@ function RequestDriverContent() {
               )}
 
               <div className="flex flex-col gap-2.5">
-                <label className="text-[15.5px] font-bold text-[var(--color-text)]">ชื่อ - นามสกุลลูกค้า *</label>
+                <label className="text-[15.5px] font-bold text-[var(--color-text)]">ชื่อ - นามสกุลผู้ใช้บริการ *</label>
                 <input 
                   value={custName} 
                   onChange={e => {
@@ -719,7 +719,7 @@ function RequestDriverContent() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                   <div className="p-3 bg-[var(--color-card)] rounded-xl border border-[var(--color-border)]">
-                    <div className="text-xs text-[var(--color-text-muted)] font-medium">ชื่อ - นามสกุลลูกค้า</div>
+                    <div className="text-xs text-[var(--color-text-muted)] font-medium">ชื่อ - นามสกุลผู้ใช้บริการ</div>
                     <div className="text-sm font-bold text-[var(--color-text)] mt-0.5">{custName || '—'}</div>
                   </div>
                   <div className="p-3 bg-[var(--color-card)] rounded-xl border border-[var(--color-border)]">

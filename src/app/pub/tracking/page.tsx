@@ -401,9 +401,9 @@ function TrackingContent() {
                 {currentStep === 0 && !requeststatus?.includes('ยกเลิก') && 'กำลังค้นหาคนขับ...'}
               </span>
               <span className="text-xs text-[var(--color-text-muted)] mt-0.5 font-medium">
-                {currentStep === 1 && 'พนักงานขับรถรับงานเรียบร้อยแล้ว กำลังเดินทางไปรับลูกค้าที่จุดนัดหมาย'}
-                {currentStep === 2 && 'พนักงานขับรถเดินทางมาถึงจุดรับลูกค้าเรียบร้อยแล้ว'}
-                {currentStep === 3 && 'พนักงานขับรถกำลังพาลูกค้าเดินทางไปยังจุดหมายปลายทางอย่างปลอดภัย'}
+                {currentStep === 1 && 'พนักงานขับรถรับงานเรียบร้อยแล้ว กำลังเดินทางไปรับผู้ใช้บริการที่จุดนัดหมาย'}
+                {currentStep === 2 && 'พนักงานขับรถเดินทางมาถึงจุดรับผู้ใช้บริการเรียบร้อยแล้ว'}
+                {currentStep === 3 && 'พนักงานขับรถกำลังพาผู้ใช้บริการเดินทางไปยังจุดหมายปลายทางอย่างปลอดภัย'}
                 {currentStep === 4 && 'เดินทางถึงจุดหมายปลายทางเรียบร้อยแล้ว ขอบคุณที่ใช้บริการ SafeSeat'}
                 {requeststatus?.includes('ยกเลิก') || requeststatus?.includes('cancelled') ? 'รายการเรียกรถนี้ถูกยกเลิกแล้ว' : ''}
                 {currentStep === 0 && !requeststatus?.includes('ยกเลิก') && 'ระบบกำลังค้นหาพนักงานขับรถบริเวณใกล้เคียง กรุณารอสักครู่'}
@@ -433,7 +433,7 @@ function TrackingContent() {
               <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">{reqData?.requestid || requestId || alphaCode}</span>
             </div>
             <div>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ชื่อลูกค้า</span>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ชื่อผู้ใช้บริการ</span>
               <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">{custname}</span>
             </div>
             <div>
@@ -522,7 +522,7 @@ function TrackingContent() {
                   className="py-2.5 px-6 rounded-full text-xs font-bold bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white transition-all shadow-md flex items-center gap-2 cursor-pointer shrink-0"
                 >
                   <QrCode className="w-4 h-4" />
-                  📲 แสดง QR Code &amp; ลิงก์ติดตามส่งให้ลูกค้า
+                  📲 แสดง QR Code &amp; ลิงก์ติดตามส่งให้ผู้ใช้บริการ
                 </button>
               )}
             </div>
@@ -634,7 +634,7 @@ function TrackingContent() {
                 QR Code ติดตามการเดินทาง
               </h3>
               <p className="text-xs text-[var(--color-text-muted)] mt-1.5 font-medium whitespace-nowrap overflow-x-auto px-2">
-                ให้ลูกค้าใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางของคนขับได้ทันทีเรียลไทม์
+                ให้ผู้ใช้บริการใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางของคนขับได้ทันทีเรียลไทม์
               </p>
             </div>
 

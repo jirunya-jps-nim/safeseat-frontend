@@ -424,7 +424,7 @@ export default function AdminDashboard() {
   }
 
   const promptReportApprove = (reportId: number, type: 'driver' | 'user') => {
-    const label = type === 'driver' ? `รายงานคนขับ #DRV-${reportId}` : `รายงานลูกค้า #USR-${reportId}`
+    const label = type === 'driver' ? `รายงานคนขับ #DRV-${reportId}` : `รายงานผู้ใช้บริการ #USR-${reportId}`
     const targetStatus = 'อนุมัติแล้ว'
     setConfirmModal({
       isOpen: true,
@@ -437,7 +437,7 @@ export default function AdminDashboard() {
   }
 
   const promptReportReject = (reportId: number, type: 'driver' | 'user') => {
-    const label = type === 'driver' ? `รายงานคนขับ #DRV-${reportId}` : `รายงานลูกค้า #USR-${reportId}`
+    const label = type === 'driver' ? `รายงานคนขับ #DRV-${reportId}` : `รายงานผู้ใช้บริการ #USR-${reportId}`
     setConfirmModal({
       isOpen: true,
       title: 'ยืนยันการปฏิเสธรายการรายงาน',
@@ -561,7 +561,7 @@ export default function AdminDashboard() {
                   : 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A]'
               }`}
             >
-              <User className="w-5 h-5" /> รายงานลูกค้า
+              <User className="w-5 h-5" /> รายงานผู้ใช้บริการ
             </button>
           </nav>
         </div>
@@ -591,7 +591,7 @@ export default function AdminDashboard() {
               {activeTab === 'driver-app' && 'พิจารณาอนุมัติคนขับ'}
               {activeTab === 'pub-app' && 'พิจารณาอนุมัติสถานบันเทิง'}
               {activeTab === 'driver-report' && 'รายงานความประพฤติคนขับ'}
-              {activeTab === 'user-report' && 'รายงานความประพฤติลูกค้า'}
+              {activeTab === 'user-report' && 'รายงานความประพฤติผู้ใช้บริการ'}
             </span>
           </div>
           <div className="flex items-center gap-2.5 px-4 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-full text-sm font-bold text-[#0F172A] shadow-sm">
@@ -654,7 +654,7 @@ export default function AdminDashboard() {
                       className={`flex items-center gap-2.5 transition-opacity cursor-pointer text-sm font-bold ${visibleSeries.userReport ? 'opacity-100' : 'opacity-40'}`}
                     >
                       <span className="w-3.5 h-3.5 rounded-full bg-[#EC4899]"></span>
-                      <span className="text-[#0F172A]">รายงานลูกค้า</span>
+                      <span className="text-[#0F172A]">รายงานผู้ใช้บริการ</span>
                     </button>
                   </div>
                 </div>
@@ -884,7 +884,7 @@ export default function AdminDashboard() {
                                   {visibleSeries.driverApp && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>การสมัครคนขับ:</span> <b className="text-white">{driverAppVal}</b></div>}
                                   {visibleSeries.pubApp && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>การสมัครสถานบันเทิง:</span> <b className="text-white">{pubAppVal}</b></div>}
                                   {visibleSeries.driverReport && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>รายงานคนขับ:</span> <b className="text-white">{driverReportVal}</b></div>}
-                                  {visibleSeries.userReport && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>รายงานลูกค้า:</span> <b className="text-white">{userReportVal}</b></div>}
+                                  {visibleSeries.userReport && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>รายงานผู้ใช้บริการ:</span> <b className="text-white">{userReportVal}</b></div>}
                                 </div>
                               )}
 
@@ -1511,7 +1511,7 @@ export default function AdminDashboard() {
         {activeTab === 'user-report' && (
           <div className="p-6 bg-white border border-[#E2E8F0] rounded-2xl shadow-sm flex flex-col gap-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h2 className="text-2xl font-black font-manrope text-[#0F172A]">รายงานความประพฤติลูกค้า (Customer Reports)</h2>
+              <h2 className="text-2xl font-black font-manrope text-[#0F172A]">รายงานความประพฤติผู้ใช้บริการ (Customer Reports)</h2>
               <span className="text-sm font-bold text-[#64748B]">
                 {statusFilter === 'รอดำเนินการ' ? 'รอดำเนินการตรวจสอบ' : statusFilter === 'All' ? 'รายการทั้งหมด' : statusFilter}
               </span>
@@ -1654,7 +1654,7 @@ export default function AdminDashboard() {
                   })}
                     {userReports.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="p-8 text-center text-sm text-[#64748B] font-bold">ไม่มีรายการร้องเรียนลูกค้าตามเงื่อนไขที่ค้นหา</td>
+                        <td colSpan={6} className="p-8 text-center text-sm text-[#64748B] font-bold">ไม่มีรายการร้องเรียนผู้ใช้บริการตามเงื่อนไขที่ค้นหา</td>
                       </tr>
                     )}
                   </tbody>

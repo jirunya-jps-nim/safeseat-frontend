@@ -221,7 +221,8 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
                   {}
                   <button
                     onClick={() => { closeMobile(); router.push('/login') }}
-                    className="px-5 py-2 rounded-full bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(35,64,167,0.4)]"
+                    style={{ color: '#ffffff' }}
+                    className="px-5 py-2 rounded-full bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] !text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-[0_0_20px_rgba(35,64,167,0.4)]"
                   >
                     เข้าสู่ระบบ
                   </button>

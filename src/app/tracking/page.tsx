@@ -207,7 +207,7 @@ function TrackingContent() {
   }
 
   const {
-    custname = 'ลูกค้าทั่วไป',
+    custname = 'ผู้ใช้บริการทั่วไป',
     phoneno,
     phoneemer,
     pickuplatitude,
@@ -347,9 +347,9 @@ function TrackingContent() {
                 {displayStatus}
               </span>
               <span className="text-xs text-[var(--color-text-muted)] mt-0.5 font-medium">
-                {currentStep === 1 && 'พนักงานขับรถรับงานเรียบร้อยแล้ว กำลังเดินทางไปรับลูกค้า'}
-                {currentStep === 2 && 'พนักงานขับรถถึงจุดรับลูกค้าแล้ว'}
-                {currentStep === 3 && 'กำลังพาลูกค้าเดินทางไปยังจุดหมายปลายทางอย่างปลอดภัย'}
+                {currentStep === 1 && 'พนักงานขับรถรับงานเรียบร้อยแล้ว กำลังเดินทางไปรับผู้ใช้บริการ'}
+                {currentStep === 2 && 'พนักงานขับรถถึงจุดรับผู้ใช้บริการแล้ว'}
+                {currentStep === 3 && 'กำลังพาผู้ใช้บริการเดินทางไปยังจุดหมายปลายทางอย่างปลอดภัย'}
                 {currentStep === 4 && 'ถึงจุดหมายปลายทางเรียบร้อยแล้ว'}
                 {currentStep === -1 && 'รายการเรียกรถนี้ถูกยกเลิกแล้ว'}
                 {currentStep === 0 && 'ระบบกำลังค้นหาพนักงานขับรถบริเวณใกล้เคียง กรุณารอสักครู่'}
@@ -376,7 +376,7 @@ function TrackingContent() {
               <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">{reqData?.requestid || requestId || alphaCode}</span>
             </div>
             <div>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ชื่อลูกค้า</span>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ชื่อผู้ใช้บริการ</span>
               <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">{custname}</span>
             </div>
             <div>

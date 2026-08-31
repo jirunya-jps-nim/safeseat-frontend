@@ -31,9 +31,9 @@ export default function PubDashboardPage() {
     {
       id: 'request',
       code: 'SERVICE // 01',
-      title: 'เรียกรถให้ลูกค้า',
+      title: 'เรียกรถให้ผู้ใช้บริการ',
       subtitle: 'REQUEST DESIGNATED DRIVER',
-      desc: 'เรียกพนักงานขับรถแทนมืออาชีพให้ลูกค้าของคุณ รับส่งถึงที่หมายอย่างปลอดภัยตลอดเส้นทาง',
+      desc: 'เรียกพนักงานขับรถแทนมืออาชีพให้ผู้ใช้บริการของคุณ รับส่งถึงที่หมายอย่างปลอดภัยตลอดเส้นทาง',
       btnLabel: 'เรียกคนขับแทนตอนนี้',
       icon: Car,
       colorClass: 'text-[#2340A7]',
@@ -46,7 +46,7 @@ export default function PubDashboardPage() {
       code: 'SERVICE // 02',
       title: 'ประวัติการเรียกรถ',
       subtitle: 'SERVICE HISTORY & STATUS',
-      desc: 'ตรวจสอบรายการ ติดตามสถานะการเดินทางแบบเรียลไทม์ และเช็คประวัติย้อนหลังของลูกค้า',
+      desc: 'ตรวจสอบรายการ ติดตามสถานะการเดินทางแบบเรียลไทม์ และเช็คประวัติย้อนหลังของผู้ใช้บริการ',
       btnLabel: 'ดูประวัติการเรียกรถ',
       icon: FileText,
       colorClass: 'text-[#2563EB]',
@@ -106,7 +106,7 @@ export default function PubDashboardPage() {
           </h1>
 
           <p className="text-base sm:text-lg text-[var(--color-text-muted)] leading-relaxed font-light max-w-none whitespace-nowrap">
-            จัดการบริการเรียกรถแทนให้ลูกค้า ติดตามสถานะเดินทาง และดูสรุปผลสถิติรายได้ของสถานบริการ
+            จัดการบริการเรียกรถแทนให้ผู้ใช้บริการ ติดตามสถานะเดินทาง และดูสรุปผลสถิติรายได้ของสถานบริการ
           </p>
         </section>
 

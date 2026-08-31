@@ -71,23 +71,13 @@ export function validateStep2(
     return false
   }
 
-  if (!form.bankAccountName || !form.bankAccountName.trim()) {
-    setError('กรุณากรอกชื่อบัญชีธนาคาร')
-    return false
-  }
-
-  if (!/^[ก-๙a-zA-Z\s]{1,150}$/.test(form.bankAccountName.trim())) {
-    setError('ชื่อบัญชีต้องเป็นภาษาไทยหรืออังกฤษเท่านั้น และห้ามใช้อักขระพิเศษ')
-    return false
-  }
-
   if (!form.bankAccountNo || !form.bankAccountNo.trim()) {
-    setError('กรุณากรอกเลขที่บัญชีธนาคาร')
+    setError('กรุณากรอกเลขบัญชีธนาคารกสิกรไทย')
     return false
   }
 
   if (!/^[0-9]{10,12}$/.test(form.bankAccountNo.trim())) {
-    setError('เลขที่บัญชีต้องเป็นตัวเลข 10–12 หลักเท่านั้น')
+    setError('เลขบัญชีธนาคารกสิกรไทยต้องเป็นตัวเลข 10–12 หลักเท่านั้น')
     return false
   }
 

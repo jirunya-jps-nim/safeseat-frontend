@@ -47,7 +47,7 @@ export default function HelpCenterPage() {
     },
     {
       category: 'general',
-      question: 'สามารถติดต่อฝ่ายสนับสนุนลูกค้าหรือทีมงานเทคนิคได้ทางใดบ้าง?',
+      question: 'สามารถติดต่อฝ่ายสนับสนุนผู้ใช้บริการหรือทีมงานเทคนิคได้ทางใดบ้าง?',
       answer: 'หากพบปัญหาการใช้งาน สามารถติดต่อได้ทาง LINE ID: @safeseat_support หรือโทรศัพท์สายด่วน 02-123-4567 ในช่วงเวลาให้บริการ 18:00 น. - 04:00 น. ของทุกวัน'
     }
   ]
@@ -89,12 +89,12 @@ export default function HelpCenterPage() {
           <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold font-manrope tracking-tight leading-tight mb-6 text-[var(--color-text)] max-w-5xl mx-auto whitespace-nowrap">
             คำถามที่พบบ่อย &amp;{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2340A7] to-[#2563EB]">
-              ฝ่ายสนับสนุนลูกค้า
+              ฝ่ายสนับสนุนผู้ใช้บริการ
             </span>
           </h1>
 
           <p className="text-xs sm:text-sm md:text-base text-[var(--color-text-muted)] font-light mb-8 whitespace-nowrap overflow-x-auto px-2">
-            ค้นหาข้อมูลการใช้งาน คำถามที่พบบ่อย และคู่มือขั้นตอนการให้บริการสำหรับลูกค้า สถานบันเทิงพาร์ทเนอร์ และผู้ขับขี่แทน
+            ค้นหาข้อมูลการใช้งาน คำถามที่พบบ่อย และคู่มือขั้นตอนการให้บริการสำหรับผู้ใช้บริการ สถานบันเทิงพาร์ทเนอร์ และผู้ขับขี่แทน
           </p>
 
           {/* Search Box */}
@@ -193,7 +193,7 @@ export default function HelpCenterPage() {
           <div className="text-center">
             <span className="text-xs font-bold tracking-widest text-[#2340A7] uppercase">ช่องทางติดต่อโดยตรง</span>
             <h2 className="text-3xl font-bold font-manrope text-[var(--color-text)] mt-2">ต้องการความช่วยเหลือเพิ่มเติม?</h2>
-            <p className="text-sm text-[var(--color-text-muted)] mt-1">เจ้าหน้าที่ฝ่ายสนับสนุนลูกค้าพร้อมดูแลและตอบข้อสงสัยของคุณตลอด 24 ชั่วโมง</p>
+            <p className="text-sm text-[var(--color-text-muted)] mt-1">เจ้าหน้าที่ฝ่ายสนับสนุนผู้ใช้บริการพร้อมดูแลและตอบข้อสงสัยของคุณตลอด 24 ชั่วโมง</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -202,7 +202,7 @@ export default function HelpCenterPage() {
                 <MessageSquare className="w-6 h-6" />
               </div>
               <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">LINE Official</h3>
-              <p className="text-xs text-[var(--color-text-muted)]">แชทสอบถามฝ่ายสนับสนุนลูกค้า</p>
+              <p className="text-xs text-[var(--color-text-muted)]">แชทสอบถามฝ่ายสนับสนุนผู้ใช้บริการ</p>
               <span className="text-xs font-bold text-[#2340A7]">@safeseat_support</span>
             </div>
 

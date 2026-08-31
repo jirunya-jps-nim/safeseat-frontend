@@ -271,7 +271,7 @@ function WaitingContent() {
 
                 <div className="grid grid-cols-2 gap-4 text-xs font-semibold">
                   <div>
-                    <span className="text-[var(--color-text-muted)] text-[10px] uppercase font-mono block">ชื่อลูกค้า</span>
+                    <span className="text-[var(--color-text-muted)] text-[10px] uppercase font-mono block">ชื่อผู้ใช้บริการ</span>
                     <span className="text-[var(--color-text)] font-bold">{reqData.custname || '-'}</span>
                   </div>
                   <div>
@@ -301,7 +301,7 @@ function WaitingContent() {
             {}
             {trackingUrl && (
               <div className="p-6 bg-[var(--color-surface)] border-2 border-dashed border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-4 text-center">
-                <span className="text-xs font-bold text-[var(--color-text)]">ลูกค้าสแกน QR Code เพื่อติดตามสถานะเรียลไทม์</span>
+                <span className="text-xs font-bold text-[var(--color-text)]">ผู้ใช้บริการสแกน QR Code เพื่อติดตามสถานะเรียลไทม์</span>
                 <div className="p-3 bg-white rounded-xl shadow-md border">
                   <img 
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(trackingUrl)}`}
@@ -324,7 +324,7 @@ function WaitingContent() {
                   }`}
                 >
                   {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                  {copied ? 'คัดลอกลิงก์ติดตามสำเร็จ!' : 'คัดลอกลิงก์ติดตามสำหรับลูกค้า'}
+                  {copied ? 'คัดลอกลิงก์ติดตามสำเร็จ!' : 'คัดลอกลิงก์ติดตามสำหรับผู้ใช้บริการ'}
                 </button>
               </div>
             )}

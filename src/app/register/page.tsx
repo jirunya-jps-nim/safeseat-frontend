@@ -64,7 +64,7 @@ export default function RegisterSelectorPage() {
               Venue Partner
             </h2>
             <p className="text-sm text-[var(--color-text-muted)] leading-relaxed font-light flex-1">
-              สำหรับสถานบันเทิง บาร์ คาราโอเกะ ยามค่ำคืน ที่ต้องการเชื่อมต่อระบบเรียกคนขับแทน เพื่อดูแลสวัสดิภาพลูกค้าหน้าสถานบันเทิง
+              สำหรับสถานบันเทิง บาร์ คาราโอเกะ ยามค่ำคืน ที่ต้องการเชื่อมต่อระบบเรียกคนขับแทน เพื่อดูแลสวัสดิภาพผู้ใช้บริการหน้าสถานบันเทิง
             </p>
 
             <button className="w-full py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">

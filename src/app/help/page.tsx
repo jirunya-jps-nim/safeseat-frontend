@@ -117,9 +117,10 @@ export default function HelpCenterPage() {
         <div className="flex justify-center flex-wrap gap-3">
           <button 
             onClick={() => { setActiveCategory('all'); setOpenFaqIndex(null); }}
+            style={activeCategory === 'all' ? { color: '#ffffff' } : {}}
             className={`px-5 py-2 rounded-full text-xs font-bold tracking-wider transition-all cursor-pointer ${
               activeCategory === 'all' 
-                ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white shadow-md' 
+                ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white shadow-md' 
                 : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#2340A7]'
             }`}
           >
@@ -127,9 +128,10 @@ export default function HelpCenterPage() {
           </button>
           <button 
             onClick={() => { setActiveCategory('general'); setOpenFaqIndex(null); }}
+            style={activeCategory === 'general' ? { color: '#ffffff' } : {}}
             className={`px-5 py-2 rounded-full text-xs font-bold tracking-wider transition-all cursor-pointer ${
               activeCategory === 'general' 
-                ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white shadow-md' 
+                ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white shadow-md' 
                 : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#2340A7]'
             }`}
           >
@@ -137,9 +139,10 @@ export default function HelpCenterPage() {
           </button>
           <button 
             onClick={() => { setActiveCategory('pub'); setOpenFaqIndex(null); }}
+            style={activeCategory === 'pub' ? { color: '#ffffff' } : {}}
             className={`px-5 py-2 rounded-full text-xs font-bold tracking-wider transition-all cursor-pointer ${
               activeCategory === 'pub' 
-                ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white shadow-md' 
+                ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white shadow-md' 
                 : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#2340A7]'
             }`}
           >
@@ -147,9 +150,10 @@ export default function HelpCenterPage() {
           </button>
           <button 
             onClick={() => { setActiveCategory('driver'); setOpenFaqIndex(null); }}
+            style={activeCategory === 'driver' ? { color: '#ffffff' } : {}}
             className={`px-5 py-2 rounded-full text-xs font-bold tracking-wider transition-all cursor-pointer ${
               activeCategory === 'driver' 
-                ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white shadow-md' 
+                ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white shadow-md' 
                 : 'bg-[var(--color-card)] text-[var(--color-text-muted)] border border-[var(--color-border)] hover:border-[#2340A7]'
             }`}
           >

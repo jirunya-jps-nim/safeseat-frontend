@@ -572,9 +572,10 @@ function RequestDriverContent() {
                         key={type}
                         type="button"
                         onClick={() => setCarType(type)}
+                        style={active ? { color: '#ffffff' } : {}}
                         className={`py-4 px-3 rounded-xl text-[15px] font-bold tracking-wider transition-all border cursor-pointer ${
                           active
-                            ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white border-transparent shadow-md'
+                            ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white border-transparent shadow-md'
                             : isCarTypeError
                             ? 'bg-[var(--color-surface)] border-red-500 text-[var(--color-text-muted)]'
                             : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[#2340A7]'
@@ -613,9 +614,10 @@ function RequestDriverContent() {
                 </button>
                 <button 
                   onClick={handleStep1Next}
-                  className="px-8 py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
+                  style={{ color: '#ffffff' }}
+                  className="px-8 py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
                 >
-                  ดำเนินการต่อ <ArrowRight className="w-4 h-4" />
+                  <span style={{ color: '#ffffff' }}>ดำเนินการต่อ</span> <ArrowRight className="w-4 h-4 text-white" style={{ color: '#ffffff' }} />
                 </button>
               </div>
             </div>
@@ -693,9 +695,10 @@ function RequestDriverContent() {
                 <button
                   onClick={handleStep2Next}
                   disabled={loadingRoute}
-                  className="px-9 py-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white font-bold text-sm sm:text-base uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
+                  style={{ color: '#ffffff' }}
+                  className="px-9 py-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white font-bold text-sm sm:text-base uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
                 >
-                  {loadingRoute ? 'กำลังคำนวณ...' : 'ยืนยันพิกัด →'}
+                  <span style={{ color: '#ffffff' }}>{loadingRoute ? 'กำลังคำนวณ...' : 'ยืนยันพิกัด →'}</span>
                 </button>
               </div>
             </div>
@@ -790,9 +793,10 @@ function RequestDriverContent() {
                 </button>
                 <button 
                   onClick={handleStep3Next}
-                  className="px-9 py-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white font-bold text-sm sm:text-base uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
+                  style={{ color: '#ffffff' }}
+                  className="px-9 py-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white font-bold text-sm sm:text-base uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
                 >
-                  ดำเนินการต่อ →
+                  <span style={{ color: '#ffffff' }}>ดำเนินการต่อ →</span>
                 </button>
               </div>
             </div>
@@ -892,9 +896,10 @@ function RequestDriverContent() {
                     }
                   }}
                   disabled={loading || verifyingPayment}
-                  className="px-8 py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
+                  style={{ color: '#ffffff' }}
+                  className="px-8 py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
                 >
-                  {loading ? 'กำลังส่งข้อมูล...' : 'เรียกคนขับรถเลย! ✓'}
+                  <span style={{ color: '#ffffff' }}>{loading ? 'กำลังส่งข้อมูล...' : 'เรียกคนขับรถเลย! ✓'}</span>
                 </button>
               </div>
             </div>

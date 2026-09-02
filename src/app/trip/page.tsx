@@ -332,9 +332,10 @@ function TripTrackingContent() {
                   {rawDriver1Phone && (
                     <a 
                       href={`tel:${rawDriver1Phone}`}
-                      className="px-4 py-2 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:opacity-90 transition-opacity"
+                      className="px-4 py-2 bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:opacity-90 transition-opacity"
+                      style={{ color: '#ffffff' }}
                     >
-                      <PhoneCall className="w-3.5 h-3.5" /> โทรหาคนขับ
+                      <PhoneCall className="w-3.5 h-3.5 !text-white" style={{ color: '#ffffff' }} /> <span style={{ color: '#ffffff' }}>โทรหาคนขับ</span>
                     </a>
                   )}
                 </div>

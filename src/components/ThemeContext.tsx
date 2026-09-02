@@ -17,6 +17,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false)
 
   const applyTheme = (newTheme: Theme) => {
+    if (typeof document === 'undefined') return
     const root = document.documentElement
     if (newTheme === 'dark') {
       root.classList.add('dark')
@@ -30,13 +31,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMounted(true)
     const savedTheme = localStorage.getItem('safeseat_theme') as Theme | null
-    if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
-      setThemeState(savedTheme)
-      applyTheme(savedTheme)
-    } else {
-      setThemeState('dark')
-      applyTheme('dark')
-    }
+    const targetTheme: Theme = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'dark'
+    setThemeState(targetTheme)
+    applyTheme(targetTheme)
   }, [])
 
   const setTheme = (newTheme: Theme) => {

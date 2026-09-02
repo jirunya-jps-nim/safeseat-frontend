@@ -1827,10 +1827,49 @@ export default function AdminDashboard() {
 
       {/* MODAL: PUB DETAIL */}
       {selectedPub && (() => {
+        let parsedPubDocs: Record<string, string> = {}
+        if (selectedPub.regisimagepath) {
+          try {
+            const parsed = JSON.parse(selectedPub.regisimagepath)
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+              parsedPubDocs = parsed
+            }
+          } catch {}
+        }
+
+        const licenseUrl =
+          parsedPubDocs.license ||
+          parsedPubDocs.licenseImage ||
+          parsedPubDocs.regisImagePath ||
+          parsedPubDocs.regisimagepath ||
+          (selectedPub as any).licenseImagePath ||
+          (selectedPub as any).licenseimagepath ||
+          selectedPub.regisimagepath ||
+          null
+
+        const shopUrl =
+          (selectedPub as any).pubimagepath ||
+          (selectedPub as any).pubImagePath ||
+          (selectedPub as any).pub_image_path ||
+          (selectedPub as any).shopimagepath ||
+          (selectedPub as any).shopImagePath ||
+          (selectedPub as any).storefrontimagepath ||
+          (selectedPub as any).storefrontImagePath ||
+          (selectedPub as any).storefront ||
+          (selectedPub as any).shop ||
+          (selectedPub as any).image ||
+          parsedPubDocs.pubimagepath ||
+          parsedPubDocs.pubImagePath ||
+          parsedPubDocs.shop ||
+          parsedPubDocs.shopImage ||
+          parsedPubDocs.storefront ||
+          parsedPubDocs.storefrontImage ||
+          null
+
         const pubDocItems = [
-          { label: '📄 ใบอนุญาตประกอบการ', url: selectedPub.regisimagepath },
-          { label: '🏪 รูปภาพบรรยากาศหน้าสถานบันเทิง', url: (selectedPub as any).pubimagepath || (selectedPub as any).pubImagePath },
-        ].filter(item => Boolean(item.url))
+          { label: '📄 ใบอนุญาตประกอบการ', url: licenseUrl, placeholderIcon: '📄' },
+          { label: '🏪 ภาพถ่ายหน้าร้าน / บรรยากาศสถานบันเทิง', url: shopUrl, placeholderIcon: '🏪' },
+        ]
 
         const isPubApproved = selectedPub.regisstatus === 'approved' || (selectedPub as any).regisstatus === 'อนุมัติแล้ว'
         const isPubRejected = selectedPub.regisstatus === 'rejected' || (selectedPub as any).regisstatus === 'ปฏิเสธ'
@@ -1874,40 +1913,56 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Documents */}
+              {/* Documents & Storefront Images */}
               <div>
                 <h4 className="text-base font-black text-[#2563EB] mb-3 flex items-center gap-2">
-                  <FileText className="w-5 h-5" /> เอกสารและภาพถ่ายประกอบการสมัครสถานบันเทิง ({pubDocItems.length} รายการ)
+                  <FileText className="w-5 h-5" /> เอกสารและภาพถ่ายประกอบการสมัครสถานบันเทิง
                 </h4>
-                {pubDocItems.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {pubDocItems.map((item, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => setPreviewImageUrl(item.url!)}
-                        className="group relative bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl overflow-hidden cursor-pointer hover:border-[#2563EB] transition-all shadow-sm"
-                      >
-                        <div className="aspect-[4/3] w-full relative bg-black/40 overflow-hidden">
-                          <img
-                            src={item.url}
-                            alt={item.label}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                            <Eye className="w-7 h-7 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {pubDocItems.map((item, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => item.url && setPreviewImageUrl(item.url)}
+                      className={`group relative bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden shadow-sm transition-all ${
+                        item.url ? 'cursor-pointer hover:border-[#2563EB]' : 'opacity-80'
+                      }`}
+                    >
+                      <div className="aspect-[4/3] w-full relative bg-black/40 overflow-hidden flex items-center justify-center">
+                        {item.url ? (
+                          <>
+                            <img
+                              src={item.url}
+                              alt={item.label}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                              <Eye className="w-7 h-7 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center p-6 text-center gap-2">
+                            <span className="text-4xl">{item.placeholderIcon}</span>
+                            <span className="text-xs font-bold text-[var(--color-text-muted)]">
+                              ไม่มีไฟล์แนบในระบบ
+                            </span>
                           </div>
-                        </div>
-                        <div className="p-2.5 text-xs font-extrabold text-[var(--color-text)] text-center bg-[var(--color-card)] border-t border-[var(--color-border)]">
-                          {item.label}
-                        </div>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-6 text-center text-sm font-bold text-[var(--color-text-muted)] bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)]">
-                    ไม่มีรูปภาพเอกสารแนบในระบบ
-                  </div>
-                )}
+                      <div className="p-3 text-xs sm:text-sm font-extrabold text-[var(--color-text)] text-center bg-[var(--color-card)] border-t border-[var(--color-border)] flex items-center justify-center gap-1.5">
+                        <span>{item.label}</span>
+                        {item.url ? (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 font-bold">
+                            แนบแล้ว
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 font-bold">
+                            รอแนบ
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Footer */}
@@ -2103,25 +2158,25 @@ export default function AdminDashboard() {
 
       {/* Modal: Confirm Action */}
       {confirmModal.isOpen && (
-        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-[100] flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-7 max-w-2xl w-full shadow-2xl flex flex-col gap-6 text-center">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-6 animate-fade-in" onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}>
+          <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-8 sm:p-10 max-w-3xl sm:max-w-4xl w-full shadow-2xl flex flex-col gap-6 text-center" onClick={e => e.stopPropagation()}>
             <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto text-amber-500 text-3xl">
               ⚠️
             </div>
             
-            <div>
-              <h3 className="text-xl font-black text-[var(--color-text)] mb-2 font-manrope">
+            <div className="w-full">
+              <h3 className="text-xl sm:text-2xl font-black text-[var(--color-text)] mb-3 font-manrope whitespace-nowrap">
                 {confirmModal.title}
               </h3>
-              <p className="text-sm text-[var(--color-text-muted)] font-semibold whitespace-nowrap overflow-x-auto px-2">
+              <p className="text-sm sm:text-base text-[var(--color-text-muted)] font-semibold sm:whitespace-nowrap px-2">
                 {confirmModal.message}
               </p>
             </div>
 
-            <div className="flex items-center gap-3.5 justify-center pt-2">
+            <div className="flex items-center gap-4 justify-center pt-2">
               <button
                 onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-                className="px-6 py-3 rounded-full border border-[var(--color-border)] text-sm font-extrabold text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] cursor-pointer transition-colors"
+                className="px-7 py-3 rounded-full border border-[var(--color-border)] text-sm font-extrabold text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] cursor-pointer transition-colors"
               >
                 ยกเลิก (Cancel)
               </button>
@@ -2131,7 +2186,15 @@ export default function AdminDashboard() {
                   setConfirmModal(prev => ({ ...prev, isOpen: false }))
                   action()
                 }}
-                className={`px-7 py-3 rounded-full ${confirmModal.confirmBg} text-white text-sm font-extrabold shadow-lg cursor-pointer transition-all`}
+                className={`px-8 py-3 rounded-full !text-white text-sm font-extrabold shadow-lg cursor-pointer transition-all ${
+                  confirmModal.confirmBg?.includes('red')
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-[#2340A7] hover:bg-[#1D358F]'
+                }`}
+                style={{
+                  backgroundColor: confirmModal.confirmBg?.includes('red') ? '#dc2626' : '#2340A7',
+                  color: '#ffffff',
+                }}
               >
                 {confirmModal.confirmText}
               </button>

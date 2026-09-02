@@ -4,7 +4,7 @@
 @import "tailwindcss";
 
 
-:root, html.dark {
+:root, html, html.dark {
   --accent-purple: #2340A7;
   --accent-blue: #2340A7;
   --accent-cyan: #2563EB;
@@ -64,7 +64,7 @@ html.light {
   inherits: false; 
 }
 
-body, input, button, select, textarea {
+body {
   font-family: 'Inter', 'Kanit', sans-serif;
   background-color: var(--color-bg);
   color: var(--color-text);
@@ -74,7 +74,63 @@ body, input, button, select, textarea {
 }
 
 input, select, textarea {
+  font-family: 'Inter', 'Kanit', sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
   font-size: 16px;
+}
+
+button {
+  font-family: 'Inter', 'Kanit', sans-serif;
+}
+
+/* Ensure ALL blue buttons, gradients, and primary actions throughout the entire system have crisp pure white text and icons */
+button[class*="bg-[#2340A7]"],
+button[class*="bg-[#2563EB]"],
+button[class*="bg-[#1D358F]"],
+button[class*="bg-[#1E40AF]"],
+button[class*="from-[#2340A7]"],
+button[class*="from-[#2563EB]"],
+button[class*="from-blue-"],
+button[class*="from-indigo-"],
+button[class*="bg-blue-"],
+button[class*="bg-indigo-"],
+a[class*="bg-[#2340A7]"],
+a[class*="bg-[#2563EB]"],
+a[class*="bg-[#1D358F]"],
+a[class*="bg-[#1E40AF]"],
+a[class*="from-[#2340A7]"],
+a[class*="from-[#2563EB]"],
+a[class*="from-blue-"],
+a[class*="from-indigo-"],
+a[class*="bg-blue-"],
+a[class*="bg-indigo-"],
+.btn-primary,
+.bg-blue-btn {
+  color: #ffffff !important;
+}
+
+button[class*="bg-[#2340A7]"] *,
+button[class*="bg-[#2563EB]"] *,
+button[class*="bg-[#1D358F]"] *,
+button[class*="bg-[#1E40AF]"] *,
+button[class*="from-[#2340A7]"] *,
+button[class*="from-[#2563EB]"] *,
+button[class*="from-blue-"] *,
+button[class*="from-indigo-"] *,
+button[class*="bg-blue-"] *,
+button[class*="bg-indigo-"] *,
+a[class*="bg-[#2340A7]"] *,
+a[class*="bg-[#2563EB]"] *,
+a[class*="bg-[#1D358F]"] *,
+a[class*="bg-[#1E40AF]"] *,
+a[class*="from-[#2340A7]"] *,
+a[class*="from-[#2563EB]"] *,
+a[class*="from-blue-"] *,
+a[class*="from-indigo-"] *,
+a[class*="bg-blue-"] *,
+a[class*="bg-indigo-"] * {
+  color: #ffffff !important;
 }
 
 input::placeholder, textarea::placeholder {

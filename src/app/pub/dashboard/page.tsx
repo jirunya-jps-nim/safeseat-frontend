@@ -145,9 +145,10 @@ export default function PubDashboardPage() {
 
                 <button
                   onClick={(e) => { e.stopPropagation(); router.push(card.path); }}
-                  className="w-full py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] !text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  style={{ color: '#ffffff' }}
                 >
-                  {card.btnLabel} <ArrowRight className="w-4 h-4" />
+                  <span className="!text-white" style={{ color: '#ffffff' }}>{card.btnLabel}</span> <ArrowRight className="w-4 h-4 !text-white" style={{ color: '#ffffff' }} />
                 </button>
               </div>
             )

@@ -67,8 +67,11 @@ export default function RegisterSelectorPage() {
               สำหรับสถานบันเทิง บาร์ คาราโอเกะ ยามค่ำคืน ที่ต้องการเชื่อมต่อระบบเรียกคนขับแทน เพื่อดูแลสวัสดิภาพผู้ใช้บริการหน้าสถานบันเทิง
             </p>
 
-            <button className="w-full py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
-              REGISTER VENUE <ArrowRight className="w-4 h-4" />
+            <button 
+              className="w-full py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] !text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              style={{ color: '#ffffff' }}
+            >
+              <span style={{ color: '#ffffff' }}>REGISTER VENUE</span> <ArrowRight className="w-4 h-4 !text-white" style={{ color: '#ffffff' }} />
             </button>
           </div>
 
@@ -91,8 +94,11 @@ export default function RegisterSelectorPage() {
               สำหรับพนักงานขับรถมืออาชีพที่ต้องการสร้างรายได้เสริมที่มั่นคง ปลอดภัย พร้อมเลือกเวลาและพื้นที่ในการรับงานได้อย่างอิสระ
             </p>
 
-            <button className="w-full py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer">
-              JOIN AS DRIVER <ArrowRight className="w-4 h-4" />
+            <button 
+              className="w-full py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] !text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              style={{ color: '#ffffff' }}
+            >
+              <span style={{ color: '#ffffff' }}>JOIN AS DRIVER</span> <ArrowRight className="w-4 h-4 !text-white" style={{ color: '#ffffff' }} />
             </button>
           </div>
 

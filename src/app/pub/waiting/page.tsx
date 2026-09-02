@@ -196,7 +196,8 @@ function WaitingContent() {
             </p>
             <button 
               onClick={() => handleCancelSearch()}
-              className="w-full py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md cursor-pointer transition-all"
+              className="w-full py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] !text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md cursor-pointer transition-all"
+              style={{ color: '#ffffff' }}
             >
               กลับไปยังหน้าแดชบอร์ด
             </button>

@@ -67,38 +67,40 @@ export default function AlertModal({
     <div className="fixed inset-0 z-[999999] bg-black/60 backdrop-blur-md flex items-center justify-center p-6 animate-fade-up" onClick={onClose}>
       <div 
         onClick={e => e.stopPropagation()}
-        className="w-auto max-w-2xl bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-8 shadow-2xl flex flex-col items-center text-center gap-6 relative overflow-hidden"
+        className="w-full max-w-2xl sm:max-w-3xl bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-8 sm:p-10 shadow-2xl flex flex-col items-center text-center gap-6 relative overflow-hidden"
       >
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#2340A7] to-[#2563EB]" />
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB]" />
 
-        {}
+        {/* Icon */}
         <div className={`p-4 rounded-full border ${c.bgIcon} ${c.color} shadow-lg`}>
           <IconComp className="w-8 h-8" />
         </div>
 
-        {}
-        <h3 className="text-lg sm:text-xl font-bold font-manrope text-[var(--color-text)] whitespace-nowrap">
-          {title || c.title}
-        </h3>
+        {/* Title & Message */}
+        <div className="max-w-2xl mx-auto">
+          <h3 className="text-xl sm:text-2xl font-bold font-manrope text-[var(--color-text)]">
+            {title || c.title}
+          </h3>
 
-        {}
-        <p className="text-xs sm:text-sm text-[var(--color-text-muted)] leading-relaxed font-light whitespace-nowrap">
-          {message}
-        </p>
+          <p className="text-sm sm:text-base text-[var(--color-text-muted)] mt-2 leading-relaxed font-light">
+            {message}
+          </p>
+        </div>
 
-        {}
+        {/* Actions */}
         <div className="flex items-center gap-3 w-full mt-2">
           {isConfirmMode ? (
             <>
               <button
                 onClick={onConfirm || onClose}
-                className="flex-1 py-3 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-md transition-all cursor-pointer"
+                className="flex-1 py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] !text-white text-xs sm:text-sm font-bold uppercase tracking-wider rounded-full shadow-md transition-all cursor-pointer"
+                style={{ color: '#ffffff' }}
               >
                 {confirmText}
               </button>
               <button
                 onClick={onClose}
-                className="flex-1 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] text-xs font-bold uppercase tracking-wider rounded-full hover:bg-[var(--color-card-hover)] transition-all cursor-pointer"
+                className="flex-1 py-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] text-xs sm:text-sm font-bold uppercase tracking-wider rounded-full hover:bg-[var(--color-card-hover)] transition-all cursor-pointer"
               >
                 {cancelText}
               </button>
@@ -106,7 +108,8 @@ export default function AlertModal({
           ) : (
             <button
               onClick={onClose}
-              className="w-full py-3 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white text-xs font-bold uppercase tracking-wider rounded-full shadow-md transition-all cursor-pointer"
+              className="w-full py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] !text-white text-xs sm:text-sm font-bold uppercase tracking-wider rounded-full shadow-md transition-all cursor-pointer"
+              style={{ color: '#ffffff' }}
             >
               {confirmText}
             </button>

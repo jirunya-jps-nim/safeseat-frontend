@@ -292,7 +292,8 @@ export default function AnalogClockPicker({
           </button>
           <button
             onClick={handleConfirm}
-            className="flex-1 py-2.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] text-white text-xs font-bold rounded-xl transition-all shadow-md"
+            className="flex-1 py-2.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] !text-white text-xs font-bold rounded-xl transition-all shadow-md"
+            style={{ color: '#ffffff' }}
           >
             ตกลง ({String(get24Hour(hour12, period)).padStart(2, '0')}:{String(minute).padStart(2, '0')})
           </button>

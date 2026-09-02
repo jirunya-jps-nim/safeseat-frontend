@@ -11,7 +11,7 @@ const getBaseURL = () => {
 
 const api = axios.create({
   baseURL: getBaseURL(),
-  validateStatus: (status) => status < 500, 
+  validateStatus: () => true, 
 })
 
 api.interceptors.request.use((config) => {

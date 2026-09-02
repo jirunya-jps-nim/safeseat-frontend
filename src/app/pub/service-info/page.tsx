@@ -188,9 +188,10 @@ export default function ServiceInfoPage() {
             </button>
             <button 
               onClick={() => router.push('/pub/request-driver')}
-              className="px-5 py-2 bg-gradient-to-r from-[#2340A7] to-[#2563EB] rounded-full text-xs font-bold text-white shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-1.5"
+              className="px-5 py-2 bg-gradient-to-r from-[#2340A7] to-[#2563EB] rounded-full text-xs font-bold !text-white shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-1.5"
+              style={{ color: '#ffffff' }}
             >
-              <Plus className="w-4 h-4" /> เรียกรถใหม่
+              <Plus className="w-4 h-4 !text-white" style={{ color: '#ffffff' }} /> เรียกรถใหม่
             </button>
           </div>
         </div>
@@ -366,9 +367,10 @@ export default function ServiceInfoPage() {
                         <button
                           type="button"
                           onClick={() => router.push(`/pub/tracking?id=${recordId}`)}
-                          className="px-4 py-1.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] text-white rounded-full text-xs font-bold shadow-md cursor-pointer transition-all inline-flex items-center gap-1"
+                          className="px-4 py-1.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] !text-white rounded-full text-xs font-bold shadow-md cursor-pointer transition-all inline-flex items-center gap-1"
+                          style={{ color: '#ffffff' }}
                         >
-                          ดูรายละเอียด <ArrowRight className="w-3 h-3" />
+                          <span style={{ color: '#ffffff' }}>ดูรายละเอียด</span> <ArrowRight className="w-3 h-3 !text-white" style={{ color: '#ffffff' }} />
                         </button>
                       </td>
                     </tr>
@@ -383,24 +385,24 @@ export default function ServiceInfoPage() {
       <Footer />
 
       {selectedQrRecord && (
-        <div className="fixed inset-0 z-[99999] bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={() => setSelectedQrRecord(null)}>
-          <div className="bg-[var(--color-card)] border border-[#2340A7]/40 rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl flex flex-col items-center gap-5 text-center relative" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[99999] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-fade-in" onClick={() => setSelectedQrRecord(null)}>
+          <div className="bg-[var(--color-card)] border border-[#2340A7]/40 rounded-3xl max-w-2xl w-full p-6 sm:p-10 shadow-2xl flex flex-col items-center gap-6 text-center relative" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setSelectedQrRecord(null)}
-              className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-bold text-lg p-1 cursor-pointer"
+              className="absolute top-5 right-5 text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-bold text-xl p-1.5 cursor-pointer transition-colors"
             >
               ✕
             </button>
 
-            <div className="w-12 h-12 bg-[#2340A7]/15 rounded-full flex items-center justify-center text-[#2340A7] text-2xl">
+            <div className="w-14 h-14 bg-[#2340A7]/15 rounded-full flex items-center justify-center text-[#2340A7] text-2xl shadow-inner">
               📲
             </div>
 
-            <div>
-              <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">
+            <div className="max-w-xl mx-auto px-2">
+              <h3 className="text-xl sm:text-2xl font-bold font-manrope text-[var(--color-text)]">
                 QR Code ติดตามการเดินทาง {selectedQrRecord.id}
               </h3>
-              <p className="text-xs text-[var(--color-text-muted)] mt-1.5 font-medium whitespace-nowrap overflow-x-auto px-2">
+              <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-2 font-medium leading-relaxed break-words">
                 ให้ผู้ใช้บริการใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางของคนขับได้ทันทีเรียลไทม์ (ผู้ใช้บริการ: {selectedQrRecord.custName})
               </p>
             </div>
@@ -413,8 +415,8 @@ export default function ServiceInfoPage() {
               />
             </div>
 
-            <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] p-3 rounded-xl flex items-center justify-between gap-2 text-xs font-mono">
-              <span className="truncate text-[var(--color-text-muted)] text-[11px]">
+            <div className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] p-3.5 rounded-xl flex items-center justify-between gap-3 text-xs font-mono">
+              <span className="truncate text-[var(--color-text-muted)] text-[12px] select-all">
                 {selectedQrRecord.url}
               </span>
               <button
@@ -423,7 +425,8 @@ export default function ServiceInfoPage() {
                   setCopied(true)
                   setTimeout(() => setCopied(false), 2500)
                 }}
-                className="px-3 py-1.5 bg-[#2340A7] text-white rounded-lg font-bold text-[11px] shrink-0 hover:bg-[#1D358F] transition-colors cursor-pointer"
+                className="px-4 py-2 bg-[#2340A7] !text-white rounded-lg font-bold text-xs shrink-0 hover:bg-[#1D358F] transition-colors cursor-pointer shadow-sm"
+                style={{ color: '#ffffff' }}
               >
                 {copied ? 'คัดลอกแล้ว' : 'คัดลอก'}
               </button>
@@ -431,7 +434,7 @@ export default function ServiceInfoPage() {
 
             <button
               onClick={() => setSelectedQrRecord(null)}
-              className="w-full py-2.5 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] rounded-full text-xs font-bold hover:bg-[var(--color-card)] transition-colors cursor-pointer"
+              className="w-full py-3 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] rounded-full text-xs sm:text-sm font-bold hover:bg-[var(--color-card-hover)] transition-colors cursor-pointer"
             >
               ปิดหน้าต่าง
             </button>

@@ -512,7 +512,8 @@ export default function HomePage() {
                 </div>
                 <button 
                   onClick={() => router.push('/register/pub')}
-                  className="w-full py-3.5 px-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer"
+                  className="w-full py-3.5 px-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] !text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer"
+                  style={{ color: '#ffffff' }}
                 >
                   สมัครพาร์ทเนอร์สถานบันเทิง
                 </button>

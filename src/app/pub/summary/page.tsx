@@ -445,9 +445,10 @@ export default function SummaryPage() {
                       onClick={() => setPeriod(tab.key)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         period === tab.key
-                          ? 'bg-[#2340A7] text-white shadow-md'
+                          ? 'bg-[#2340A7] !text-white shadow-md'
                           : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
                       }`}
+                      style={period === tab.key ? { color: '#ffffff' } : undefined}
                     >
                       {tab.label}
                     </button>

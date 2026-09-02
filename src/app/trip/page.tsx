@@ -294,7 +294,9 @@ function TripTrackingContent() {
             </div>
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ผู้ใช้บริการ</span>
-              <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">{reqData?.custname || 'ผู้ใช้บริการ SafeSeat'}</span>
+              <span className="text-base font-extrabold font-manrope text-[var(--color-text)]">
+                {reqData?.custname || reqData?.customer_name || reqData?.user?.name || (reqData?.user_id ? `คุณ (${reqData.user_id})` : 'ผู้ใช้บริการ SafeSeat')}
+              </span>
             </div>
             <div>
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ระยะทาง</span>

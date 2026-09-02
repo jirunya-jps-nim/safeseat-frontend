@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import AlertModal from './AlertModal'
 import { useTheme } from '../ThemeContext'
-import { Shield } from 'lucide-react'
+import { Shield, ShieldCheck } from 'lucide-react'
 
 interface NavbarProps {
   showLoginButton?: boolean
@@ -84,12 +84,19 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
       <header className="fixed top-0 left-0 w-full z-50 pt-6 px-4">
         <nav className="max-w-5xl mx-auto flex items-center justify-between bg-[var(--color-card)]/90 backdrop-blur-xl border border-[var(--color-border)] rounded-full px-6 py-3 shadow-[0_10px_30px_rgba(35,64,167,0.12)] transition-all">
           
-          {}
+          {/* Logo Section */}
           <div 
             onClick={() => { closeMobile(); router.push(pubUser ? '/pub/dashboard' : (driverUser ? '/driver-status' : '/')) }}
             className="flex items-center gap-3 cursor-pointer group"
           >
-            <div className="w-5 h-5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] rounded-sm rotate-45 group-hover:rotate-180 transition-transform duration-500 shadow-[0_0_15px_rgba(35,64,167,0.7)]"></div>
+            {/* Original Rotated Gradient Diamond with Safety Shield Icon */}
+            <div className="relative w-6 h-6 flex items-center justify-center shrink-0">
+              <div className="w-5 h-5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] rounded-[4px] rotate-45 group-hover:rotate-180 transition-transform duration-500 shadow-[0_0_15px_rgba(35,64,167,0.7)] flex items-center justify-center">
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <ShieldCheck className="w-3.5 h-3.5 text-white" />
+              </div>
+            </div>
             <span className="text-lg font-bold font-manrope tracking-tight text-[var(--color-text)]">
               Safe<span className="text-[#2340A7]">Seat</span>
             </span>
@@ -204,21 +211,20 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
                 </button>
               </div>
             ) : (
-              showLoginButton && (
-                <div className="flex items-center gap-3">
-                  {}
-                  <button
-                    onClick={toggleTheme}
-                    className="theme-switch-btn focus:outline-none"
-                    title={`สลับเป็นโหมด ${theme === 'dark' ? 'สว่าง' : 'มืด'}`}
-                    aria-label="Toggle Theme"
-                  >
-                    <div className="theme-switch-thumb shadow-md">
-                      {theme === 'dark' ? '🌙' : '☀️'}
-                    </div>
-                  </button>
+              <div className="flex items-center gap-3">
+                {/* Theme Mode Toggle Button */}
+                <button
+                  onClick={toggleTheme}
+                  className="theme-switch-btn focus:outline-none"
+                  title={`สลับเป็นโหมด ${theme === 'dark' ? 'สว่าง' : 'มืด'}`}
+                  aria-label="Toggle Theme"
+                >
+                  <div className="theme-switch-thumb shadow-md">
+                    {theme === 'dark' ? '🌙' : '☀️'}
+                  </div>
+                </button>
 
-                  {}
+                {showLoginButton && (
                   <button
                     onClick={() => { closeMobile(); router.push('/login') }}
                     style={{ color: '#ffffff' }}
@@ -226,8 +232,8 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
                   >
                     เข้าสู่ระบบ
                   </button>
-                </div>
-              )
+                )}
+              </div>
             )}
 
             {}

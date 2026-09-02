@@ -13,7 +13,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark')
+  const [theme, setThemeState] = useState<Theme>('light')
   const [mounted, setMounted] = useState(false)
 
   const applyTheme = (newTheme: Theme) => {
@@ -31,7 +31,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMounted(true)
     const savedTheme = localStorage.getItem('safeseat_theme') as Theme | null
-    const targetTheme: Theme = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'dark'
+    const targetTheme: Theme = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'light'
     setThemeState(targetTheme)
     applyTheme(targetTheme)
   }, [])

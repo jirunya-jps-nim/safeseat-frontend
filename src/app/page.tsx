@@ -2,12 +2,23 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
 import FloatingNav from '@/components/ui/FloatingNav'
 import api from '@/services/api'
 import { useTheme } from '@/components/ThemeContext'
 import { ArrowRight, Search, Shield, Zap, Car, Star, Bot, Code, Layers, Check, User, MapPin, Clock, ShieldCheck, Sparkles, PhoneCall, CheckCircle2 } from 'lucide-react'
+
+// แผนที่จริงแบบ Interactive แสดงสถานบันเทิงจริงในเชียงใหม่
+const ChiangMaiHeroMap = dynamic(() => import('@/components/ui/ChiangMaiHeroMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full min-h-[420px] rounded-3xl bg-slate-100 dark:bg-slate-900 animate-pulse flex items-center justify-center border border-slate-200 dark:border-slate-800">
+      <span className="text-xs font-bold text-slate-400">กำลังโหลดแผนที่เชียงใหม่...</span>
+    </div>
+  )
+})
 
 const encodeId = (id: number | string | undefined) => {
   if (!id) return '';
@@ -90,157 +101,137 @@ export default function HomePage() {
       <main className="relative z-10">
         
         {/* =========================================================================
-            SECTION 1: HERO & REALTIME TRACKING SEARCH (PERFECT LIGHT & DARK DYNAMICS)
+            SECTION 1: HERO & REALTIME TRACKING SEARCH (2-COLUMN WHITE THEME LAYOUT)
             ========================================================================= */}
-        <section className={`relative min-h-[90vh] flex flex-col items-center justify-center pt-40 pb-20 px-6 overflow-hidden transition-colors duration-500 ${
-          isDark ? 'bg-[#050714]' : 'bg-slate-100'
+        <section className={`relative min-h-[90vh] flex items-center justify-center pt-32 sm:pt-36 pb-20 px-6 sm:px-10 lg:px-12 overflow-hidden transition-colors duration-500 ${
+          isDark 
+            ? 'bg-[#050714]' 
+            : 'bg-gradient-to-b from-[#FFFFFF] via-[#F8FAFC] to-[#EFF6FF]/60'
         }`}>
           
-          {/* Hero Panoramic Background Image with Dynamic Theme Overlay */}
+          {/* Subtle Background Glows */}
           <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-            <img 
-              src="/images/safeseat_hero_bg.png" 
-              alt="SafeSeat futuristic smart night city backdrop" 
-              className={`w-full h-full object-cover object-center scale-105 transition-all duration-500 ${
-                isDark 
-                  ? 'opacity-65 filter brightness-90 contrast-125' 
-                  : 'opacity-25 filter brightness-105 contrast-110'
-              }`}
-            />
-            {/* Overlay Gradients */}
             {isDark ? (
               <>
-                <div className="absolute inset-0 bg-gradient-to-b from-[#050714]/80 via-[#050714]/40 to-[#050714]"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,#050714_85%)]"></div>
+                <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] bg-[#2340A7]/15 rounded-full blur-[140px]"></div>
+                <div className="absolute top-1/2 right-10 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[130px]"></div>
               </>
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-b from-slate-100/60 via-slate-50/40 to-slate-100/80"></div>
+              <>
+                <div className="absolute top-10 left-10 w-[550px] h-[550px] bg-blue-100/50 rounded-full blur-[120px]"></div>
+                <div className="absolute bottom-10 right-10 w-[600px] h-[600px] bg-indigo-50/60 rounded-full blur-[140px]"></div>
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(35,64,167,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(35,64,167,0.03)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_90%)]"></div>
+              </>
             )}
           </div>
 
-          <div className="text-center max-w-5xl mx-auto relative z-10">
+          <div className="max-w-7xl w-full mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
             
-            {/* Pill Badge */}
-            <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border shadow-md backdrop-blur-xl mb-8 animate-fade-up ${
-              isDark 
-                ? 'bg-slate-900/90 border-blue-400/30' 
-                : 'bg-white/95 border-slate-300'
-            }`}>
-              <span className="relative flex h-2.5 w-2.5">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                  isDark ? 'bg-cyan-400' : 'bg-blue-600'
-                }`}></span>
-                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                  isDark ? 'bg-cyan-400' : 'bg-[#2340A7]'
-                }`}></span>
-              </span>
-              <span className={`text-xs font-black tracking-wide font-manrope ${
-                isDark ? 'text-cyan-200' : 'text-[#1D358F]'
-              }`}>
-                SafeSeat 2.0 พร้อมให้บริการครอบคลุมทั่วประเทศแล้ววันนี้
-              </span>
-              <ArrowRight className={`w-3.5 h-3.5 ${isDark ? 'text-cyan-300' : 'text-[#1D358F]'}`} />
-            </div>
+            {/* LEFT COLUMN: HERO HEADLINE & SEARCH */}
+            <div className="lg:col-span-7 flex flex-col items-start text-left">
 
-            {/* Main Heading */}
-            <h1 className={`text-4xl sm:text-6xl md:text-7xl font-black tracking-tight font-manrope leading-[1.15] mb-8 animate-fade-up ${
-              isDark 
-                ? 'text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]' 
-                : 'text-[#090D1A]'
-            }`} style={{ animationDelay: '0.1s' }}>
-              <span className="block">
-                บริการผู้ขับขี่แทนมืออาชีพ
-              </span>
-              <span className="block mt-2">
-                เพื่อทุกค่ำคืนที่{' '}
-                <span className={`text-transparent bg-clip-text inline-block relative font-black ${
+              {/* Main Headline (3-Line Layout from screenshot) */}
+              <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-[58px] font-black tracking-tight font-manrope leading-[1.18] mb-6 animate-fade-up ${
+                isDark 
+                  ? 'text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]' 
+                  : 'text-[#0F172A]'
+              }`} style={{ animationDelay: '0.1s' }}>
+                <span className="block font-black">
+                  ทุกค่ำคืน
+                </span>
+                <span className="block font-black mt-1">
+                  มีคนขับพากลับบ้านอย่าง
+                </span>
+                <span className={`block mt-1 font-black text-transparent bg-clip-text ${
                   isDark 
                     ? 'bg-gradient-to-r from-blue-400 via-sky-300 to-cyan-300' 
                     : 'bg-gradient-to-r from-[#1D358F] via-[#2563EB] to-[#0044C9]'
                 }`}>
                   ปลอดภัย
-                  <svg className={`absolute w-full h-3.5 -bottom-2 left-0 opacity-90 ${
-                    isDark ? 'text-cyan-400' : 'text-[#2340A7]'
-                  }`} viewBox="0 0 100 10" preserveAspectRatio="none">
-                    <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="3.5" fill="none" />
-                  </svg>
                 </span>
-              </span>
-            </h1>
+              </h1>
 
-            {/* Sub-headline (2-line Layout) */}
-            <p className={`text-base sm:text-lg md:text-xl max-w-4xl mx-auto mb-10 leading-relaxed font-bold animate-fade-up ${
-              isDark 
-                ? 'text-slate-200 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]' 
-                : 'text-[#1E293B]'
-            }`} style={{ animationDelay: '0.2s' }}>
-              <span className="block">SafeSeat ผสานระบบนำทาง GPS เรียลไทม์เข้ากับคนขับมืออาชีพที่ผ่านการตรวจสอบประวัติ</span>
-              <span className="block mt-1">เพื่อส่งคุณและรถยนต์ส่วนตัวของคุณกลับบ้านอย่างปลอดภัย ไร้กังวลเรื่องอุบัติเหตุและด่านตรวจ</span>
-            </p>
-
-            {/* Live Tracking Search Box */}
-            <div className="max-w-xl mx-auto mb-10 animate-fade-up" style={{ animationDelay: '0.3s' }}>
-              <form onSubmit={handleSearchCode} className={`flex flex-col sm:flex-row items-center gap-3 p-2 rounded-full backdrop-blur-2xl border ${
+              {/* Sub-headline */}
+              <p className={`text-sm sm:text-base md:text-lg max-w-xl mb-8 leading-relaxed font-medium animate-fade-up ${
                 isDark 
-                  ? 'bg-slate-900/90 border-white/20 shadow-[0_15px_45px_rgba(0,0,0,0.6)]' 
-                  : 'bg-white border-slate-300 shadow-[0_12px_40px_rgba(35,64,167,0.15)]'
-              }`}>
-                <div className="flex-1 flex items-center gap-3 px-5 py-2 w-full">
-                  <Search className={`w-5 h-5 shrink-0 ${isDark ? 'text-cyan-400' : 'text-[#2340A7]'}`} />
-                  <input
-                    type="text"
-                    placeholder="ป้อนรหัสติดตามบริการ..."
-                    value={searchCode}
-                    onChange={(e) => setSearchCode(e.target.value)}
-                    className={`w-full bg-transparent text-sm focus:outline-none font-bold ${
-                      isDark ? 'text-white placeholder-slate-400' : 'text-[#090D1A] placeholder-slate-500'
-                    }`}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={searching}
-                  style={{ color: '#ffffff' }}
-                  className={`w-full sm:w-auto px-7 py-3.5 !text-white font-extrabold text-xs tracking-wider uppercase rounded-full transition-all shadow-lg flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
-                    isDark 
-                      ? 'bg-gradient-to-r from-[#2563EB] to-cyan-600 hover:from-[#1D4ED8] hover:to-cyan-700 hover:shadow-[0_0_25px_rgba(34,211,238,0.5)]' 
-                      : 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] hover:shadow-[0_0_25px_rgba(35,64,167,0.4)]'
-                  }`}
-                >
-                  <span style={{ color: '#ffffff' }}>{searching ? 'กำลังค้นหา...' : 'ติดตามสถานะ'}</span>
-                  <ArrowRight className="w-4 h-4 text-white" style={{ color: '#ffffff' }} />
-                </button>
-              </form>
+                  ? 'text-slate-300' 
+                  : 'text-[#334155]'
+              }`} style={{ animationDelay: '0.2s' }}>
+                ผู้ขับขี่แทนมืออาชีพที่ผ่านการตรวจสอบประวัติ นำทางด้วย GPS แบบเรียลไทม์ ส่งคุณและรถของคุณกลับถึงบ้าน โดยไม่ต้องกังวลเรื่องด่านตรวจหรืออุบัติเหตุ
+              </p>
 
-              {/* Helper Example Code Tag */}
-              <div className={`mt-3 flex flex-wrap items-center justify-center gap-2 text-xs ${
-                isDark ? 'text-slate-300' : 'text-[#1E293B]'
-              }`}>
-                <span className="font-extrabold">💡 ตัวอย่างรหัสบริการ:</span>
-                <span className={`px-3.5 py-1 rounded-full font-black font-mono shadow-xs border ${
+              {/* Live Tracking Search Box */}
+              <div className="w-full max-w-xl mb-7 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+                <form onSubmit={handleSearchCode} className={`flex flex-col sm:flex-row items-center gap-2 p-2 rounded-2xl sm:rounded-full backdrop-blur-2xl border transition-all ${
                   isDark 
-                    ? 'bg-slate-900/90 border-cyan-500/30 text-cyan-300' 
-                    : 'bg-blue-50 border-blue-200 text-[#1D358F]'
+                    ? 'bg-slate-900/90 border-white/20 shadow-[0_15px_45px_rgba(0,0,0,0.6)]' 
+                    : 'bg-white border-slate-300/90 shadow-[0_10px_35px_rgba(35,64,167,0.12)] hover:border-blue-400'
                 }`}>
-                  ป้อนรหัสตัวเลขจากระบบ เช่น <strong className="font-black">79</strong>
-                </span>
+                  <div className="flex-1 flex items-center gap-3 px-4 py-2 w-full">
+                    <Search className={`w-5 h-5 shrink-0 ${isDark ? 'text-cyan-400' : 'text-[#2340A7]'}`} />
+                    <input
+                      type="text"
+                      placeholder="ป้อนรหัสติดตามบริการ..."
+                      value={searchCode}
+                      onChange={(e) => setSearchCode(e.target.value)}
+                      style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
+                      className={`w-full !bg-transparent text-sm focus:outline-none font-bold border-none ${
+                        isDark ? 'text-white placeholder-slate-400' : 'text-[#0F172A] placeholder-slate-400'
+                      }`}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={searching}
+                    style={{ color: '#ffffff' }}
+                    className={`w-full sm:w-auto px-7 py-3.5 !text-white font-extrabold text-sm tracking-wide rounded-xl sm:rounded-full transition-all shadow-md flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer shrink-0 ${
+                      isDark 
+                        ? 'bg-gradient-to-r from-[#2563EB] to-cyan-600 hover:from-[#1D4ED8] hover:to-cyan-700 hover:shadow-[0_0_25px_rgba(34,211,238,0.5)]' 
+                        : 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] hover:shadow-[0_4px_18px_rgba(35,64,167,0.35)]'
+                    }`}
+                  >
+                    <span style={{ color: '#ffffff' }}>{searching ? 'กำลังค้นหา...' : 'ติดตามสถานะ'}</span>
+                    <ArrowRight className="w-4 h-4 text-white" style={{ color: '#ffffff' }} />
+                  </button>
+                </form>
+
+                {/* Helper Example Code Tag */}
+                <div className={`mt-3.5 flex flex-wrap items-center gap-2 text-xs font-semibold ${
+                  isDark ? 'text-slate-300' : 'text-[#475569]'
+                }`}>
+                  <span>ตัวอย่างรหัสบริการ:</span>
+                  <span className={`px-3 py-0.5 rounded-lg font-black font-mono shadow-xs border ${
+                    isDark 
+                      ? 'bg-slate-900/90 border-cyan-500/30 text-cyan-300' 
+                      : 'bg-blue-50 border-blue-200 text-[#1D358F]'
+                  }`}>
+                    79
+                  </span>
+                </div>
+
+                {searchError && <p className="mt-3 text-sm text-red-600 font-black">{searchError}</p>}
               </div>
 
-              {searchError && <p className="mt-3 text-sm text-red-600 font-black">{searchError}</p>}
+              {/* CTA Button */}
+              <div className="animate-fade-up" style={{ animationDelay: '0.4s' }}>
+                <button 
+                  onClick={() => router.push('/register')}
+                  className={`px-6 py-3.5 rounded-2xl border font-black text-sm transition-all duration-300 flex items-center gap-2.5 shadow-md cursor-pointer group ${
+                    isDark
+                      ? 'bg-slate-900/80 border-slate-700 text-white hover:bg-slate-800'
+                      : 'bg-white border-slate-300 text-[#0F172A] hover:bg-slate-50 hover:border-slate-400 hover:shadow-lg'
+                  }`}
+                >
+                  <span>เริ่มสมัครใช้งานระบบ</span>
+                  <ArrowRight className="w-4 h-4 text-[#2340A7] transition-transform group-hover:translate-x-1" />
+                </button>
+              </div>
+
             </div>
 
-            {/* CTA Button */}
-            <div className="flex justify-center items-center animate-fade-up" style={{ animationDelay: '0.4s' }}>
-              <button 
-                onClick={() => router.push('/register')}
-                className="shiny-cta group cursor-pointer shadow-xl hover:scale-105 transition-all duration-300"
-              >
-                <span className={`relative z-10 flex items-center gap-2 font-black text-sm sm:text-base px-3 py-1 ${
-                  isDark ? 'text-white' : 'text-[#090D1A]'
-                }`}>
-                  เริ่มสมัครใช้งานระบบ <ArrowRight className="w-5 h-5 text-[#2340A7] transition-transform group-hover:translate-x-1" />
-                </span>
-              </button>
+            {/* RIGHT COLUMN: REAL CHIANG MAI INTERACTIVE MAP WITH AUTHENTIC ENTERTAINMENT VENUES */}
+            <div className="lg:col-span-5 w-full flex justify-center lg:justify-end animate-fade-up min-h-[440px] sm:min-h-[480px] lg:min-h-[500px]" style={{ animationDelay: '0.2s' }}>
+              <ChiangMaiHeroMap />
             </div>
 
           </div>
@@ -557,65 +548,106 @@ export default function HomePage() {
 
       {/* Multiple Matches Modal Popup */}
       {multipleMatches && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setMultipleMatches(null)}>
-          <div className="bg-[#0B132B] border border-slate-700/80 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden text-white" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center pb-4 border-b border-slate-700/80 mb-6">
-              <div className="flex items-center gap-2.5 text-lg font-bold text-white font-manrope">
-                <span className="p-2 bg-blue-500/20 text-blue-400 rounded-xl"><Layers className="w-5 h-5" /></span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in" onClick={() => setMultipleMatches(null)}>
+          <div className={`border rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden transition-all duration-300 ${
+            isDark ? 'bg-[#0B132B] border-slate-700/80 text-white' : 'bg-white border-slate-200 text-[#0F172A]'
+          }`} onClick={e => e.stopPropagation()}>
+            <div className={`flex justify-between items-center pb-4 border-b mb-6 ${
+              isDark ? 'border-slate-700/80' : 'border-slate-200'
+            }`}>
+              <div className={`flex items-center gap-2.5 text-lg font-black font-manrope ${
+                isDark ? 'text-white' : 'text-[#0F172A]'
+              }`}>
+                <span className={`p-2 rounded-xl ${
+                  isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-[#1D358F] border border-blue-200/80'
+                }`}>
+                  <Layers className="w-5 h-5" />
+                </span>
                 พบข้อมูล 2 รายการซ้ำกัน ({multipleMatches[0]?.requestid})
               </div>
               <button 
                 onClick={() => setMultipleMatches(null)}
-                className="text-slate-400 hover:text-white font-bold text-sm px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-slate-700 cursor-pointer transition-colors"
+                className={`font-black text-sm px-2.5 py-1 rounded-full cursor-pointer transition-colors ${
+                  isDark ? 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-[#0F172A]'
+                }`}
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-slate-300 mb-6 leading-relaxed">
-              เนื่องจากรหัสหมายเลข <span className="font-bold text-blue-400">#{multipleMatches[0]?.requestid}</span> มีบันทึกอยู่ทั้งในระบบเรียกรถของผู้ใช้บริการ และระบบพาร์ทเนอร์สถานบันเทิง กรุณาเลือกรายการที่คุณต้องการติดตาม:
+            <p className={`text-sm mb-6 leading-relaxed font-bold ${
+              isDark ? 'text-slate-200' : 'text-[#0F172A]'
+            }`}>
+              เนื่องจากรหัสหมายเลข <span className={`font-black ${isDark ? 'text-blue-400' : 'text-[#1D358F]'}`}>#{multipleMatches[0]?.requestid}</span> มีบันทึกอยู่ทั้งในระบบเรียกรถของผู้ใช้บริการ และระบบพาร์ทเนอร์สถานบันเทิง กรุณาเลือกรายการที่คุณต้องการติดตาม:
             </p>
 
             <div className="flex flex-col gap-3.5 mb-6">
               {multipleMatches.map((item, idx) => {
                 const isUser = item.requestType === 'user'
                 return (
-                  <button
+                  <div
                     key={idx}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => {
                       const reqId = item.requestid
                       setMultipleMatches(null)
                       const targetUrl = isUser ? `/trip?id=${reqId}` : `/tracking?id=${reqId}`
                       window.open(targetUrl, '_blank')
                     }}
-                    className={`p-4 rounded-2xl border text-left transition-all hover:scale-[1.01] flex items-center justify-between gap-4 cursor-pointer shadow-md ${
-                      isUser 
-                        ? 'bg-slate-900/90 border-blue-500/40 hover:border-blue-400 hover:bg-blue-950/60'
-                        : 'bg-slate-900/90 border-indigo-500/40 hover:border-indigo-400 hover:bg-indigo-950/60'
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        const reqId = item.requestid
+                        setMultipleMatches(null)
+                        const targetUrl = isUser ? `/trip?id=${reqId}` : `/tracking?id=${reqId}`
+                        window.open(targetUrl, '_blank')
+                      }
+                    }}
+                    className={`p-4 rounded-2xl border text-left transition-all hover:scale-[1.01] flex items-center justify-between gap-4 cursor-pointer shadow-xs ${
+                      isDark
+                        ? (isUser 
+                            ? 'bg-slate-900/90 border-blue-500/40 hover:border-blue-400 hover:bg-blue-950/60'
+                            : 'bg-slate-900/90 border-indigo-500/40 hover:border-indigo-400 hover:bg-indigo-950/60')
+                        : (isUser
+                            ? 'bg-blue-50/80 hover:bg-blue-100/80 border-blue-200 hover:border-[#2340A7] hover:shadow-md'
+                            : 'bg-indigo-50/80 hover:bg-indigo-100/80 border-indigo-200 hover:border-[#2340A7] hover:shadow-md')
                     }`}
                   >
                     <div className="flex items-center gap-3.5">
                       <div className="p-3 rounded-xl !text-white shadow-md bg-gradient-to-r from-[#2340A7] to-[#2563EB]">
-                        {isUser ? <User className="w-5 h-5" /> : <Shield className="w-5 h-5" />}
+                        {isUser ? <User className="w-5 h-5 text-white" /> : <Shield className="w-5 h-5 text-white" />}
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-white">
+                        <div 
+                          className="text-base font-black tracking-tight"
+                          style={{ color: isDark ? '#ffffff' : '#0F172A' }}
+                        >
                           {isUser ? 'รายการของผู้ใช้บริการ (User Trip)' : 'รายการของสถานบันเทิง (Venue Order)'}
                         </div>
-                        <div className="text-xs text-slate-400 mt-0.5 font-medium">
-                          ผู้ใช้บริการ: <span className="font-semibold text-slate-200">{item.custname || '—'}</span> • สถานะ: <span className="font-semibold text-blue-400">{item.requeststatus}</span>
+                        <div 
+                          className="text-xs mt-1 font-bold"
+                          style={{ color: isDark ? '#cbd5e1' : '#334155' }}
+                        >
+                          ผู้ใช้บริการ: <span style={{ color: isDark ? '#ffffff' : '#0F172A', fontWeight: 900 }}>{item.custname || '—'}</span> • สถานะ: <span style={{ color: isDark ? '#60a5fa' : '#1D358F', fontWeight: 900 }}>{item.requeststatus}</span>
                         </div>
                       </div>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-blue-400 shrink-0" />
-                  </button>
+                    <ArrowRight 
+                      className="w-5 h-5 shrink-0" 
+                      style={{ color: isDark ? '#60a5fa' : '#1D358F' }} 
+                    />
+                  </div>
                 )
               })}
             </div>
 
             <button
               onClick={() => setMultipleMatches(null)}
-              className="w-full py-3 bg-slate-800/80 border border-slate-700 text-slate-300 font-bold text-xs rounded-full hover:bg-slate-700 hover:text-white transition-colors cursor-pointer"
+              className={`w-full py-3.5 font-black text-xs rounded-full transition-colors cursor-pointer border ${
+                isDark 
+                  ? 'bg-slate-800/80 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white' 
+                  : 'bg-slate-100 border-slate-300 text-[#0F172A] hover:bg-slate-200'
+              }`}
             >
               ปิดหน้าต่าง
             </button>

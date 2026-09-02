@@ -13,8 +13,14 @@ export default function Footer() {
         
         {}
         <div className="md:col-span-2">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-5 h-5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] rounded-sm rotate-45 shadow-[0_0_15px_rgba(35,64,167,0.7)]"></div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="relative w-6 h-6 flex items-center justify-center shrink-0">
+              <div className="w-5 h-5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] rounded-[4px] rotate-45 shadow-[0_0_15px_rgba(35,64,167,0.7)] flex items-center justify-center">
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <ShieldCheck className="w-3.5 h-3.5 text-white" />
+              </div>
+            </div>
             <span className="text-xl font-bold font-manrope tracking-tight text-[var(--color-text)]">Safe<span className="text-[#2340A7]">Seat</span></span>
           </div>
           <p className="text-[var(--color-text-muted)] max-w-sm leading-relaxed text-xs font-normal">

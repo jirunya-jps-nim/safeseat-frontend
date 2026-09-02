@@ -2,9 +2,38 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@200;400;600;700;800&family=Kanit:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+@variant dark (&:where(.dark, .dark *));
 
 
-:root, html, html.dark {
+:root, html, html.light {
+  --accent-purple: #2340A7;
+  --accent-blue: #2340A7;
+  --accent-cyan: #2563EB;
+  --accent-deep: #0044C9;
+  --accent-gradient: linear-gradient(135deg, #2340A7 0%, #2563EB 50%, #0044C9 100%);
+  --accent-glow: rgba(35, 64, 167, 0.2);
+  
+  --color-bg: #F8FAFC;           
+  --color-card: #FFFFFF;         
+  --color-card-hover: #EFF6FF;   
+  --color-surface: #F1F5F9;      
+  --color-text: #0F172A;         
+  --color-text-muted: #64748B;   
+  --color-text-subtle: #94A3B8;  
+  --color-border: #E2E8F0;
+  --color-border-light: #F1F5F9;
+  --color-accent: #2340A7;
+  --color-accent-hover: #1D358F;
+  --color-accent-text: #ffffff;
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(35, 64, 167, 0.2);
+  --glow-overlay: radial-gradient(circle at center, rgba(35, 64, 167, 0.05) 0%, transparent 70%);
+
+  color-scheme: light;
+}
+
+html.dark {
   --accent-purple: #2340A7;
   --accent-blue: #2340A7;
   --accent-cyan: #2563EB;
@@ -31,33 +60,6 @@
   color-scheme: dark;
 }
 
-html.light {
-  --accent-purple: #2340A7;
-  --accent-blue: #2340A7;
-  --accent-cyan: #2563EB;
-  --accent-deep: #0044C9;
-  --accent-gradient: linear-gradient(135deg, #2340A7 0%, #2563EB 50%, #0044C9 100%);
-  --accent-glow: rgba(35, 64, 167, 0.2);
-  
-  --color-bg: #F8FAFC;           
-  --color-card: #FFFFFF;         
-  --color-card-hover: #EFF6FF;   
-  --color-surface: #F1F5F9;      
-  --color-text: #1E293B;         
-  --color-text-muted: #64748B;   
-  --color-text-subtle: #94A3B8;  
-  --color-border: #E2E8F0;
-  --color-border-light: #F1F5F9;
-  --color-accent: #2340A7;
-  --color-accent-hover: #1D358F;
-  --color-accent-text: #ffffff;
-  --glass-bg: rgba(255, 255, 255, 0.95);
-  --glass-border: rgba(35, 64, 167, 0.2);
-  --glow-overlay: radial-gradient(circle at center, rgba(35, 64, 167, 0.05) 0%, transparent 70%);
-
-  color-scheme: light;
-}
-
 @property --gradient-angle { 
   syntax: "<angle>"; 
   initial-value: 0deg; 
@@ -75,8 +77,7 @@ body {
 
 input, select, textarea {
   font-family: 'Inter', 'Kanit', sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  color: inherit;
   font-size: 16px;
 }
 
@@ -84,52 +85,38 @@ button {
   font-family: 'Inter', 'Kanit', sans-serif;
 }
 
-/* Ensure ALL blue buttons, gradients, and primary actions throughout the entire system have crisp pure white text and icons */
+/* Ensure solid blue primary CTA buttons have crisp pure white text and icons (excluding light pastel cards) */
 button[class*="bg-[#2340A7]"],
 button[class*="bg-[#2563EB]"],
 button[class*="bg-[#1D358F]"],
 button[class*="bg-[#1E40AF]"],
 button[class*="from-[#2340A7]"],
 button[class*="from-[#2563EB]"],
-button[class*="from-blue-"],
-button[class*="from-indigo-"],
-button[class*="bg-blue-"],
-button[class*="bg-indigo-"],
+button[class*="bg-blue-600"],
+button[class*="bg-blue-700"],
+button[class*="bg-indigo-600"],
+button[class*="bg-indigo-700"],
 a[class*="bg-[#2340A7]"],
 a[class*="bg-[#2563EB]"],
 a[class*="bg-[#1D358F]"],
 a[class*="bg-[#1E40AF]"],
 a[class*="from-[#2340A7]"],
 a[class*="from-[#2563EB]"],
-a[class*="from-blue-"],
-a[class*="from-indigo-"],
-a[class*="bg-blue-"],
-a[class*="bg-indigo-"],
 .btn-primary,
 .bg-blue-btn {
   color: #ffffff !important;
 }
 
-button[class*="bg-[#2340A7]"] *,
-button[class*="bg-[#2563EB]"] *,
-button[class*="bg-[#1D358F]"] *,
-button[class*="bg-[#1E40AF]"] *,
-button[class*="from-[#2340A7]"] *,
-button[class*="from-[#2563EB]"] *,
-button[class*="from-blue-"] *,
-button[class*="from-indigo-"] *,
-button[class*="bg-blue-"] *,
-button[class*="bg-indigo-"] *,
-a[class*="bg-[#2340A7]"] *,
-a[class*="bg-[#2563EB]"] *,
-a[class*="bg-[#1D358F]"] *,
-a[class*="bg-[#1E40AF]"] *,
-a[class*="from-[#2340A7]"] *,
-a[class*="from-[#2563EB]"] *,
-a[class*="from-blue-"] *,
-a[class*="from-indigo-"] *,
-a[class*="bg-blue-"] *,
-a[class*="bg-indigo-"] * {
+button[class*="bg-[#2340A7]"] *:not(.keep-color),
+button[class*="bg-[#2563EB]"] *:not(.keep-color),
+button[class*="bg-[#1D358F]"] *:not(.keep-color),
+button[class*="bg-[#1E40AF]"] *:not(.keep-color),
+button[class*="from-[#2340A7]"] *:not(.keep-color),
+button[class*="from-[#2563EB]"] *:not(.keep-color),
+a[class*="bg-[#2340A7]"] *:not(.keep-color),
+a[class*="bg-[#2563EB]"] *:not(.keep-color),
+a[class*="from-[#2340A7]"] *:not(.keep-color),
+a[class*="from-[#2563EB]"] *:not(.keep-color) {
   color: #ffffff !important;
 }
 

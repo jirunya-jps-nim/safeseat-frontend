@@ -78,11 +78,11 @@ export default function AlertModal({
 
         {/* Title & Message */}
         <div className="max-w-2xl mx-auto">
-          <h3 className="text-xl sm:text-2xl font-bold font-manrope text-[var(--color-text)]">
+          <h3 className="text-xl sm:text-2xl font-black font-manrope text-[#0F172A] dark:text-white">
             {title || c.title}
           </h3>
 
-          <p className="text-sm sm:text-base text-[var(--color-text-muted)] mt-2 leading-relaxed font-light">
+          <p className="text-sm sm:text-base text-[#1E293B] dark:text-slate-200 mt-2.5 leading-relaxed font-bold">
             {message}
           </p>
         </div>

@@ -557,26 +557,26 @@ export default function HomePage() {
 
       {/* Multiple Matches Modal Popup */}
       {multipleMatches && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-          <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden">
-            <div className="flex justify-between items-center pb-4 border-b border-[var(--color-border)] mb-6">
-              <div className="flex items-center gap-2 text-lg font-bold text-[var(--color-text)] font-manrope">
-                <span className="p-2 bg-blue-500/10 text-[#2340A7] rounded-xl"><Layers className="w-5 h-5" /></span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in" onClick={() => setMultipleMatches(null)}>
+          <div className="bg-[#0B132B] border border-slate-700/80 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden text-white" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center pb-4 border-b border-slate-700/80 mb-6">
+              <div className="flex items-center gap-2.5 text-lg font-bold text-white font-manrope">
+                <span className="p-2 bg-blue-500/20 text-blue-400 rounded-xl"><Layers className="w-5 h-5" /></span>
                 พบข้อมูล 2 รายการซ้ำกัน ({multipleMatches[0]?.requestid})
               </div>
               <button 
                 onClick={() => setMultipleMatches(null)}
-                className="text-[var(--color-text-muted)] hover:text-[var(--color-text)] font-bold text-sm px-2.5 py-1 rounded-full bg-[var(--color-surface)] cursor-pointer"
+                className="text-slate-400 hover:text-white font-bold text-sm px-2.5 py-1 rounded-full bg-slate-800/80 hover:bg-slate-700 cursor-pointer transition-colors"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-[var(--color-text-muted)] mb-6 leading-relaxed">
-              เนื่องจากรหัสหมายเลข <span className="font-bold text-[#2340A7]">{multipleMatches[0]?.requestid}</span> มีบันทึกอยู่ทั้งในระบบเรียกรถของผู้ใช้บริการ และระบบพาร์ทเนอร์สถานบันเทิง กรุณาเลือกรายการที่คุณต้องการติดตาม:
+            <p className="text-xs text-slate-300 mb-6 leading-relaxed">
+              เนื่องจากรหัสหมายเลข <span className="font-bold text-blue-400">#{multipleMatches[0]?.requestid}</span> มีบันทึกอยู่ทั้งในระบบเรียกรถของผู้ใช้บริการ และระบบพาร์ทเนอร์สถานบันเทิง กรุณาเลือกรายการที่คุณต้องการติดตาม:
             </p>
 
-            <div className="flex flex-col gap-4 mb-6">
+            <div className="flex flex-col gap-3.5 mb-6">
               {multipleMatches.map((item, idx) => {
                 const isUser = item.requestType === 'user'
                 return (
@@ -588,26 +588,26 @@ export default function HomePage() {
                       const targetUrl = isUser ? `/trip?id=${reqId}` : `/tracking?id=${reqId}`
                       window.open(targetUrl, '_blank')
                     }}
-                    className={`p-4 rounded-2xl border text-left transition-all hover:scale-[1.01] flex items-center justify-between gap-4 cursor-pointer shadow-sm ${
+                    className={`p-4 rounded-2xl border text-left transition-all hover:scale-[1.01] flex items-center justify-between gap-4 cursor-pointer shadow-md ${
                       isUser 
-                        ? 'bg-blue-500/5 border-blue-500/30 hover:border-blue-500 hover:bg-blue-500/10'
-                        : 'bg-indigo-500/5 border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500/10'
+                        ? 'bg-slate-900/90 border-blue-500/40 hover:border-blue-400 hover:bg-blue-950/60'
+                        : 'bg-slate-900/90 border-indigo-500/40 hover:border-indigo-400 hover:bg-indigo-950/60'
                     }`}
                   >
                     <div className="flex items-center gap-3.5">
-                      <div className="p-3 rounded-xl text-white shadow-md bg-gradient-to-r from-[#2340A7] to-[#2563EB]">
+                      <div className="p-3 rounded-xl !text-white shadow-md bg-gradient-to-r from-[#2340A7] to-[#2563EB]">
                         {isUser ? <User className="w-5 h-5" /> : <Shield className="w-5 h-5" />}
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-[var(--color-text)]">
+                        <div className="text-sm font-bold text-white">
                           {isUser ? 'รายการของผู้ใช้บริการ (User Trip)' : 'รายการของสถานบันเทิง (Venue Order)'}
                         </div>
-                        <div className="text-xs text-[var(--color-text-muted)] mt-0.5 font-medium">
-                          ผู้ใช้บริการ: <span className="font-semibold text-[var(--color-text)]">{item.custname || '—'}</span> • สถานะ: <span className="font-semibold text-[#2340A7]">{item.requeststatus}</span>
+                        <div className="text-xs text-slate-400 mt-0.5 font-medium">
+                          ผู้ใช้บริการ: <span className="font-semibold text-slate-200">{item.custname || '—'}</span> • สถานะ: <span className="font-semibold text-blue-400">{item.requeststatus}</span>
                         </div>
                       </div>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-blue-400" />
+                    <ArrowRight className="w-5 h-5 text-blue-400 shrink-0" />
                   </button>
                 )
               })}
@@ -615,7 +615,7 @@ export default function HomePage() {
 
             <button
               onClick={() => setMultipleMatches(null)}
-              className="w-full py-3 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)] font-bold text-xs rounded-full hover:bg-[var(--color-card-hover)] transition-colors cursor-pointer"
+              className="w-full py-3 bg-slate-800/80 border border-slate-700 text-slate-300 font-bold text-xs rounded-full hover:bg-slate-700 hover:text-white transition-colors cursor-pointer"
             >
               ปิดหน้าต่าง
             </button>

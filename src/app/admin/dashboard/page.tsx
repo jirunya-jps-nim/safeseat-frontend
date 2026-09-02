@@ -94,6 +94,18 @@ function getThaiDateString(dateStr: string): string {
   }
 }
 
+function formatSupabaseImageUrl(url?: string | null): string {
+  if (!url) return ''
+  const trimmed = String(url).trim()
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined' || trimmed === '—') return ''
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+    return trimmed
+  }
+  const cleanPath = trimmed.replace(/^\/+/, '').replace(/^images\//, '')
+  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qbionbozkvlekpakvstg.supabase.co'
+  return `${baseUrl.replace(/\/+$/, '')}/storage/v1/object/public/images/${cleanPath}`
+}
+
 const REPORT_TYPE_MAP: Record<string, string> = {
   'wrong location': 'พิกัดรับส่งไม่ถูกต้อง / ผิดตำแหน่ง',
   'behavior': 'พฤติกรรมไม่เหมาะสม / กิริยาไม่สุภาพ',
@@ -1687,16 +1699,19 @@ export default function AdminDashboard() {
         const carModel = carObj?.carmodel || carObj?.car_model || '—'
         const carColor = carObj?.carcolor || carObj?.car_color || '—'
         const carPlate = carObj?.carplate || carObj?.carplateno || carObj?.carPlateNo || carObj?.car_plate_no || carObj?.car_plate || '—'
-        const carImg = carObj?.carimagepath || carObj?.carImagePath || carObj?.car_image_path
+        const rawCarImg = carObj?.carimagepath || carObj?.carImagePath || carObj?.car_image_path || (carObj as any)?.car_image || (carObj as any)?.image
+        const carImg = formatSupabaseImageUrl(rawCarImg)
 
         const docItems = [
-          { label: '📸 รูปโปรไฟล์ใบหน้า', url: docs.profile },
+          { label: '📸 รูปโปรไฟล์ใบหน้า', url: formatSupabaseImageUrl(docs.profile) },
           { label: '🚗 รูปถ่ายยานพาหนะ', url: carImg },
-          { label: '🪪 ใบขับขี่', url: docs.driverLicense },
-          { label: '⚖️ ประวัติอาชญากรรม', url: docs.criminalRecord },
-          { label: '🏥 ใบรับรองแพทย์', url: docs.medicalCertificate },
-          { label: '📜 อบรม 1: ขับขี่ปลอดภัย', url: docs.trainingCert1 },
-          { label: '📜 อบรม 2: ปฐมพยาบาล', url: docs.trainingCert2 },
+          { label: '🪪 ใบขับขี่', url: formatSupabaseImageUrl(docs.driverLicense) },
+          { label: '⚖️ ประวัติอาชญากรรม', url: formatSupabaseImageUrl(docs.criminalRecord) },
+          { label: '🏥 ใบรับรองแพทย์', url: formatSupabaseImageUrl(docs.medicalCertificate) },
+          { label: '📜 อบรม 1: ขับขี่ปลอดภัย', url: formatSupabaseImageUrl(docs.trainingCert1) },
+          { label: '📜 อบรม 2: ปฐมพยาบาล', url: formatSupabaseImageUrl(docs.trainingCert2) },
+          ...(docs.trainingCert3 ? [{ label: '📜 อบรม 3', url: formatSupabaseImageUrl(docs.trainingCert3) }] : []),
+          ...(docs.trainingCert4 ? [{ label: '📜 อบรม 4', url: formatSupabaseImageUrl(docs.trainingCert4) }] : []),
         ].filter(item => Boolean(item.url))
 
         return (
@@ -1867,8 +1882,8 @@ export default function AdminDashboard() {
           null
 
         const pubDocItems = [
-          { label: '📄 ใบอนุญาตประกอบการ', url: licenseUrl, placeholderIcon: '📄' },
-          { label: '🏪 ภาพถ่ายหน้าร้าน / บรรยากาศสถานบันเทิง', url: shopUrl, placeholderIcon: '🏪' },
+          { label: '📄 ใบอนุญาตประกอบการ', url: formatSupabaseImageUrl(licenseUrl), placeholderIcon: '📄' },
+          { label: '🏪 ภาพถ่ายหน้าร้าน / บรรยากาศสถานบันเทิง', url: formatSupabaseImageUrl(shopUrl), placeholderIcon: '🏪' },
         ]
 
         const isPubApproved = selectedPub.regisstatus === 'approved' || (selectedPub as any).regisstatus === 'อนุมัติแล้ว'

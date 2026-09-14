@@ -328,7 +328,7 @@ export default function AdminDashboard() {
     try {
       const res = await api.put(`/admin/drivers/${username}/status`, { status: newStatus })
       if (res.data && res.data.success) {
-        showToast(newStatus === 'ปฏิเสธ' ? `ปฏิเสธคำขอสมัครคนขับของ @${username} เรียบร้อยแล้ว` : `อนุมัติคำขอสมัครคนขับ @${username} เรียบร้อยแล้ว`)
+        showToast(newStatus === 'ปฏิเสธ' ? `ปฏิเสธและลบข้อมูลคำขอสมัครคนขับของ @${username} ออกจากระบบแล้ว` : `อนุมัติคำขอสมัครคนขับ @${username} เรียบร้อยแล้ว`)
         await fetchTabData('driver-app')
         setSelectedDriver(null)
       }
@@ -344,7 +344,7 @@ export default function AdminDashboard() {
     try {
       const res = await api.put(`/admin/pubs/${username}/status`, { status: newStatus })
       if (res.data && res.data.success) {
-        showToast(newStatus === 'rejected' ? `ปฏิเสธคำขอพาร์ทเนอร์สถานบันเทิง @${username} เรียบร้อยแล้ว` : `อนุมัติคำขอพาร์ทเนอร์สถานบันเทิง @${username} เรียบร้อยแล้ว`)
+        showToast(newStatus === 'rejected' ? `ปฏิเสธและลบข้อมูลคำขอสถานบันเทิง @${username} ออกจากระบบแล้ว` : `อนุมัติคำขอพาร์ทเนอร์สถานบันเทิง @${username} เรียบร้อยแล้ว`)
         await fetchTabData('pub-app')
         setSelectedPub(null)
       }
@@ -406,7 +406,7 @@ export default function AdminDashboard() {
     setConfirmModal({
       isOpen: true,
       title: 'ยืนยันการปฏิเสธการสมัครคนขับ',
-      message: `คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอสมัครของคนขับ @${username}? (สถานะจะถูกเปลี่ยนเป็น "ปฏิเสธ")`,
+      message: `คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอสมัครของคนขับ @${username}? ข้อมูลจะถูกลบออกจากระบบทั้งหมด`,
       confirmText: 'ยืนยันการปฏิเสธ (Confirm Reject)',
       confirmBg: 'bg-red-600 hover:bg-red-700',
       onConfirm: () => handleDriverStatus(username, 'ปฏิเสธ')
@@ -428,7 +428,7 @@ export default function AdminDashboard() {
     setConfirmModal({
       isOpen: true,
       title: 'ยืนยันการปฏิเสธการสมัครพาร์ทเนอร์สถานบันเทิง',
-      message: `คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอสมัครของสถานบันเทิง @${username}? (สถานะจะถูกเปลี่ยนเป็น "ปฏิเสธ")`,
+      message: `คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอสมัครของสถานบันเทิง @${username}? ข้อมูลจะถูกลบออกจากระบบทั้งหมด`,
       confirmText: 'ยืนยันการปฏิเสธ (Confirm Reject)',
       confirmBg: 'bg-red-600 hover:bg-red-700',
       onConfirm: () => handlePubStatus(username, 'rejected')
@@ -1114,7 +1114,6 @@ export default function AdminDashboard() {
                 >
                   <option value="รอดำเนินการ">🟡 รอดำเนินการ (Pending)</option>
                   <option value="อนุมัติแล้ว">🟢 อนุมัติแล้ว (Approved)</option>
-                  <option value="ปฏิเสธ">🔴 ปฏิเสธ (Rejected)</option>
                   <option value="All">📋 รายการทั้งหมด (All)</option>
                 </select>
               </div>
@@ -1150,8 +1149,7 @@ export default function AdminDashboard() {
                         statusFilter === 'All' ||
                         regStatus === statusFilter ||
                         (statusFilter === 'รอดำเนินการ' && (regStatus === 'รอดำเนินการ' || regStatus === 'pending')) ||
-                        (statusFilter === 'อนุมัติแล้ว' && (regStatus === 'อนุมัติแล้ว' || regStatus === 'approved')) ||
-                        (statusFilter === 'ปฏิเสธ' && (regStatus === 'ปฏิเสธ' || regStatus === 'rejected'))
+                        (statusFilter === 'อนุมัติแล้ว' && (regStatus === 'อนุมัติแล้ว' || regStatus === 'approved'))
 
                       const matchDate = !dateFilter || getThaiDateString(d.regisdate) === dateFilter
 
@@ -1229,7 +1227,7 @@ export default function AdminDashboard() {
                 <Search className="w-5 h-5 text-[#2563EB] shrink-0" />
                 <input
                   type="text"
-                  placeholder="ค้นหาชื่อร้าน, username, อีเมล, เบอร์โทร, เลขผู้เสียภาษี..."
+                  placeholder="ค้นหาชื่อสถานบันเทิง, username, อีเมล, เบอร์โทร, เลขผู้เสียภาษี..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="bg-transparent text-sm text-[#0F172A] outline-none w-full font-semibold"
@@ -1261,7 +1259,6 @@ export default function AdminDashboard() {
                 >
                   <option value="รอดำเนินการ">🟡 รอดำเนินการ (Pending)</option>
                   <option value="อนุมัติแล้ว">🟢 อนุมัติแล้ว (Approved)</option>
-                  <option value="ปฏิเสธ">🔴 ปฏิเสธ (Rejected)</option>
                   <option value="All">📋 รายการทั้งหมด (All)</option>
                 </select>
               </div>
@@ -1297,8 +1294,7 @@ export default function AdminDashboard() {
                         statusFilter === 'All' ||
                         pubStatus === statusFilter || 
                         (statusFilter === 'รอดำเนินการ' && (pubStatus === 'pending' || pubStatus === 'รอดำเนินการ')) ||
-                        (statusFilter === 'อนุมัติแล้ว' && (pubStatus === 'approved' || pubStatus === 'อนุมัติแล้ว')) ||
-                        (statusFilter === 'ปฏิเสธ' && (pubStatus === 'rejected' || pubStatus === 'ปฏิเสธ'))
+                        (statusFilter === 'อนุมัติแล้ว' && (pubStatus === 'approved' || pubStatus === 'อนุมัติแล้ว'))
 
                       const matchDate = !dateFilter || getThaiDateString(p.regisdate) === dateFilter
 
@@ -1881,7 +1877,7 @@ export default function AdminDashboard() {
 
         const pubDocItems = [
           { label: '📄 ใบอนุญาตประกอบการ', url: formatSupabaseImageUrl(licenseUrl), placeholderIcon: '📄' },
-          { label: '🏪 ภาพถ่ายหน้าร้าน / บรรยากาศสถานบันเทิง', url: formatSupabaseImageUrl(shopUrl), placeholderIcon: '🏪' },
+          { label: '🏪 ภาพถ่ายบรรยากาศสถานบันเทิง', url: formatSupabaseImageUrl(shopUrl), placeholderIcon: '🏪' },
         ]
 
         const isPubApproved = selectedPub.regisstatus === 'approved' || (selectedPub as any).regisstatus === 'อนุมัติแล้ว'

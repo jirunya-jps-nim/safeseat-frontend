@@ -166,6 +166,33 @@ export default function RegisterPubPage() {
       }
       setLoading(false)
     }
+
+    if (step === 3) {
+      if (!validateStep3(form, termsAccepted, setError)) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+
+      setLoading(true)
+      try {
+        const res = await api.post('/pub/check-email', {
+          username: form.username,
+        })
+        if (res.status >= 400 || res.data?.success === false || res.data?.error) {
+          setError(res.data?.error || res.data?.message || 'ชื่อผู้ใช้นี้ถูกใช้งานแล้วในระบบ')
+          setLoading(false)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          return
+        }
+      } catch (err: unknown) {
+        setError(parseApiError(err, 'เกิดข้อผิดพลาดในการตรวจสอบชื่อผู้ใช้ซ้ำ'))
+        setLoading(false)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+      setLoading(false)
+    }
+
     setStep(step + 1)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }

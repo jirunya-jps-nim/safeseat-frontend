@@ -280,6 +280,13 @@ export default function RegisterDriverPage() {
       }
     }
 
+    if (step === 4) {
+      if (!validateDriverStep4(files, setError)) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+    }
+
     setStep(step + 1)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }

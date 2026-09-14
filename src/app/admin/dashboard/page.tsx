@@ -1408,7 +1408,6 @@ export default function AdminDashboard() {
                 >
                   <option value="รอดำเนินการ">🟡 รอดำเนินการ (Pending)</option>
                   <option value="อนุมัติแล้ว">🟢 อนุมัติแล้ว (Approved)</option>
-                  <option value="ปฏิเสธ">🔴 ปฏิเสธ (Rejected)</option>
                   <option value="All">📋 รายการทั้งหมด (All)</option>
                 </select>
               </div>
@@ -1442,12 +1441,12 @@ export default function AdminDashboard() {
                       const rawStatus = String(r.status || r.reportstatus || '').trim()
                       const isApproved = rawStatus === 'แก้ไขแล้ว' || rawStatus === 'อนุมัติแล้ว' || rawStatus === 'approved'
                       const isRejected = rawStatus === 'ปฏิเสธ' || rawStatus === 'ไม่อนุมัติ' || rawStatus === 'rejected'
-                      const isPending = !isApproved && !isRejected
+                      if (isRejected) return false
+                      const isPending = !isApproved
 
                       const matchStatus = 
                         statusFilter === 'All' ||
                         (statusFilter === 'อนุมัติแล้ว' && isApproved) ||
-                        (statusFilter === 'ปฏิเสธ' && isRejected) ||
                         (statusFilter === 'รอดำเนินการ' && isPending)
 
                       const matchDate = !dateFilter || getThaiDateString(r.reportdate) === dateFilter
@@ -1455,9 +1454,9 @@ export default function AdminDashboard() {
                       return matchSearch && matchStatus && matchDate
                     }).sort((a, b) => {
                       const rawA = String(a.status || a.reportstatus || '').trim()
-                      const isPendingA = rawA !== 'แก้ไขแล้ว' && rawA !== 'อนุมัติแล้ว' && rawA !== 'approved' && rawA !== 'ปฏิเสธ' && rawA !== 'ไม่อนุมัติ' && rawA !== 'rejected'
+                      const isPendingA = rawA !== 'แก้ไขแล้ว' && rawA !== 'อนุมัติแล้ว' && rawA !== 'approved'
                       const rawB = String(b.status || b.reportstatus || '').trim()
-                      const isPendingB = rawB !== 'แก้ไขแล้ว' && rawB !== 'อนุมัติแล้ว' && rawB !== 'approved' && rawB !== 'ปฏิเสธ' && rawB !== 'ไม่อนุมัติ' && rawB !== 'rejected'
+                      const isPendingB = rawB !== 'แก้ไขแล้ว' && rawB !== 'อนุมัติแล้ว' && rawB !== 'approved'
                       if (isPendingA && !isPendingB) return -1
                       if (!isPendingA && isPendingB) return 1
                       return new Date(b.reportdate || 0).getTime() - new Date(a.reportdate || 0).getTime()
@@ -1566,7 +1565,6 @@ export default function AdminDashboard() {
                 >
                   <option value="รอดำเนินการ">🟡 รอดำเนินการ (Pending)</option>
                   <option value="อนุมัติแล้ว">🟢 อนุมัติแล้ว (Approved)</option>
-                  <option value="ปฏิเสธ">🔴 ปฏิเสธ (Rejected)</option>
                   <option value="All">📋 รายการทั้งหมด (All)</option>
                 </select>
               </div>
@@ -1599,12 +1597,12 @@ export default function AdminDashboard() {
                       const rawStatus = String(r.status || r.reportstatus || '').trim()
                       const isApproved = rawStatus === 'แก้ไขแล้ว' || rawStatus === 'อนุมัติแล้ว' || rawStatus === 'approved'
                       const isRejected = rawStatus === 'ปฏิเสธ' || rawStatus === 'ไม่อนุมัติ' || rawStatus === 'rejected'
-                      const isPending = !isApproved && !isRejected
+                      if (isRejected) return false
+                      const isPending = !isApproved
 
                       const matchStatus = 
                         statusFilter === 'All' ||
                         (statusFilter === 'อนุมัติแล้ว' && isApproved) ||
-                        (statusFilter === 'ปฏิเสธ' && isRejected) ||
                         (statusFilter === 'รอดำเนินการ' && isPending)
 
                       const matchDate = !dateFilter || getThaiDateString(r.reportdate) === dateFilter
@@ -1612,9 +1610,9 @@ export default function AdminDashboard() {
                       return matchSearch && matchStatus && matchDate
                     }).sort((a, b) => {
                       const rawA = String(a.status || a.reportstatus || '').trim()
-                      const isPendingA = rawA !== 'แก้ไขแล้ว' && rawA !== 'อนุมัติแล้ว' && rawA !== 'approved' && rawA !== 'ปฏิเสธ' && rawA !== 'ไม่อนุมัติ' && rawA !== 'rejected'
+                      const isPendingA = rawA !== 'แก้ไขแล้ว' && rawA !== 'อนุมัติแล้ว' && rawA !== 'approved'
                       const rawB = String(b.status || b.reportstatus || '').trim()
-                      const isPendingB = rawB !== 'แก้ไขแล้ว' && rawB !== 'อนุมัติแล้ว' && rawB !== 'approved' && rawB !== 'ปฏิเสธ' && rawB !== 'ไม่อนุมัติ' && rawB !== 'rejected'
+                      const isPendingB = rawB !== 'แก้ไขแล้ว' && rawB !== 'อนุมัติแล้ว' && rawB !== 'approved'
                       if (isPendingA && !isPendingB) return -1
                       if (!isPendingA && isPendingB) return 1
                       return new Date(b.reportdate || 0).getTime() - new Date(a.reportdate || 0).getTime()

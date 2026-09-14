@@ -205,9 +205,6 @@ export default function StatusPage() {
 
         {}
         <div style={styles.pageHeader}>
-          <div style={styles.pageBadge}>
-            📋 สถานะการสมัคร
-          </div>
           <h1 style={styles.pageTitle}>View Registration Status</h1>
           <p style={styles.pageSubtitle}>
             ติดตามสถานะการพิจารณาใบสมัครของคุณ

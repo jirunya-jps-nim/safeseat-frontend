@@ -130,7 +130,7 @@ export default function StepDriverPersonalInfo({
                 borderColor: isBankError ? '#ef4444' : 'var(--color-border)',
                 backgroundColor: isBankError ? 'rgba(239, 68, 68, 0.05)' : 'var(--color-surface)',
               }}
-              placeholder="10 - 12 หลัก (เฉพาะตัวเลข)"
+              placeholder="กรุณากรอกเลขบัญชีกสิกรไทย"
             />
             {isBankError && <span style={styles.fieldErrorText}>⚠️ {errorMessage}</span>}
           </div>

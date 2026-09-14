@@ -178,7 +178,7 @@ export default function StepDocuments({
             borderColor: isBankNoError ? '#ef4444' : (inputStyle.borderColor || 'var(--color-border)'),
             backgroundColor: isBankNoError ? 'rgba(239, 68, 68, 0.05)' : (inputStyle.backgroundColor || 'var(--color-surface)'),
           }}
-          placeholder="เลขบัญชีธนาคารกสิกรไทย"
+          placeholder="กรุณากรอกเลขบัญชีกสิกรไทย"
           maxLength={12}
           inputMode="numeric"
         />

@@ -219,6 +219,9 @@ function RequestDriverContent() {
     if (phoneNo.trim() === phoneEmer.trim()) return 'เบอร์โทรศัพท์ของผู้ใช้บริการและเบอร์โทรฉุกเฉินต้องห้ามซ้ำกัน'
     
     if (!carBrand.trim()) return 'กรุณากรอกยี่ห้อรถยนต์ของผู้ใช้บริการ'
+    if (!/^[ก-๙a-zA-Z\s.-]+$/.test(carBrand.trim())) {
+      return 'ยี่ห้อรถยนต์ต้องเป็นตัวอักษรภาษาไทยหรือภาษาอังกฤษเท่านั้น'
+    }
     if (!carModel.trim()) return 'กรุณากรอกรุ่นรถยนต์ของผู้ใช้บริการ'
     if (!licensePlate.trim()) return 'กรุณากรอกทะเบียนรถยนต์ของผู้ใช้บริการ'
     if (!/^[ก-๙0-9\s.-]+$/.test(licensePlate.trim())) return 'ทะเบียนรถยนต์ต้องเป็นตัวเลขและภาษาไทยเท่านั้น (เช่น 1กข-1234 หรือ กข 1234)'

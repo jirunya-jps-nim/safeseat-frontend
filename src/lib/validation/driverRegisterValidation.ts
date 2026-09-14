@@ -102,8 +102,8 @@ export function validateDriverStep2(
     setError('กรุณากรอกยี่ห้อรถยนต์')
     return false
   }
-  if (!/^[ก-๙a-zA-Z0-9\s.-]{1,50}$/.test(carBrand.trim())) {
-    setError('ยี่ห้อรถยนต์ต้องเป็นตัวอักษรภาษาไทย ภาษาอังกฤษ ตัวเลข เครื่องหมายขีด (-) จุด หรือช่องว่าง 1-50 ตัวอักษร')
+  if (!/^[ก-๙a-zA-Z\s.-]{1,50}$/.test(carBrand.trim())) {
+    setError('ยี่ห้อรถยนต์ต้องเป็นตัวอักษรภาษาไทยหรือภาษาอังกฤษเท่านั้น')
     return false
   }
 

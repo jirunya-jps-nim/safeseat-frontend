@@ -188,7 +188,7 @@ function RequestDriverContent() {
     }
   }, [destination, pickupLat, pickupLng])
 
-  const estimatedPrice = distance > 0 ? Math.round(300 + distance * 10) : 0
+  const estimatedPrice = distance > 0 ? Math.round(150 + distance * 25) : 0
 
   const isCustNameError = error.includes('ชื่อ - นามสกุล') || (error.includes('ชื่อ') && !error.includes('ยี่ห้อ') && !error.includes('จุดหมาย'))
   const isPhoneError = (error.includes('เบอร์โทรศัพท์') || error.includes('เบอร์โทรติดต่อ')) && !error.includes('ฉุกเฉิน')

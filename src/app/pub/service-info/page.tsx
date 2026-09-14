@@ -356,10 +356,12 @@ export default function ServiceInfoPage() {
                               const tUrl = `${originUrl}/tracking?id=${recordId}`
                               setSelectedQrRecord({ url: tUrl, id: recordId, custName: item.custname })
                             }}
-                            className="px-3.5 py-1.5 bg-[var(--color-surface)] border border-[#2340A7]/30 text-[#2340A7] hover:bg-[#2340A7]/10 rounded-full text-xs font-bold cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-xs"
+                            className="px-3.5 py-1.5 bg-[var(--color-surface)] border border-[#2340A7]/30 !text-black hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full text-xs font-bold cursor-pointer transition-colors inline-flex items-center gap-1.5 shadow-xs"
+                            style={{ color: '#000000' }}
                             title="แสดง QR Code สำหรับติดตาม"
                           >
-                            <QrCode className="w-3.5 h-3.5 text-[#2340A7]" /> QR Code
+                            <QrCode className="w-3.5 h-3.5 !text-black" style={{ color: '#000000' }} />
+                            <span className="!text-black" style={{ color: '#000000' }}>QR Code</span>
                           </button>
                         ) : '—'}
                       </td>

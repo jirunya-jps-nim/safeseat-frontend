@@ -204,12 +204,13 @@ export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng,
     }
   }, [pickupLat, pickupLng, dropoffLat, dropoffLng, driverLat, driverLng, currentStep])
 
+  const showPickup = !currentStep || currentStep < 3
+
   const allPositions = [
-    ...mainRouteCoords,
-    ...driverRouteCoords,
-    [pickupLat, pickupLng] as [number, number],
+    ...(showPickup ? [[pickupLat, pickupLng] as [number, number], ...mainRouteCoords] : (driverRouteCoords.length > 0 ? [] : mainRouteCoords)),
     [dropoffLat, dropoffLng] as [number, number],
-    ...(driverLat && driverLng ? [[driverLat, driverLng] as [number, number]] : [])
+    ...(driverLat && driverLng ? [[driverLat, driverLng] as [number, number]] : []),
+    ...driverRouteCoords
   ]
 
   const dynamicDriverIcon = createDriverIcon(currentStep)
@@ -258,8 +259,10 @@ export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng,
           url="https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
         />
 
-        {/* 🍺 จุดรับ (Pickup) */}
-        <Marker position={[pickupLat, pickupLng]} icon={pickupIcon || undefined} />
+        {/* 🍺 จุดรับ (Pickup) - ซ่อนเมื่อเริ่มออกเดินทางแล้ว (currentStep >= 3) */}
+        {showPickup && (
+          <Marker position={[pickupLat, pickupLng]} icon={pickupIcon || undefined} />
+        )}
 
         {/* 🏠 จุดหมายปลายทาง (Dropoff) */}
         <Marker position={[dropoffLat, dropoffLng]} icon={dropoffIcon || undefined} />
@@ -269,8 +272,8 @@ export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng,
           <Marker position={[driverLat, driverLng]} icon={dynamicDriverIcon || undefined} />
         )}
 
-        {/* เส้นทางหลัก */}
-        {mainRouteCoords.length > 0 && (
+        {/* เส้นทางหลัก (Pickup -> Dropoff) แสดงเมื่อก่อนเริ่มเดินทาง หรือยังไม่มีพิกัดคนขับ */}
+        {mainRouteCoords.length > 0 && (showPickup || !driverLat || !driverLng) && (
           <Polyline
             positions={mainRouteCoords}
             color="#2340A7"
@@ -285,7 +288,7 @@ export default function RouteMap({ pickupLat, pickupLng, dropoffLat, dropoffLng,
             positions={driverRouteCoords}
             color="#2563EB"
             weight={5}
-            dashArray="8, 8"
+            dashArray={showPickup ? "8, 8" : undefined}
           />
         )}
 

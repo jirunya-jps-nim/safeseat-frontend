@@ -1,72 +1,84 @@
-// ═══════════════════════════════════════════════════════════════
-// lib/validation/driverRegisterValidation.ts
-// ฟังก์ชัน validate ข้อมูลฟอร์มสมัครสมาชิกคนขับรถตามขั้นตอน
-// ═══════════════════════════════════════════════════════════════
-
 import { DriverRegisterForm } from '@/types'
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024 
 
-// STEP 1: ข้อมูลส่วนตัว
 export function validateDriverStep1(
   form: DriverRegisterForm,
+  profileFile: File | null,
   setError: (msg: string) => void
 ): boolean {
-  const { firstName, lastName, idCard, email, bankAccountNo, gender, phoneNo } = form
+  const { firstName, lastName, idCard, email, bankAccountNo, gender, phoneNo, password, driverSkills } = form
 
-  if (!firstName || !lastName || !idCard || !email || !bankAccountNo || !gender || !phoneNo) {
-    setError('กรุณากรอกข้อมูลส่วนตัวทั่วไปให้ครบถ้วน')
+  if (!firstName || !firstName.trim()) {
+    setError('กรุณากรอกชื่อ')
     return false
   }
-
-  // First Name: ก-๙, a-z, A-Z เท่านั้น ความยาว 2-50 ตัวอักษร
-  if (!/^[ก-๙a-zA-Z]{2,50}$/.test(firstName)) {
+  if (!/^[ก-๙a-zA-Z]{2,50}$/.test(firstName.trim())) {
     setError('ชื่อ ต้องเป็นอักษรภาษาไทยหรือภาษาอังกฤษ 2-50 ตัวอักษร และไม่มีช่องว่าง')
     return false
   }
 
-  // Last Name: ก-๙, a-z, A-Z เท่านั้น ความยาว 2-50 ตัวอักษร
-  if (!/^[ก-๙a-zA-Z]{2,50}$/.test(lastName)) {
+  if (!lastName || !lastName.trim()) {
+    setError('กรุณากรอกนามสกุล')
+    return false
+  }
+  if (!/^[ก-๙a-zA-Z]{2,50}$/.test(lastName.trim())) {
     setError('นามสกุล ต้องเป็นอักษรภาษาไทยหรือภาษาอังกฤษ 2-50 ตัวอักษร และไม่มีช่องว่าง')
     return false
   }
 
-  // ID Card: ตัวเลข 13 หลัก
-  if (!/^[0-9]{13}$/.test(idCard)) {
+  if (!idCard || !idCard.trim()) {
+    setError('กรุณากรอกหมายเลขบัตรประชาชน')
+    return false
+  }
+  if (!/^[0-9]{13}$/.test(idCard.trim())) {
     setError('หมายเลขบัตรประชาชนต้องเป็นตัวเลข 13 หลัก')
     return false
   }
 
-  // Email: รูปแบบอีเมลมาตรฐาน
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    setError('รูปแบบอีเมลไม่ถูกต้อง')
+  if (!bankAccountNo || !bankAccountNo.trim()) {
+    setError('กรุณากรอกเลขบัญชีกสิกรไทย')
+    return false
+  }
+  if (!/^[0-9]{10,12}$/.test(bankAccountNo.trim())) {
+    setError('เลขบัญชีกสิกรไทยต้องเป็นตัวเลข 10 - 12 หลักเท่านั้น')
     return false
   }
 
-  // Bank Account: ตัวเลข 12 หลัก
-  if (!/^[0-9]{12}$/.test(bankAccountNo)) {
-    setError('เลขบัญชีธนาคาร (กสิกรไทย) ต้องเป็นตัวเลข 12 หลัก')
+  if (!email || !email.trim()) {
+    setError('กรุณากรอกอีเมล')
+    return false
+  }
+  if (!/^[a-z0-9_.]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(email.toLowerCase().trim())) {
+    setError('อีเมลต้องเป็นรูปแบบมาตรฐานสากลเท่านั้น (เช่น example@domain.com)')
     return false
   }
 
-  // Phone No: ตัวเลข 10 หลัก
-  if (!/^[0-9]{10}$/.test(phoneNo)) {
-    setError('หมายเลขโทรศัพท์มือถือต้องเป็นตัวเลข 10 หลัก')
+  if (!phoneNo || !phoneNo.trim()) {
+    setError('กรุณากรอกเบอร์โทรศัพท์มือถือ')
+    return false
+  }
+  if (!/^0[689][0-9]{8}$/.test(phoneNo.trim())) {
+    setError('หมายเลขโทรศัพท์มือถือต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 06, 08 หรือ 09 เท่านั้น')
     return false
   }
 
-  return true
-}
+  if (!password) {
+    setError('กรุณากรอกรหัสผ่าน')
+    return false
+  }
+  if (!/^(?=.*[!#_.])[a-zA-Z0-9!#_.]{8,50}$/.test(password)) {
+    setError('รหัสผ่านต้องเป็นภาษาอังกฤษ ตัวเลข และรวมอักขระพิเศษ [!#_.] เท่านั้น ความยาว 8 - 50 ตัวอักษร และไม่มีช่องว่าง')
+    return false
+  }
 
-// STEP 2: ข้อมูลรถยนต์และความสามารถ
-export function validateDriverStep2(
-  form: DriverRegisterForm,
-  setError: (msg: string) => void
-): boolean {
-  const { carBrand, carModel, carColor, carPlate, driverSkills } = form
+  if (!profileFile) {
+    setError('กรุณาแนบรูปภาพใบหน้าตนเอง')
+    return false
+  }
 
-  if (!carBrand || !carModel || !carColor || !carPlate) {
-    setError('กรุณากรอกข้อมูลยานพาหนะให้ครบถ้วน')
+  if (!gender) {
+    setError('กรุณาเลือกเพศ')
     return false
   }
 
@@ -75,110 +87,107 @@ export function validateDriverStep2(
     return false
   }
 
-  // Car Brand: ภาษาอังกฤษเท่านั้น ความยาว 2-50 ตัวอักษร ไม่มีช่องว่าง
-  if (!/^[a-zA-Z]{2,50}$/.test(carBrand)) {
-    setError('ยี่ห้อรถยนต์ต้องเป็นตัวอักษรภาษาอังกฤษ 2-50 ตัวอักษร')
+  return true
+}
+
+export function validateDriverStep2(
+  form: DriverRegisterForm,
+  carFile: File | null,
+  termsAccepted: boolean,
+  setError: (msg: string) => void
+): boolean {
+  const { carBrand, carModel, carColor, carPlate } = form
+
+  if (!carBrand || !carBrand.trim()) {
+    setError('กรุณากรอกยี่ห้อรถยนต์')
+    return false
+  }
+  if (!/^[ก-๙a-zA-Z\s.-]{1,50}$/.test(carBrand.trim())) {
+    setError('ยี่ห้อรถยนต์ต้องเป็นตัวอักษรภาษาไทยหรือภาษาอังกฤษเท่านั้น')
     return false
   }
 
-  // Car Model: ภาษาอังกฤษและตัวเลขเท่านั้น ความยาว 2-50 ตัวอักษร ไม่มีช่องว่าง
-  if (!/^[a-zA-Z0-9]{2,50}$/.test(carModel)) {
-    setError('รุ่นรถยนต์ต้องเป็นภาษาอังกฤษหรือตัวเลข 2-50 ตัวอักษร')
+  if (!carModel || !carModel.trim()) {
+    setError('กรุณากรอกรุ่นรถยนต์')
+    return false
+  }
+  if (!/^[ก-๙a-zA-Z0-9\s.-]{1,50}$/.test(carModel.trim())) {
+    setError('รุ่นรถยนต์ต้องเป็นภาษาไทย ภาษาอังกฤษ ตัวเลข เครื่องหมายขีด (-) จุด หรือช่องว่าง 1-50 ตัวอักษร')
     return false
   }
 
-  // Car Color: ภาษาไทยเท่านั้น ความยาว 2-50 ตัวอักษร ไม่มีช่องว่าง
-  if (!/^[ก-๙]{2,50}$/.test(carColor)) {
-    setError('สีรถยนต์ต้องเป็นภาษาไทย 2-50 ตัวอักษร')
+  if (!carColor || !carColor.trim()) {
+    setError('กรุณากรอกสีรถยนต์')
+    return false
+  }
+  if (!/^[ก-๙a-zA-Z0-9\s.-]{1,50}$/.test(carColor.trim())) {
+    setError('สีรถยนต์ต้องเป็นตัวอักษรภาษาไทยหรือภาษาอังกฤษ 1-50 ตัวอักษร')
     return false
   }
 
-  // Car Plate: ภาษาไทย ตัวเลข และขีด ความยาว 2-20 ตัวอักษร ไม่มีช่องว่าง
-  if (!/^[ก-๙0-9-]{2,20}$/.test(carPlate)) {
-    setError('ทะเบียนรถยนต์ต้องเป็นภาษาไทย ตัวเลข หรือเครื่องหมายขีด (-) ความยาว 2-20 ตัวอักษร')
+  if (!carPlate || !carPlate.trim()) {
+    setError('กรุณากรอกทะเบียนรถยนต์')
+    return false
+  }
+  if (!/^[ก-๙0-9\s.-]{1,20}$/.test(carPlate.trim())) {
+    setError('ทะเบียนรถยนต์ต้องเป็นตัวเลขและภาษาไทยเท่านั้น (เช่น 1กข-1234 หรือ กข 1234)')
+    return false
+  }
+
+  if (!carFile) {
+    setError('กรุณาแนบรูปภาพรถยนต์ของคุณ')
+    return false
+  }
+
+  if (!termsAccepted) {
+    setError('กรุณายอมรับนโยบายข้อมูลส่วนตัวก่อนดำเนินการต่อ')
     return false
   }
 
   return true
 }
 
-// STEP 3: ตรวจสอบรูปภาพเอกสารแนบ
 export function validateDriverStep3(
   files: {
-    regisImagePath: File | null
-    carImagePath: File | null
     driverLicensePath: File | null
     criminalRecordPath: File | null
     medicalCertificatePath: File | null
   },
   setError: (msg: string) => void
 ): boolean {
-  const {
-    regisImagePath,
-    carImagePath,
-    driverLicensePath,
-    criminalRecordPath,
-    medicalCertificatePath,
-  } = files
-
-  if (!regisImagePath) {
-    setError('กรุณาแนบรูปภาพใบหน้าตนเอง')
-    return false
-  }
-  if (!carImagePath) {
-    setError('กรุณาแนบรูปภาพรถยนต์')
-    return false
-  }
-  if (!driverLicensePath) {
+  if (!files.driverLicensePath) {
     setError('กรุณาแนบรูปภาพใบขับขี่')
     return false
   }
-  if (!criminalRecordPath) {
-    setError('กรุณาแนบรูปภาพประวัติอาชญากรรม')
+  if (!files.criminalRecordPath) {
+    setError('กรุณาแนบประวัติอาชญากรรม')
     return false
   }
-  if (!medicalCertificatePath) {
+  if (!files.medicalCertificatePath) {
     setError('กรุณาแนบใบรับรองแพทย์ตรวจสุขภาพ')
     return false
   }
-
   return true
 }
 
-// STEP 4: ข้อมูลบัญชีและข้อตกลง
 export function validateDriverStep4(
-  form: DriverRegisterForm,
-  termsAccepted: boolean,
+  files: {
+    trainingCert1: File | null
+    trainingCert2: File | null
+  },
   setError: (msg: string) => void
 ): boolean {
-  const { username, password } = form
-
-  if (!termsAccepted) {
-    setError('กรุณายอมรับเงื่อนไขการให้บริการและนโยบายความเป็นส่วนตัว')
+  if (!files.trainingCert1) {
+    setError('กรุณาแนบเกียรติบัตรการอบรม คอร์สที่ 1 (หลักสูตรการขับขี่ปลอดภัยฯ)')
     return false
   }
-
-  if (!password) {
-    setError('กรุณากรอกรหัสผ่าน')
+  if (!files.trainingCert2) {
+    setError('กรุณาแนบเกียรติบัตรการอบรม คอร์สที่ 2 (หลักสูตรการปฐมพยาบาลเบื้องต้นฯ)')
     return false
   }
-
-  // Password: a-zA-Z0-9 และอักขระพิเศษ [!#_.] เท่านั้น ความยาว 6-50 ตัว ไม่มีช่องว่าง
-  if (!/^[a-zA-Z0-9!#_.]{6,50}$/.test(password)) {
-    setError('รหัสผ่านต้องเป็นภาษาอังกฤษ ตัวเลข และอักขระพิเศษ [!#_.] เท่านั้น ความยาว 6 - 50 ตัวอักษร')
-    return false
-  }
-
-  // Username (ถ้ามี): a-zA-Z0-9_ 2-50 ตัว
-  if (username && !/^[a-zA-Z0-9_]{2,50}$/.test(username)) {
-    setError('ชื่อผู้ใช้ต้องเป็นตัวอักษรภาษาอังกฤษ ตัวเลข หรือขีดล่าง (_) ความยาว 2-50 ตัวอักษร')
-    return false
-  }
-
   return true
 }
 
-// ฟังก์ชันสำหรับ validate แต่ละไฟล์
 export function validateDriverFile(
   file: File,
   label: string,

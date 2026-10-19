@@ -1,284 +1,129 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// app/register/page.tsx
-// หน้าสำหรับเลือกประเภทสมาชิกที่จะลงทะเบียน (Selector Page - Cohesive Light Theme)
-// ═══════════════════════════════════════════════════════════════
 
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
-import { registerStyles as styles } from '@/lib/styles/registerStyles'
+import FloatingNav from '@/components/ui/FloatingNav'
+import { Store, Car, ArrowRight } from 'lucide-react'
 
 export default function RegisterSelectorPage() {
   const router = useRouter()
 
   return (
-    <div style={styles.page}>
-      {/* Background decoration circles */}
-      <div style={styles.bgCircle1} />
-      <div style={styles.bgCircle2} />
-      <div style={styles.bgCircle3} />
+    <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
+      
+      {/* Ambient Background Glow */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#2340A7]/10 rounded-full blur-[140px]"></div>
+      </div>
 
-      {/* Navbar */}
+      <div className="gradient-blur"></div>
       <Navbar />
+      <FloatingNav />
 
-      {/* Main Selection Area */}
-      <main style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '60px 20px',
-        position: 'relative',
-        zIndex: 5,
-        maxWidth: '1200px',
-        margin: '0 auto',
-        width: '100%'
-      }}>
-        {/* Title Section */}
-        <div style={{
-          textAlign: 'center',
-          marginBottom: '45px',
-          animation: 'fadeUp 0.4s ease both'
-        }}>
-          <h1 style={{
-            fontSize: '32px',
-            fontWeight: 700,
-            color: '#0f172a',
-            marginBottom: '14px',
-            whiteSpace: 'nowrap', // ให้หัวข้อใหญ่เป็นบรรทัดเดียวกัน
-          }}>
-            เริ่มต้นสมัครสมาชิกกับ SafeSeat
+      <main className="relative z-10 max-w-5xl mx-auto px-6 pt-48 pb-24 flex flex-col items-center gap-12">
+        
+        {/* Title Header */}
+        <div className="text-center flex flex-col items-center max-w-4xl">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] backdrop-blur-md mb-6">
+            <span className="w-2 h-2 rounded-full bg-[#2340A7] animate-pulse"></span>
+            <span className="text-xs font-bold text-[#2340A7] uppercase tracking-widest font-manrope">
+              PARTNER REGISTRATION PORTAL
+            </span>
+          </div>
+
+          <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold font-manrope tracking-tight leading-tight mb-4 text-[var(--color-text)] whitespace-nowrap">
+            CHOOSE YOUR{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2340A7] to-[#2563EB]">
+              PARTNERSHIP
+            </span>{' '}
+            PATH.
           </h1>
-          <p style={{
-            fontSize: '15px',
-            color: '#475569',
-            margin: '0 auto',
-            lineHeight: 1.6,
-            whiteSpace: 'nowrap', // ป้องกันคำตัดครึ่งคำ และให้อยู่บรรทัดเดียวกัน
-          }}>
-            เลือกประเภทบัญชีผู้ใช้ที่คุณต้องการ เพื่อเริ่มต้นลงทะเบียนเข้าสู่ระบบความปลอดภัยของเรา
+
+          <p className="text-xs sm:text-sm md:text-base text-[var(--color-text-muted)] leading-relaxed font-light whitespace-nowrap">
+            เลือกประเภทการลงทะเบียนเพื่อเข้าร่วมกับ SafeSeat ไม่ว่าคุณจะเป็นเจ้าของสถานบริการ หรือผู้ให้บริการขับรถแทน
           </p>
         </div>
 
-        {/* Cards Grid */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: '24px',
-          justifyContent: 'center',
-          width: '100%',
-          maxWidth: '860px',
-          marginBottom: '45px',
-          animation: 'fadeUp 0.5s ease both'
-        }}>
-          {/* Card 1: Pub Owner */}
-          <div 
+        {/* 2 Portal Cards (Wider Layout with refined text) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 w-full max-w-6xl">
+          
+          {/* Card 1: Venue Partner */}
+          <div
             onClick={() => router.push('/register/pub')}
-            className="selector-card"
-            style={{
-              flex: '1 1 320px',
-              maxWidth: '380px',
-              background: '#ffffff',
-              borderRadius: '20px',
-              border: '1px solid #e2e8f0',
-              padding: '40px 30px',
-              textAlign: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.01)',
-            }}
+            className="group p-8 sm:p-10 lg:p-11 bg-[var(--color-card)] border-2 border-[var(--color-border)] hover:border-[#2340A7] rounded-3xl shadow-2xl flex flex-col gap-5 cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(35,64,167,0.18)]"
           >
-            {/* Icon Box */}
-            <div style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: '20px',
-              background: '#f1f5f9',
-              border: '1px solid #e2e8f0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '38px',
-              marginBottom: '24px',
-            }}>
-              🏪
+            <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-3xl bg-blue-500/10 border-2 border-blue-500/30 text-[#2340A7] flex items-center justify-center group-hover:rotate-6 group-hover:scale-105 transition-transform shadow-sm">
+              <Store className="w-8 h-8 sm:w-9 sm:h-9 text-[#2340A7]" />
             </div>
-            
-            {/* Title */}
-            <h2 style={{
-              fontSize: '20px',
-              fontWeight: 600,
-              color: '#0f172a',
-              marginBottom: '14px',
-              whiteSpace: 'nowrap', // ให้อยู่บรรทัดเดียวกัน
-            }}>
-              เจ้าของร้านค้า / สถานบันเทิง
-            </h2>
-            
-            {/* Description - ตัดคำให้มีระเบียบ สวยงามและไม่ตัดครึ่งคำ */}
-            <p style={{
-              fontSize: '14px',
-              color: '#64748b',
-              lineHeight: 1.6,
-              marginBottom: '28px',
-              flex: 1,
-              maxWidth: '340px',
-              wordBreak: 'keep-all', // ป้องกันการตัดอักษรกลางคำภาษาไทย
-            }}>
-              สำหรับร้านค้า บาร์ คาราโอเกะ หรือสถานบริการยามค่ำคืน ที่ต้องการเข้าร่วมระบบพาร์ทเนอร์ เพื่อส่งลูกค้ากลับบ้านอย่างปลอดภัย
+
+            <div>
+              <span className="text-xs font-mono font-bold tracking-widest text-[#2340A7] block mb-1.5">
+                PORTAL 01 // VENUE
+              </span>
+              <h2 className="text-2xl sm:text-3xl lg:text-3xl font-black font-manrope text-[var(--color-text)] tracking-tight">
+                พาร์ทเนอร์สถานบันเทิง
+              </h2>
+            </div>
+
+            <p className="text-xs sm:text-sm text-[var(--color-text-muted)] leading-relaxed font-normal flex-1">
+              สำหรับสถานบันเทิง บาร์ คาราโอเกะ ยามค่ำคืน ที่ต้องการเชื่อมต่อระบบเรียกผู้ให้บริการขับรถ เพื่อดูแลสวัสดิภาพผู้ใช้บริการหน้าสถานบันเทิง
             </p>
-            
-            {/* Button */}
-            <button style={{
-              width: '100%',
-              background: '#4f46e5', // เปลี่ยนสีปุ่มให้ตรงกัน (สีน้ำเงินครามแบรนด์หลัก)
-              border: 'none',
-              color: '#ffffff',
-              padding: '12px 24px',
-              borderRadius: '12px',
-              fontWeight: 600,
-              fontSize: '14px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              whiteSpace: 'nowrap', // ป้องกันข้อความในปุ่มแตกแถว
-            }}>
-              สมัครเป็นพาร์ทเนอร์ร้านค้า →
+
+            <button 
+              className="w-full py-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] !text-white font-black text-sm sm:text-base rounded-2xl sm:rounded-full transition-all shadow-md hover:shadow-lg hover:scale-[1.01] flex items-center justify-center gap-2.5 cursor-pointer"
+              style={{ color: '#ffffff' }}
+            >
+              <span style={{ color: '#ffffff' }}>สมัครพาร์ทเนอร์สถานบันเทิง</span> <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 !text-white" style={{ color: '#ffffff' }} />
             </button>
           </div>
 
-          {/* Card 2: Substitute Driver */}
-          <div 
+          {/* Card 2: Driver Partner */}
+          <div
             onClick={() => router.push('/register/driver')}
-            className="selector-card"
-            style={{
-              flex: '1 1 320px',
-              maxWidth: '380px',
-              background: '#ffffff',
-              borderRadius: '20px',
-              border: '1px solid #e2e8f0', // เปลี่ยนกรอบให้เท่ากันเป็นรูปแบบเดียวกับ Card 1
-              padding: '40px 30px',
-              textAlign: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.02), 0 1px 3px rgba(0, 0, 0, 0.01)',
-            }}
+            className="group p-8 sm:p-10 lg:p-11 bg-[var(--color-card)] border-2 border-[var(--color-border)] hover:border-[#2340A7] rounded-3xl shadow-2xl flex flex-col gap-5 cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(35,64,167,0.18)]"
           >
-            {/* Icon Box */}
-            <div style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: '20px',
-              background: '#f1f5f9', // ปรับไอคอนบล็อกให้มีสีและรูปแบบเดียวกับ Card 1
-              border: '1px solid #e2e8f0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '38px',
-              marginBottom: '24px',
-            }}>
-              🚗
+            <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-3xl bg-blue-500/10 border-2 border-blue-500/30 text-blue-600 flex items-center justify-center group-hover:rotate-6 group-hover:scale-105 transition-transform shadow-sm">
+              <Car className="w-8 h-8 sm:w-9 sm:h-9 text-blue-600" />
             </div>
-            
-            {/* Title */}
-            <h2 style={{
-              fontSize: '20px',
-              fontWeight: 600,
-              color: '#0f172a',
-              marginBottom: '14px',
-              whiteSpace: 'nowrap', // ให้อยู่บรรทัดเดียวกัน
-            }}>
-              พนักงานขับรถแทน (คนขับ)
-            </h2>
-            
-            {/* Description - ตัดคำให้มีระเบียบ สวยงามและไม่ตัดครึ่งคำ */}
-            <p style={{
-              fontSize: '14px',
-              color: '#64748b',
-              lineHeight: 1.6,
-              marginBottom: '28px',
-              flex: 1,
-              maxWidth: '340px',
-              wordBreak: 'keep-all', // ป้องกันการตัดอักษรกลางคำภาษาไทย
-            }}>
-              สำหรับบุคคลทั่วไปที่ต้องการหารายได้เสริม ยื่นสมัครเป็นพนักงานขับรถสำรอง เพื่อบริการส่งลูกค้ากลับด้วยรถยนต์ของลูกค้าเอง
+
+            <div>
+              <span className="text-xs font-mono font-bold tracking-widest text-[#2340A7] block mb-1.5">
+                PORTAL 02 // DRIVER
+              </span>
+              <h2 className="text-2xl sm:text-3xl lg:text-3xl font-black font-manrope text-[var(--color-text)] tracking-tight">
+                ผู้ให้บริการขับรถมืออาชีพ
+              </h2>
+            </div>
+
+            <p className="text-xs sm:text-sm text-[var(--color-text-muted)] leading-relaxed font-normal flex-1">
+              สำหรับผู้ให้บริการขับรถมืออาชีพที่ต้องการสร้างรายได้เสริมที่มั่นคง ปลอดภัย พร้อมเลือกเวลาและพื้นที่ในการรับงานได้อย่างอิสระ
             </p>
-            
-            {/* Button */}
-            <button style={{
-              width: '100%',
-              background: '#4f46e5', // ใช้ปุ่มสีครามแบรนด์หลัก รูปแบบและโทนเดียวกันเป๊ะ
-              border: 'none',
-              color: '#ffffff',
-              padding: '12px 24px',
-              borderRadius: '12px',
-              fontWeight: 600,
-              fontSize: '14px',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              whiteSpace: 'nowrap', // ป้องกันข้อความในปุ่มแตกแถว
-            }}>
-              สมัครเป็นคนขับ SafeSeat →
+
+            <button 
+              className="w-full py-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] !text-white font-black text-sm sm:text-base rounded-2xl sm:rounded-full transition-all shadow-md hover:shadow-lg hover:scale-[1.01] flex items-center justify-center gap-2.5 cursor-pointer"
+              style={{ color: '#ffffff' }}
+            >
+              <span style={{ color: '#ffffff' }}>สมัครเป็นผู้ให้บริการขับรถ</span> <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 !text-white" style={{ color: '#ffffff' }} />
             </button>
           </div>
+
         </div>
 
-        {/* Login Link */}
-        <div style={{
-          textAlign: 'center',
-          animation: 'fadeUp 0.6s ease both'
-        }}>
-          <span style={{ color: '#64748b', fontSize: '14px' }}>
-            มีบัญชีอยู่แล้วในระบบ?{' '}
-          </span>
-          <button 
+        {/* Footer Login Link */}
+        <div className="text-center text-sm text-[var(--color-text-muted)]">
+          <span>มีบัญชีผู้ใช้ในระบบอยู่แล้ว? </span>
+          <button
             onClick={() => router.push('/login')}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#4f46e5',
-              textDecoration: 'underline',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 600,
-              padding: 0
-            }}
+            className="text-[#2340A7] font-bold underline ml-1 hover:text-[var(--color-text)] transition-colors cursor-pointer"
           >
-            เข้าสู่ระบบที่นี่
+            เข้าสู่ระบบที่นี่ →
           </button>
         </div>
+
       </main>
 
       <Footer />
-
-      {/* Custom Styles for Hover Effects */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Prompt', sans-serif; }
-
-        .selector-card {
-          border: 1px solid #e2e8f0 !important;
-        }
-
-        .selector-card:hover {
-          transform: translateY(-6px);
-          box-shadow: 0 12px 30px rgba(99, 102, 241, 0.08) !important;
-          border-color: #818cf8 !important;
-        }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   )
 }

@@ -1,10 +1,76 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import api from '@/services/api'
+import AlertModal from '@/components/ui/AlertModal'
+import { Shield, Car, Store, AlertTriangle, User, LogOut, CheckCircle2, XCircle, Search, Calendar, Filter, RefreshCw, ChevronRight, Eye, FileText, Check, X, TrendingUp, BarChart2, Clock, BarChart3, CalendarDays } from 'lucide-react'
 
-// ── Types ─────────────────────────────────────────────────────
+// Custom Thai Date Input Component (วัน / เดือน / ปี)
+function AdminThaiDateInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (val: string) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const formatThaiDisplay = (isoStr: string) => {
+    if (!isoStr) return { short: 'วว/ดด/ปปปป', full: '' }
+    const parts = isoStr.split('-')
+    if (parts.length !== 3) return { short: isoStr, full: '' }
+    const y = parseInt(parts[0], 10)
+    const m = parts[1]
+    const d = parts[2]
+    const thaiYear = y + 543
+    const short = `${d}/${m}/${thaiYear}`
+    
+    try {
+      const date = new Date(y, parseInt(m, 10) - 1, parseInt(d, 10))
+      const full = date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+      return { short, full }
+    } catch {
+      return { short, full: '' }
+    }
+  }
+
+  const { short, full } = formatThaiDisplay(value)
+
+  return (
+    <div>
+      <label className="block text-[10px] font-bold uppercase tracking-wider text-[#64748B] mb-1">
+        {label}
+      </label>
+      <div 
+        onClick={() => {
+          try {
+            inputRef.current?.showPicker?.()
+          } catch {
+            inputRef.current?.focus()
+          }
+        }}
+        className="relative flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#CBD5E1] hover:border-[#2563EB] transition-all cursor-pointer group shadow-xs"
+      >
+        <span className="text-xs sm:text-sm font-bold font-mono text-[#0F172A]">
+          {short}
+        </span>
+        <CalendarDays className="w-4 h-4 text-[#2563EB] group-hover:scale-110 transition-transform pointer-events-none" />
+        <input
+          ref={inputRef}
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+        />
+      </div>
+    </div>
+  )
+}
+
+// หน้าผู้ดูแลระบบ (Admin Dashboard: สถิติภาพรวม, อนุมัติผู้ให้บริการขับรถ, อนุมัติสถานบันเทิง, และจัดการรายงาน)
 interface AdminUser {
   username: string
 }
@@ -35,7 +101,7 @@ interface DriverData {
   bankaccountno: string
   registerstatus: 'รอดำเนินการ' | 'อนุมัติแล้ว' | 'ปฏิเสธ'
   regisdate: string
-  regisimagepath: string // Stringified JSON structure containing doc urls
+  regisimagepath: string
   drivercar?: DriverCar
 }
 
@@ -49,7 +115,7 @@ interface PubData {
   taxnumber: string
   bankaccountno: string
   bankaccountname: string
-  regisstatus: 'pending' | 'approved' | 'rejected'
+  regisstatus: 'pending' | 'approved' | 'rejected' | 'รอดำเนินการ' | 'อนุมัติแล้ว' | 'ปฏิเสธ'
   regisdate: string
   regisimagepath?: string
 }
@@ -60,50 +126,183 @@ interface ReportData {
   reportdate: string
   reporttype: string
   reportdetail: string
-  status: 'กำลังดำเนินการ' | 'แก้ไขแล้ว' | 'อนุมัติแล้ว' | 'ไม่อนุมัติ'
-  reportindex?: number // For driverreport
-  request_id?: number // For userreport
+  status: 'กำลังดำเนินการ' | 'แก้ไขแล้ว' | 'อนุมัติแล้ว' | 'ไม่อนุมัติ' | 'ปฏิเสธ'
+  reportstatus?: string
+  reportindex?: number
+  request_id?: number
+  reportimagepath?: string
+  reportimages?: string[]
 }
 
 type TabType = 'home' | 'driver-app' | 'pub-app' | 'driver-report' | 'user-report'
 
+function parseThaiDate(dateStr: string): Date {
+  if (!dateStr) return new Date()
+  const s = String(dateStr).trim()
+  const cleanStr = s.replace(/Z$/i, '')
+  const isoWithTz = cleanStr.includes('T')
+    ? `${cleanStr.split('+')[0]}+07:00`
+    : `${cleanStr.replace(' ', 'T').split('+')[0]}+07:00`
+  const d = new Date(isoWithTz)
+  return isNaN(d.getTime()) ? new Date(dateStr) : d
+}
+
+function getThaiDateString(dateStr: string): string {
+  if (!dateStr) return ''
+  try {
+    const d = parseThaiDate(dateStr)
+    if (isNaN(d.getTime())) return ''
+    return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+  } catch {
+    return ''
+  }
+}
+
+function formatSupabaseImageUrl(url?: string | null): string {
+  if (!url) return ''
+  const trimmed = String(url).trim()
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined' || trimmed === '—') return ''
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+    return trimmed
+  }
+  const cleanPath = trimmed.replace(/^\/+/, '').replace(/^images\//, '')
+  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qbionbozkvlekpakvstg.supabase.co'
+  return `${baseUrl.replace(/\/+$/, '')}/storage/v1/object/public/images/${cleanPath}`
+}
+
+const REPORT_TYPE_MAP: Record<string, string> = {
+  'wrong location': 'พิกัดรับส่งไม่ถูกต้อง / ผิดตำแหน่ง',
+  'behavior': 'พฤติกรรมไม่เหมาะสม / กิริยาไม่สุภาพ',
+  'safety issue': 'ความปลอดภัย / เสี่ยงอันตราย',
+  'safety': 'ความปลอดภัย / เสี่ยงอันตราย',
+  'driving': 'ขับรถเร็วเกินกำหนด / ขับขี่อันตราย',
+  'dangerous driving': 'ขับรถเร็วเกินกำหนด / ขับขี่อันตราย',
+  'overcharge': 'เรียกเก็บค่าบริการเกินจริง / ไม่ตรงตามระบบ',
+  'payment': 'เรียกเก็บค่าบริการเกินจริง / ไม่ตรงตามระบบ',
+  'harassment': 'พูดจาไม่สุภาพ / แสดงพฤติกรรมคุกคาม',
+  'other': 'อื่นๆ (ระบุในรายละเอียด)',
+  'ขับรถอันตราย': 'ขับรถเร็วเกินกำหนด / ขับขี่อันตราย',
+  'ขับรถเร็วเกินกำหนด/อันตราย': 'ขับรถเร็วเกินกำหนด / ขับขี่อันตราย',
+  'เรียกเก็บเงินเกินจริง': 'เรียกเก็บค่าบริการเกินจริง / ไม่ตรงตามระบบ',
+  'ขอเก็บค่าบริการเพิ่มจากที่กำหนด': 'เรียกเก็บค่าบริการเกินจริง / ไม่ตรงตามระบบ',
+  'พูดจาไม่สุภาพ/คุกคาม': 'พูดจาไม่สุภาพ / แสดงพฤติกรรมคุกคาม',
+  'อื่นๆ (โปรดระบุในคำอธิบาย)': 'อื่นๆ (ระบุในรายละเอียด)',
+  'อื่นๆ': 'อื่นๆ (ระบุในรายละเอียด)'
+}
+
+function formatReportType(rawType: string): string {
+  if (!rawType) return 'ไม่ระบุหัวข้อรายงาน'
+  const trimmed = rawType.trim()
+  const key = trimmed.toLowerCase()
+  return REPORT_TYPE_MAP[key] || trimmed
+}
+
+const mapReports = (list: any[]) => {
+  return (list || []).map((item: any) => {
+    const raw = String(item.status || item.reportstatus || 'รอดำเนินการ').trim()
+    let finalStatus = raw
+    if (raw === 'กำลังดำเนินการ' || raw === 'รอพิจารณา' || raw === 'pending') finalStatus = 'รอดำเนินการ'
+    else if (raw === 'แก้ไขแล้ว' || raw === 'approved') finalStatus = 'อนุมัติแล้ว'
+    else if (raw === 'ไม่อนุมัติ' || raw === 'rejected') finalStatus = 'ปฏิเสธ'
+    return {
+      ...item,
+      status: finalStatus,
+      reportstatus: finalStatus
+    }
+  })
+}
+
+const sortItems = <T extends Record<string, any>>(items: T[], statusKey: string, dateKey: string): T[] => {
+  return [...items].sort((a, b) => {
+    const getStatusStr = (item: any) => {
+      const val = item[statusKey] || item.status || item.reportstatus || item.registerstatus || item.regisstatus || ''
+      return String(val).trim().toLowerCase()
+    }
+
+    const aStr = getStatusStr(a)
+    const bStr = getStatusStr(b)
+
+    const isPending = (s: string) => s === 'รอดำเนินการ' || s === 'รอพิจารณา' || s === 'pending' || s === 'กำลังดำเนินการ'
+    const aPending = isPending(aStr)
+    const bPending = isPending(bStr)
+
+    if (aPending && !bPending) return -1
+    if (!aPending && bPending) return 1
+
+    const dateA = a[dateKey] ? parseThaiDate(a[dateKey]).getTime() : 0
+    const dateB = b[dateKey] ? parseThaiDate(b[dateKey]).getTime() : 0
+    return dateB - dateA
+  })
+}
+
 export default function AdminDashboard() {
   const router = useRouter()
 
-  // ── States ──────────────────────────────────────────────────
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null)
   const [activeTab, setActiveTab] = useState<TabType>('home')
   const [stats, setStats] = useState<StatsData | null>(null)
   const [loadingStats, setLoadingStats] = useState(true)
 
-  // Data lists
   const [drivers, setDrivers] = useState<DriverData[]>([])
   const [pubs, setPubs] = useState<PubData[]>([])
   const [driverReports, setDriverReports] = useState<ReportData[]>([])
   const [userReports, setUserReports] = useState<ReportData[]>([])
   const [loadingData, setLoadingData] = useState(false)
 
-  // Filters & Searches
   const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('รอดำเนินการ')
   const [dateFilter, setDateFilter] = useState('')
-  const [statusFilter, setStatusFilter] = useState('All')
 
-  // ── Toast State ──────────────────────────────────────────────
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type })
     setTimeout(() => setToast(null), 3500)
   }
 
-  // Modals for Detail Viewing
+  const handleTabChange = (newTab: TabType) => {
+    setActiveTab(newTab)
+    setSearchQuery('')
+    setStatusFilter('รอดำเนินการ')
+    setDateFilter('')
+  }
+
   const [selectedDriver, setSelectedDriver] = useState<DriverData | null>(null)
   const [selectedPub, setSelectedPub] = useState<PubData | null>(null)
   const [selectedReport, setSelectedReport] = useState<ReportData | null>(null)
   const [selectedReportType, setSelectedReportType] = useState<'driver' | 'user' | null>(null)
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null)
+
+  const [chartTimeframe, setChartTimeframe] = useState<'day' | 'week' | 'month' | 'year' | 'custom'>('day')
+  const [chartStartDate, setChartStartDate] = useState<string>(() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 7)
+    return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+  })
+  const [chartEndDate, setChartEndDate] = useState<string>(() => {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+  })
+  const [showAdminCalendar, setShowAdminCalendar] = useState(false)
+  const [chartHoverIndex, setChartHoverIndex] = useState<number | null>(null)
+  const [visibleSeries, setVisibleSeries] = useState({
+    driverApp: true,
+    pubApp: true,
+    driverReport: true,
+    userReport: true,
+  })
 
   const [actionLoading, setActionLoading] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
-  // ── Auth Check ──────────────────────────────────────────────
+  const handleLogout = () => {
+    setShowLogoutModal(true)
+  }
+
+  const confirmLogout = () => {
+    localStorage.removeItem('admin_user')
+    setShowLogoutModal(false)
+    router.push('/login')
+  }
+
   useEffect(() => {
     const stored = localStorage.getItem('admin_user')
     if (!stored) {
@@ -122,16 +321,34 @@ export default function AdminDashboard() {
     }
   }, [router])
 
-  // ── Data Fetching ───────────────────────────────────────────
   const fetchStats = useCallback(async () => {
     setLoadingStats(true)
     try {
-      const res = await api.get('/admin/stats')
-      if (res.data && res.data.success) {
-        setStats(res.data.data)
+      const [statsRes, driversRes, pubsRes, driverRepRes, userRepRes] = await Promise.allSettled([
+        api.get('/admin/stats'),
+        api.get('/admin/drivers'),
+        api.get('/admin/pubs'),
+        api.get('/admin/driver-reports'),
+        api.get('/admin/user-reports'),
+      ])
+
+      if (statsRes.status === 'fulfilled' && statsRes.value.data?.success) {
+        setStats(statsRes.value.data.data)
+      }
+      if (driversRes.status === 'fulfilled' && driversRes.value.data?.success) {
+        setDrivers(sortItems(driversRes.value.data.data, 'registerstatus', 'regisdate'))
+      }
+      if (pubsRes.status === 'fulfilled' && pubsRes.value.data?.success) {
+        setPubs(sortItems(pubsRes.value.data.data, 'regisstatus', 'regisdate'))
+      }
+      if (driverRepRes.status === 'fulfilled' && driverRepRes.value.data?.success) {
+        setDriverReports(sortItems(mapReports(driverRepRes.value.data.data), 'status', 'reportdate'))
+      }
+      if (userRepRes.status === 'fulfilled' && userRepRes.value.data?.success) {
+        setUserReports(sortItems(mapReports(userRepRes.value.data.data), 'status', 'reportdate'))
       }
     } catch (err) {
-      console.error('Failed to fetch stats:', err)
+      console.error('Failed to fetch stats & real data:', err)
     } finally {
       setLoadingStats(false)
     }
@@ -143,9 +360,6 @@ export default function AdminDashboard() {
       return
     }
     setLoadingData(true)
-    setSearchQuery('')
-    setStatusFilter('All')
-    setDateFilter('')
     try {
       let endpoint = ''
       if (tab === 'driver-app') endpoint = '/admin/drivers'
@@ -156,15 +370,17 @@ export default function AdminDashboard() {
       const res = await api.get(endpoint)
       if (res.data && res.data.success) {
         const payload = res.data.data
-        if (tab === 'driver-app') setDrivers(payload)
-        else if (tab === 'pub-app') setPubs(payload)
-        else if (tab === 'driver-report') setDriverReports(payload)
+        if (tab === 'driver-app') {
+          setDrivers(sortItems(payload, 'registerstatus', 'regisdate'))
+        }
+        else if (tab === 'pub-app') {
+          setPubs(sortItems(payload, 'regisstatus', 'regisdate'))
+        }
+        else if (tab === 'driver-report') {
+          setDriverReports(sortItems(mapReports(payload), 'status', 'reportdate'))
+        }
         else if (tab === 'user-report') {
-          const mapped = payload.map((item: any) => ({
-            ...item,
-            status: item.status || item.reportstatus
-          }))
-          setUserReports(mapped)
+          setUserReports(sortItems(mapReports(payload), 'status', 'reportdate'))
         }
       }
     } catch (err) {
@@ -172,7 +388,7 @@ export default function AdminDashboard() {
     } finally {
       setLoadingData(false)
     }
-  }, [fetchStats])
+  }, [])
 
   useEffect(() => {
     if (adminUser) {
@@ -180,16 +396,14 @@ export default function AdminDashboard() {
     }
   }, [adminUser, activeTab, fetchTabData])
 
-  // ── Handle Approvals & Status Updates ───────────────────────
   const handleDriverStatus = async (username: string, newStatus: 'อนุมัติแล้ว' | 'ปฏิเสธ') => {
     setActionLoading(true)
     try {
       const res = await api.put(`/admin/drivers/${username}/status`, { status: newStatus })
       if (res.data && res.data.success) {
-        showToast(`เปลี่ยนสถานะคนขับเป็น "${newStatus}" เรียบร้อยแล้ว`)
+        showToast(newStatus === 'ปฏิเสธ' ? `ปฏิเสธและลบข้อมูลคำขอสมัครผู้ให้บริการขับรถของ @${username} ออกจากระบบแล้ว` : `อนุมัติคำขอสมัครผู้ให้บริการขับรถ @${username} เรียบร้อยแล้ว`)
+        await fetchTabData('driver-app')
         setSelectedDriver(null)
-        fetchTabData('driver-app')
-        fetchStats()
       }
     } catch (err: any) {
       showToast(err?.response?.data?.error || 'ไม่สามารถอัปเดตสถานะได้', 'error')
@@ -203,11 +417,9 @@ export default function AdminDashboard() {
     try {
       const res = await api.put(`/admin/pubs/${username}/status`, { status: newStatus })
       if (res.data && res.data.success) {
-        const thaiStatus = newStatus === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'
-        showToast(`เปลี่ยนสถานะสถานประกอบการเป็น "${thaiStatus}" เรียบร้อยแล้ว`)
+        showToast(newStatus === 'rejected' ? `ปฏิเสธและลบข้อมูลคำขอสถานบันเทิง @${username} ออกจากระบบแล้ว` : `อนุมัติคำขอพาร์ทเนอร์สถานบันเทิง @${username} เรียบร้อยแล้ว`)
+        await fetchTabData('pub-app')
         setSelectedPub(null)
-        fetchTabData('pub-app')
-        fetchStats()
       }
     } catch (err: any) {
       showToast(err?.response?.data?.error || 'ไม่สามารถอัปเดตสถานะได้', 'error')
@@ -216,7 +428,7 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleReportStatus = async (reportId: number, type: 'driver' | 'user', newStatus: 'กำลังดำเนินการ' | 'แก้ไขแล้ว' | 'อนุมัติแล้ว' | 'ไม่อนุมัติ') => {
+  const handleReportStatus = async (reportId: number, type: 'driver' | 'user', newStatus: 'กำลังดำเนินการ' | 'แก้ไขแล้ว' | 'อนุมัติแล้ว' | 'ไม่อนุมัติ' | 'ปฏิเสธ') => {
     setActionLoading(true)
     try {
       const endpoint = type === 'driver'
@@ -224,10 +436,10 @@ export default function AdminDashboard() {
         : `/admin/user-reports/${reportId}/status`
       const res = await api.put(endpoint, { status: newStatus })
       if (res.data && res.data.success) {
-        showToast('อัปเดตสถานะรายงานสำเร็จ')
+        showToast(newStatus === 'ปฏิเสธ' || newStatus === 'ไม่อนุมัติ' ? 'ปฏิเสธรายการรายงานเรียบร้อยแล้ว' : 'อนุมัติรายงานเรียบร้อยแล้ว')
+        const targetTab: TabType = type === 'driver' ? 'driver-report' : 'user-report'
+        await fetchTabData(targetTab)
         setSelectedReport(null)
-        fetchTabData(type === 'driver' ? 'driver-report' : 'user-report')
-        fetchStats()
       }
     } catch (err: any) {
       showToast(err?.response?.data?.error || 'ไม่สามารถอัปเดตสถานะรายงานได้', 'error')
@@ -236,1746 +448,2037 @@ export default function AdminDashboard() {
     }
   }
 
-  // ── Logout ──────────────────────────────────────────────────
-  const handleLogout = () => {
-    if (window.confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
-      localStorage.removeItem('admin_user')
-      router.push('/login')
-    }
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean
+    title: string
+    message: string
+    confirmText: string
+    confirmBg: string
+    onConfirm: () => void
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'ยืนยัน',
+    confirmBg: 'bg-[#2563EB] hover:bg-[#1D4ED8]',
+    onConfirm: () => {},
+  })
+
+  const promptDriverApprove = (username: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'ยืนยันการอนุมัติการสมัครผู้ให้บริการขับรถ',
+      message: `คุณแน่ใจหรือไม่ว่าต้องการอนุมัติคำขอสมัครของผู้ให้บริการขับรถ @${username}?`,
+      confirmText: 'ยืนยันการอนุมัติ (Approve)',
+      confirmBg: 'bg-[#2563EB] hover:bg-[#1D4ED8]',
+      onConfirm: () => handleDriverStatus(username, 'อนุมัติแล้ว')
+    })
   }
 
-  // ── Rendering Helper for Images in Driver Modal ────────────
+  const promptDriverReject = (username: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'ยืนยันการปฏิเสธการสมัครผู้ให้บริการขับรถ',
+      message: `คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอสมัครของผู้ให้บริการขับรถ @${username}? ข้อมูลจะถูกลบออกจากระบบทั้งหมด`,
+      confirmText: 'ยืนยันการปฏิเสธ (Confirm Reject)',
+      confirmBg: 'bg-red-600 hover:bg-red-700',
+      onConfirm: () => handleDriverStatus(username, 'ปฏิเสธ')
+    })
+  }
+
+  const promptPubApprove = (username: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'ยืนยันการอนุมัติการสมัครพาร์ทเนอร์สถานบันเทิง',
+      message: `คุณแน่ใจหรือไม่ว่าต้องการอนุมัติคำขอสมัครของสถานบันเทิง @${username}?`,
+      confirmText: 'ยืนยันการอนุมัติ (Approve)',
+      confirmBg: 'bg-[#2340A7] hover:bg-[#1D358F]',
+      onConfirm: () => handlePubStatus(username, 'approved')
+    })
+  }
+
+  const promptPubReject = (username: string) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'ยืนยันการปฏิเสธการสมัครพาร์ทเนอร์สถานบันเทิง',
+      message: `คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอสมัครของสถานบันเทิง @${username}? ข้อมูลจะถูกลบออกจากระบบทั้งหมด`,
+      confirmText: 'ยืนยันการปฏิเสธ (Confirm Reject)',
+      confirmBg: 'bg-red-600 hover:bg-red-700',
+      onConfirm: () => handlePubStatus(username, 'rejected')
+    })
+  }
+
+  const promptReportApprove = (reportId: number, type: 'driver' | 'user') => {
+    const label = type === 'driver' ? `รายงานผู้ให้บริการขับรถ #DRV-${reportId}` : `รายงานผู้ใช้บริการ #USR-${reportId}`
+    const targetStatus = 'อนุมัติแล้ว'
+    setConfirmModal({
+      isOpen: true,
+      title: 'ยืนยันการอนุมัติ / ดำเนินการรายงาน',
+      message: `คุณแน่ใจหรือไม่ว่าต้องการเปลี่ยนสถานะของ ${label} เป็น "${targetStatus}"?`,
+      confirmText: 'ยืนยันการอัปเดตสถานะ',
+      confirmBg: 'bg-[#2340A7] hover:bg-[#1D358F]',
+      onConfirm: () => handleReportStatus(reportId, type, targetStatus)
+    })
+  }
+
+  const promptReportReject = (reportId: number, type: 'driver' | 'user') => {
+    const label = type === 'driver' ? `รายงานผู้ให้บริการขับรถ #DRV-${reportId}` : `รายงานผู้ใช้บริการ #USR-${reportId}`
+    setConfirmModal({
+      isOpen: true,
+      title: 'ยืนยันการปฏิเสธรายการรายงาน',
+      message: `คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธ ${label}? (สถานะจะถูกเปลี่ยนเป็น "ปฏิเสธ")`,
+      confirmText: 'ยืนยันการปฏิเสธ (Confirm Reject)',
+      confirmBg: 'bg-red-600 hover:bg-red-700',
+      onConfirm: () => handleReportStatus(reportId, type, type === 'user' ? 'ไม่อนุมัติ' : 'ปฏิเสธ')
+    })
+  }
+
   const parseDriverImages = (imagePathStr: string) => {
     try {
       const parsed = JSON.parse(imagePathStr)
-      if (typeof parsed === 'object' && parsed !== null) {
-        return parsed
-      }
+      if (typeof parsed === 'object' && parsed !== null) return parsed
       return {}
     } catch {
       return { profile: imagePathStr }
     }
   }
 
-  // ── Helper: Format Thai Date ────────────────────────────────
   const formatThaiDate = (dateStr: string) => {
     if (!dateStr) return '—'
     try {
-      const d = new Date(dateStr)
-      return d.toLocaleDateString('th-TH', {
+      const d = parseThaiDate(dateStr)
+      if (isNaN(d.getTime())) return dateStr
+      const datePart = d.toLocaleDateString('th-TH', {
+        timeZone: 'Asia/Bangkok',
         year: 'numeric',
         month: 'short',
         day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
       })
+      const timePart = d.toLocaleTimeString('th-TH', {
+        timeZone: 'Asia/Bangkok',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      })
+      return `${datePart}, ${timePart} น.`
     } catch {
       return dateStr
     }
   }
 
   return (
-    <div style={styles.dashboardContainer}>
-      {/* Background neon glows */}
-      <div style={styles.bgGlowPurple} />
-      <div style={styles.bgGlowCyan} />
+    <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter flex flex-col md:flex-row transition-colors duration-300">
+      
+      <AlertModal
+        isOpen={!!toast}
+        message={toast?.msg || ''}
+        type={toast?.type || 'info'}
+        onClose={() => setToast(null)}
+      />
 
-      {/* ── Toast Notification ── */}
-      {toast && (
-        <div style={{
-          position: 'fixed',
-          top: 24,
-          right: 24,
-          zIndex: 9999,
-          backgroundColor: toast.type === 'success' ? '#059669' : '#dc2626',
-          color: '#ffffff',
-          padding: '12px 20px',
-          borderRadius: 12,
-          fontSize: 14,
-          fontWeight: 600,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          animation: 'fadeUp 0.3s ease',
-          maxWidth: 360,
-        }}>
-          {toast.type === 'success' ? '✅' : '❌'} {toast.msg}
-        </div>
-      )}
-
-      {/* ─── 1. Left Sidebar (Premium Control Finish) ─── */}
-      <aside style={styles.sidebar}>
-        <div style={styles.sidebarHeader}>
-          <div style={styles.adminShieldWrapper}>
-            <span style={styles.adminShieldIcon}>🛡️</span>
+      {}
+      <aside className="w-full md:w-72 bg-white border-r border-[#E2E8F0] p-6 flex flex-col justify-between shrink-0 shadow-sm">
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-3.5 border-b border-[#E2E8F0] pb-6">
+            <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 p-1.5 flex items-center justify-center shadow-xs shrink-0">
+              <img 
+                src="/images/safeseat_logo.png" 
+                alt="SafeSeat Logo" 
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div>
+              <h2 className="text-xl font-black font-manrope text-[#0F172A]">SafeSeat Admin</h2>
+              <span className="text-xs font-extrabold text-[#2563EB] uppercase tracking-widest font-mono">Control Center</span>
+            </div>
           </div>
-          <h2 style={styles.sidebarAdminTitle}>SafeSeat Admin</h2>
-          <p style={styles.sidebarAdminRole}>System Administrator</p>
+
+          <nav className="flex flex-col gap-2">
+            <button
+              onClick={() => handleTabChange('home')}
+              className={`w-full p-3.5 rounded-xl text-sm font-bold transition-all flex items-center gap-3.5 cursor-pointer ${
+                activeTab === 'home'
+                  ? 'bg-[#2563EB] text-white shadow-sm font-extrabold'
+                  : 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A]'
+              }`}
+            >
+              <Shield className="w-5 h-5" /> ภาพรวมระบบ (Home)
+            </button>
+
+            <span className="text-xs font-extrabold uppercase tracking-widest text-[#94A3B8] mt-4 px-2">การอนุมัติคำขอ</span>
+
+            <button
+              onClick={() => handleTabChange('driver-app')}
+              className={`w-full p-3.5 rounded-xl text-sm font-bold transition-all flex items-center gap-3.5 cursor-pointer ${
+                activeTab === 'driver-app'
+                  ? 'bg-[#2563EB] text-white shadow-sm font-extrabold'
+                  : 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A]'
+              }`}
+            >
+              <Car className="w-5 h-5" /> พิจารณาผู้ให้บริการขับรถ
+            </button>
+
+            <button
+              onClick={() => handleTabChange('pub-app')}
+              className={`w-full p-3.5 rounded-xl text-sm font-bold transition-all flex items-center gap-3.5 cursor-pointer ${
+                activeTab === 'pub-app'
+                  ? 'bg-[#2563EB] text-white shadow-sm font-extrabold'
+                  : 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A]'
+              }`}
+            >
+              <Store className="w-5 h-5" /> พิจารณาสถานบันเทิง
+            </button>
+
+            <span className="text-xs font-extrabold uppercase tracking-widest text-[#94A3B8] mt-4 px-2">รายงานความประพฤติ</span>
+
+            <button
+              onClick={() => handleTabChange('driver-report')}
+              className={`w-full p-3.5 rounded-xl text-sm font-bold transition-all flex items-center gap-3.5 cursor-pointer ${
+                activeTab === 'driver-report'
+                  ? 'bg-[#2563EB] text-white shadow-sm font-extrabold'
+                  : 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A]'
+              }`}
+            >
+              <AlertTriangle className="w-5 h-5" /> รายงานผู้ให้บริการขับรถ
+            </button>
+
+            <button
+              onClick={() => handleTabChange('user-report')}
+              className={`w-full p-3.5 rounded-xl text-sm font-bold transition-all flex items-center gap-3.5 cursor-pointer ${
+                activeTab === 'user-report'
+                  ? 'bg-[#2563EB] text-white shadow-sm font-extrabold'
+                  : 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A]'
+              }`}
+            >
+              <User className="w-5 h-5" /> รายงานผู้ใช้บริการ
+            </button>
+          </nav>
         </div>
 
-        <nav style={styles.sidebarNav}>
-          <button
-            onClick={() => setActiveTab('home')}
-            style={{
-              ...styles.navItem,
-              ...(activeTab === 'home' ? styles.navItemActive : {}),
-            }}
+        <div className="border-t border-[#E2E8F0] pt-4 mt-6">
+          <button 
+            onClick={handleLogout} 
+            className="w-full p-3.5 rounded-xl text-sm font-extrabold text-[#EF4444] border border-[#EF4444]/30 hover:bg-[#EF4444] hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
           >
-            <span style={styles.navIcon}>📊</span>
-            หน้าแรก
+            <LogOut className="w-5 h-5" />
+            <span>ออกจากระบบ</span>
           </button>
-
-          <div style={styles.navGroupLabel}>การจัดการข้อมูลสมัคร</div>
-
-          <button
-            onClick={() => setActiveTab('driver-app')}
-            style={{
-              ...styles.navItem,
-              ...(activeTab === 'driver-app' ? styles.navItemActive : {}),
-            }}
-          >
-            <span style={styles.navIcon}>🚗</span>
-            พิจารณาคนขับรถ
-            {stats && stats.drivers.pending > 0 && (
-              <span style={styles.badgePending}>{stats.drivers.pending}</span>
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('pub-app')}
-            style={{
-              ...styles.navItem,
-              ...(activeTab === 'pub-app' ? styles.navItemActive : {}),
-            }}
-          >
-            <span style={styles.navIcon}>🏪</span>
-            พิจารณาร้านค้า
-            {stats && stats.pubs.pending > 0 && (
-              <span style={styles.badgePending}>{stats.pubs.pending}</span>
-            )}
-          </button>
-
-          <div style={styles.navGroupLabel}>รายงานความประพฤติ</div>
-
-          <button
-            onClick={() => setActiveTab('driver-report')}
-            style={{
-              ...styles.navItem,
-              ...(activeTab === 'driver-report' ? styles.navItemActive : {}),
-            }}
-          >
-            <span style={styles.navIcon}>🚨</span>
-            รายงานความประพฤติคนขับ
-            {stats && stats.driverReports.pending > 0 && (
-              <span style={styles.badgeReportPending}>{stats.driverReports.pending}</span>
-            )}
-          </button>
-
-          <button
-            onClick={() => setActiveTab('user-report')}
-            style={{
-              ...styles.navItem,
-              ...(activeTab === 'user-report' ? styles.navItemActive : {}),
-            }}
-          >
-            <span style={styles.navIcon}>👤</span>
-            รายงานความประพฤติลูกค้า
-            {stats && stats.userReports.pending > 0 && (
-              <span style={styles.badgeReportPending}>{stats.userReports.pending}</span>
-            )}
-          </button>
-        </nav>
-
+        </div>
       </aside>
 
-      {/* ─── 2. Main Content Area ─── */}
-      <div style={styles.mainContainer}>
-        {/* Main Content Header */}
-        <header style={styles.header}>
-          <div style={styles.breadcrumb}>
-            <span style={styles.crumbParent}>Admin</span>
-            <span style={styles.crumbDivider}>‣</span>
-            <span style={styles.crumbCurrent}>
-              {activeTab === 'home' && 'หน้าแรก'}
-              {activeTab === 'driver-app' && 'พิจารณาตรวจสอบคนขับรถ'}
-              {activeTab === 'pub-app' && 'พิจารณาตรวจสอบร้านค้า / สถานบันเทิง'}
-              {activeTab === 'driver-report' && 'รายงานความประพฤติคนขับ'}
-              {activeTab === 'user-report' && 'รายงานความประพฤติลูกค้า'}
+      {}
+      <main className="flex-1 p-8 overflow-y-auto max-w-7xl mx-auto w-full flex flex-col gap-6">
+        
+        {}
+        {/* Top Header Bar */}
+        <div className="flex items-center justify-between bg-white border border-[#E2E8F0] p-4.5 rounded-2xl shadow-sm">
+          <div className="flex items-center gap-2.5 text-sm font-bold">
+            <span className="text-[#64748B]">Admin</span>
+            <ChevronRight className="w-4 h-4 text-[#94A3B8]" />
+            <span className="text-[#2563EB] font-manrope uppercase tracking-wider font-black text-base">
+              {activeTab === 'home' && 'ภาพรวมระบบ'}
+              {activeTab === 'driver-app' && 'พิจารณาอนุมัติผู้ให้บริการขับรถ'}
+              {activeTab === 'pub-app' && 'พิจารณาอนุมัติสถานบันเทิง'}
+              {activeTab === 'driver-report' && 'รายงานความประพฤติผู้ให้บริการขับรถ'}
+              {activeTab === 'user-report' && 'รายงานความประพฤติผู้ใช้บริการ'}
             </span>
           </div>
+          <div className="flex items-center gap-2.5 px-4 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-full text-sm font-bold text-[#0F172A] shadow-sm">
+            <div className="w-7 h-7 rounded-full bg-[#2563EB]/15 text-[#2563EB] flex items-center justify-center text-xs font-black uppercase">
+              {adminUser?.username ? adminUser.username.charAt(0) : 'A'}
+            </div>
+            <span>@{adminUser?.username || 'admin'}</span>
+          </div>
+        </div>
 
-          <div style={styles.headerRight}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: '#eef2ff',
-                color: '#4f46e5',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1.5px solid rgba(79, 70, 229, 0.2)'
-              }}>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" style={{ width: '16px', height: '16px' }}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                </svg>
-              </div>
-              <span style={{ fontSize: '14px', color: '#0f172a', fontWeight: 600 }}>
-                @{adminUser?.username}
+        {/* TAB: home */}
+        {activeTab === 'home' && (
+          <div>
+            {loadingStats ? (
+              <div className="p-12 text-center text-sm font-bold text-[#64748B]">กำลังโหลดสถิติระบบ...</div>
+            ) : (
+              <div className="bg-white border border-[#E2E8F0] p-6 rounded-3xl shadow-sm flex flex-col gap-6">
+                {/* Main Section Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E2E8F0] pb-5">
+                  <div>
+                    <h3 className="text-2xl font-black text-[#0F172A] flex items-center gap-2.5 font-manrope">
+                      <TrendingUp className="w-6 h-6 text-[#2563EB]" /> สถิติการสมัครและรายงานสรุป
+                    </h3>
+                    <p className="text-sm font-semibold text-[#64748B] mt-1">
+                      เปรียบเทียบแนวโน้มการสมัครและข้อร้องเรียนตามช่วงเวลา (วัน / สัปดาห์ / เดือน / ปี)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Series Visibility Toggles */}
+                <div className="flex flex-wrap items-center justify-between gap-4 text-sm font-extrabold bg-[#F8FAFC] p-4 rounded-2xl border border-[#E2E8F0]">
+                  <span className="text-[#64748B] uppercase tracking-wider text-xs font-black">หมวดหมู่สถิติ:</span>
+                  <div className="flex flex-wrap items-center gap-5">
+                    <button 
+                      onClick={() => setVisibleSeries(prev => ({ ...prev, driverApp: !prev.driverApp }))}
+                      className={`flex items-center gap-2.5 transition-opacity cursor-pointer text-sm font-bold ${visibleSeries.driverApp ? 'opacity-100' : 'opacity-40'}`}
+                    >
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#2563EB]"></span>
+                      <span className="text-[#0F172A]">การสมัครผู้ให้บริการขับรถ</span>
+                    </button>
+
+                    <button 
+                      onClick={() => setVisibleSeries(prev => ({ ...prev, pubApp: !prev.pubApp }))}
+                      className={`flex items-center gap-2.5 transition-opacity cursor-pointer text-sm font-bold ${visibleSeries.pubApp ? 'opacity-100' : 'opacity-40'}`}
+                    >
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#0EA5E9]"></span>
+                      <span className="text-[#0F172A]">การสมัครสถานบันเทิง</span>
+                    </button>
+
+                    <button 
+                      onClick={() => setVisibleSeries(prev => ({ ...prev, driverReport: !prev.driverReport }))}
+                      className={`flex items-center gap-2.5 transition-opacity cursor-pointer text-sm font-bold ${visibleSeries.driverReport ? 'opacity-100' : 'opacity-40'}`}
+                    >
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#EF4444]"></span>
+                      <span className="text-[#0F172A]">รายงานผู้ให้บริการขับรถ</span>
+                    </button>
+
+                    <button 
+                      onClick={() => setVisibleSeries(prev => ({ ...prev, userReport: !prev.userReport }))}
+                      className={`flex items-center gap-2.5 transition-opacity cursor-pointer text-sm font-bold ${visibleSeries.userReport ? 'opacity-100' : 'opacity-40'}`}
+                    >
+                      <span className="w-3.5 h-3.5 rounded-full bg-[#EC4899]"></span>
+                      <span className="text-[#0F172A]">รายงานผู้ใช้บริการ</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Dynamic Chart Section */}
+                {(() => {
+                const getAnalyticsData = () => {
+                  const now = new Date()
+                  const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+                  const currentMonth = now.getMonth()
+                  const currentYear = now.getFullYear()
+
+                  if (chartTimeframe === 'day') {
+                    // วันนี้ (Today): แบ่งเป็น 6 ช่วงเวลาของวันนี้ (00.00 - 23.59)
+                    const labels = ['00.00 - 03.59', '04.00 - 07.59', '08.00 - 11.59', '12.00 - 15.59', '16.00 - 19.59', '20.00 - 23.59']
+                    const counts = {
+                      driverApp: [0, 0, 0, 0, 0, 0],
+                      pubApp: [0, 0, 0, 0, 0, 0],
+                      driverReport: [0, 0, 0, 0, 0, 0],
+                      userReport: [0, 0, 0, 0, 0, 0],
+                    }
+
+                    const countByTimeSlot = (items: any[], dateKey: string, arr: number[]) => {
+                      (items || []).forEach(item => {
+                        if (!item[dateKey]) return
+                        const d = parseThaiDate(item[dateKey])
+                        const itemDateStr = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+                        if (itemDateStr === todayStr) {
+                          const hour = d.getHours()
+                          const slotIdx = Math.min(Math.floor(hour / 4), 5)
+                          arr[slotIdx] += 1
+                        }
+                      })
+                    }
+
+                    countByTimeSlot(drivers, 'regisdate', counts.driverApp)
+                    countByTimeSlot(pubs, 'regisdate', counts.pubApp)
+                    countByTimeSlot(driverReports, 'reportdate', counts.driverReport)
+                    countByTimeSlot(userReports, 'reportdate', counts.userReport)
+
+                    const todayDateThai = now.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })
+                    return { 
+                      labels, 
+                      datasets: counts, 
+                      periodTitle: `สถิติรายช่วงเวลา ประจำวันนี้ (${todayDateThai})` 
+                    }
+                  }
+
+                  else if (chartTimeframe === 'week') {
+                    // สัปดาห์นี้ (This Week): แสดง 7 วันของสัปดาห์นี้ (จันทร์ - อาทิตย์)
+                    const labels = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์', 'อาทิตย์']
+                    const dayMap = [6, 0, 1, 2, 3, 4, 5] // Sun=6, Mon=0, Tue=1, ...
+
+                    const dayOfWeek = (now.getDay() + 6) % 7 // 0 = Mon, 6 = Sun
+                    const startOfWeek = new Date(now)
+                    startOfWeek.setHours(0, 0, 0, 0)
+                    startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek)
+
+                    const endOfWeek = new Date(startOfWeek)
+                    endOfWeek.setDate(endOfWeek.getDate() + 6)
+                    endOfWeek.setHours(23, 59, 59, 999)
+
+                    const counts = {
+                      driverApp: [0, 0, 0, 0, 0, 0, 0],
+                      pubApp: [0, 0, 0, 0, 0, 0, 0],
+                      driverReport: [0, 0, 0, 0, 0, 0, 0],
+                      userReport: [0, 0, 0, 0, 0, 0, 0],
+                    }
+
+                    const countByDayOfWeek = (items: any[], dateKey: string, arr: number[]) => {
+                      (items || []).forEach(item => {
+                        if (!item[dateKey]) return
+                        const d = parseThaiDate(item[dateKey])
+                        if (d >= startOfWeek && d <= endOfWeek) {
+                          const dayIdx = dayMap[d.getDay()]
+                          if (dayIdx >= 0 && dayIdx < 7) {
+                            arr[dayIdx] += 1
+                          }
+                        }
+                      })
+                    }
+
+                    countByDayOfWeek(drivers, 'regisdate', counts.driverApp)
+                    countByDayOfWeek(pubs, 'regisdate', counts.pubApp)
+                    countByDayOfWeek(driverReports, 'reportdate', counts.driverReport)
+                    countByDayOfWeek(userReports, 'reportdate', counts.userReport)
+
+                    const startStr = startOfWeek.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+                    const endStr = endOfWeek.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+                    return { 
+                      labels, 
+                      datasets: counts, 
+                      periodTitle: `สถิติรายวัน ประจำสัปดาห์นี้ (${startStr} - ${endStr})` 
+                    }
+                  }
+
+                  else if (chartTimeframe === 'month') {
+                    // เดือนนี้ (This Month): แสดง 4 ช่วงสัปดาห์ของเดือนนี้
+                    const labels = ['1 - 7 ของเดือน', '8 - 14 ของเดือน', '15 - 21 ของเดือน', '22 - สิ้นเดือน']
+                    const counts = {
+                      driverApp: [0, 0, 0, 0],
+                      pubApp: [0, 0, 0, 0],
+                      driverReport: [0, 0, 0, 0],
+                      userReport: [0, 0, 0, 0],
+                    }
+
+                    const countByWeekOfMonth = (items: any[], dateKey: string, arr: number[]) => {
+                      (items || []).forEach(item => {
+                        if (!item[dateKey]) return
+                        const d = parseThaiDate(item[dateKey])
+                        if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                          const dateNum = d.getDate()
+                          const weekIdx = Math.min(Math.floor((dateNum - 1) / 7), 3)
+                          arr[weekIdx] += 1
+                        }
+                      })
+                    }
+
+                    countByWeekOfMonth(drivers, 'regisdate', counts.driverApp)
+                    countByWeekOfMonth(pubs, 'regisdate', counts.pubApp)
+                    countByWeekOfMonth(driverReports, 'reportdate', counts.driverReport)
+                    countByWeekOfMonth(userReports, 'reportdate', counts.userReport)
+
+                    const monthThai = now.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' })
+                    return { 
+                      labels, 
+                      datasets: counts, 
+                      periodTitle: `สถิติรายสัปดาห์ ประจำเดือน ${monthThai}` 
+                    }
+                  }
+
+                  else if (chartTimeframe === 'year') {
+                    // ปีนี้ (This Year): แสดง 12 เดือนของปีปัจจุบัน
+                    const labels = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+                    const counts = {
+                      driverApp: Array(12).fill(0),
+                      pubApp: Array(12).fill(0),
+                      driverReport: Array(12).fill(0),
+                      userReport: Array(12).fill(0),
+                    }
+
+                    const countByMonthOfYear = (items: any[], dateKey: string, arr: number[]) => {
+                      (items || []).forEach(item => {
+                        if (!item[dateKey]) return
+                        const d = parseThaiDate(item[dateKey])
+                        if (d.getFullYear() === currentYear) {
+                          const m = d.getMonth()
+                          if (m >= 0 && m < 12) arr[m] += 1
+                        }
+                      })
+                    }
+
+                    countByMonthOfYear(drivers, 'regisdate', counts.driverApp)
+                    countByMonthOfYear(pubs, 'regisdate', counts.pubApp)
+                    countByMonthOfYear(driverReports, 'reportdate', counts.driverReport)
+                    countByMonthOfYear(userReports, 'reportdate', counts.userReport)
+
+                    const yearThai = now.toLocaleDateString('th-TH', { year: 'numeric' })
+                    return { 
+                      labels, 
+                      datasets: counts, 
+                      periodTitle: `สถิติรายเดือน ประจำปี ${yearThai}` 
+                    }
+                  }
+
+                  else {
+                    // กำหนดช่วงวันที่เอง (Custom Calendar Range)
+                    const sDate = new Date(`${chartStartDate}T00:00:00+07:00`)
+                    const eDate = new Date(`${chartEndDate}T23:59:59.999+07:00`)
+                    const validStart = sDate <= eDate ? sDate : eDate
+                    const validEnd = sDate <= eDate ? eDate : sDate
+
+                    const diffTime = Math.abs(validEnd.getTime() - validStart.getTime())
+                    const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
+
+                    const startThaiStr = validStart.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
+                    const endThaiStr = validEnd.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
+
+                    if (diffDays <= 1) {
+                      const labels = ['00.00 - 03.59', '04.00 - 07.59', '08.00 - 11.59', '12.00 - 15.59', '16.00 - 19.59', '20.00 - 23.59']
+                      const counts = {
+                        driverApp: [0, 0, 0, 0, 0, 0],
+                        pubApp: [0, 0, 0, 0, 0, 0],
+                        driverReport: [0, 0, 0, 0, 0, 0],
+                        userReport: [0, 0, 0, 0, 0, 0],
+                      }
+
+                      const countSlot = (items: any[], dateKey: string, arr: number[]) => {
+                        (items || []).forEach(item => {
+                          if (!item[dateKey]) return
+                          const d = parseThaiDate(item[dateKey])
+                          if (d >= validStart && d <= validEnd) {
+                            const hour = d.getHours()
+                            const slot = Math.min(Math.floor(hour / 4), 5)
+                            arr[slot] += 1
+                          }
+                        })
+                      }
+
+                      countSlot(drivers, 'regisdate', counts.driverApp)
+                      countSlot(pubs, 'regisdate', counts.pubApp)
+                      countSlot(driverReports, 'reportdate', counts.driverReport)
+                      countSlot(userReports, 'reportdate', counts.userReport)
+
+                      return {
+                        labels,
+                        datasets: counts,
+                        periodTitle: `สถิติตามช่วงวันที่เลือก (${startThaiStr})`,
+                      }
+                    } else if (diffDays <= 14) {
+                      const labels: string[] = []
+                      const counts = {
+                        driverApp: [] as number[],
+                        pubApp: [] as number[],
+                        driverReport: [] as number[],
+                        userReport: [] as number[],
+                      }
+
+                      const cur = new Date(validStart)
+                      while (cur <= validEnd && labels.length < 14) {
+                        const dayLabel = cur.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+                        labels.push(dayLabel)
+                        const dayKey = cur.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+
+                        const countDay = (items: any[], dateKey: string) => {
+                          return (items || []).filter(item => {
+                            if (!item[dateKey]) return false
+                            const d = parseThaiDate(item[dateKey])
+                            return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' }) === dayKey
+                          }).length
+                        }
+
+                        counts.driverApp.push(countDay(drivers, 'regisdate'))
+                        counts.pubApp.push(countDay(pubs, 'regisdate'))
+                        counts.driverReport.push(countDay(driverReports, 'reportdate'))
+                        counts.userReport.push(countDay(userReports, 'reportdate'))
+
+                        cur.setDate(cur.getDate() + 1)
+                      }
+
+                      return {
+                        labels,
+                        datasets: counts,
+                        periodTitle: `สถิติตามช่วงวันที่เลือก (${startThaiStr} - ${endThaiStr})`,
+                      }
+                    } else {
+                      const intervalCount = Math.min(diffDays, 7)
+                      const labels: string[] = []
+                      const counts = {
+                        driverApp: new Array(intervalCount).fill(0),
+                        pubApp: new Array(intervalCount).fill(0),
+                        driverReport: new Array(intervalCount).fill(0),
+                        userReport: new Array(intervalCount).fill(0),
+                      }
+                      const intervalDuration = diffTime / intervalCount
+
+                      for (let i = 0; i < intervalCount; i++) {
+                        const segStart = new Date(validStart.getTime() + i * intervalDuration)
+                        const segEnd = new Date(validStart.getTime() + (i + 1) * intervalDuration)
+                        const segLabel = `${segStart.toLocaleDateString('th-TH', { day: 'numeric', month: 'numeric' })}-${segEnd.toLocaleDateString('th-TH', { day: 'numeric', month: 'numeric' })}`
+                        labels.push(segLabel)
+
+                        const countSeg = (items: any[], dateKey: string) => {
+                          let c = 0
+                          ;(items || []).forEach(item => {
+                            if (!item[dateKey]) return
+                            const d = parseThaiDate(item[dateKey])
+                            if (d >= segStart && (i === intervalCount - 1 ? d <= segEnd : d < segEnd)) {
+                              c++
+                            }
+                          })
+                          return c
+                        }
+
+                        counts.driverApp[i] = countSeg(drivers, 'regisdate')
+                        counts.pubApp[i] = countSeg(pubs, 'regisdate')
+                        counts.driverReport[i] = countSeg(driverReports, 'reportdate')
+                        counts.userReport[i] = countSeg(userReports, 'reportdate')
+                      }
+
+                      return {
+                        labels,
+                        datasets: counts,
+                        periodTitle: `สถิติตามช่วงวันที่เลือก (${startThaiStr} - ${endThaiStr})`,
+                      }
+                    }
+                  }
+                }
+
+                const data = getAnalyticsData()
+                const allValues = [
+                  ...(visibleSeries.driverApp ? data.datasets.driverApp : []),
+                  ...(visibleSeries.pubApp ? data.datasets.pubApp : []),
+                  ...(visibleSeries.driverReport ? data.datasets.driverReport : []),
+                  ...(visibleSeries.userReport ? data.datasets.userReport : []),
+                ]
+                const maxValue = Math.max(...allValues, 1) + 2
+
+                return (
+                  <div className="flex flex-col gap-4">
+                    {/* Timeframe Switcher Tabs */}
+                    <div className="flex justify-end px-1">
+                      <div className="inline-flex items-center p-1 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl gap-1 shrink-0">
+                        {[
+                          { key: 'day' as const, label: 'วัน' },
+                          { key: 'week' as const, label: 'สัปดาห์' },
+                          { key: 'month' as const, label: 'เดือน' },
+                          { key: 'year' as const, label: 'ปี' },
+                          { key: 'custom' as const, label: '📅 ปฏิทิน' },
+                        ].map((tab) => (
+                          <button
+                            key={tab.key}
+                            onClick={() => setChartTimeframe(tab.key)}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer text-center whitespace-nowrap ${
+                              chartTimeframe === tab.key
+                                ? 'bg-[#2563EB] text-white shadow-sm'
+                                : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white'
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Expandable Calendar Date Range Bar for Admin */}
+                    {chartTimeframe === 'custom' && (
+                      <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#2563EB]/30 flex flex-col gap-3.5 animate-fade-in shadow-xs">
+                        <div className="flex items-center gap-2 text-xs font-bold text-[#2563EB]">
+                          <Calendar className="w-4 h-4 text-[#2563EB]" />
+                          <span>เลือกช่วงวันที่ต้องการกรองสถิติและกิจกรรมของระบบ</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <AdminThaiDateInput
+                            label="วันที่เริ่มต้น (วัน / เดือน / ปี)"
+                            value={chartStartDate}
+                            onChange={(val) => {
+                              setChartStartDate(val)
+                              setChartTimeframe('custom')
+                            }}
+                          />
+                          <AdminThaiDateInput
+                            label="วันที่สิ้นสุด (วัน / เดือน / ปี)"
+                            value={chartEndDate}
+                            onChange={(val) => {
+                              setChartEndDate(val)
+                              setChartTimeframe('custom')
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="relative pt-6 pb-2 px-2 bg-[#F8FAFC]/50 rounded-2xl border border-[#E2E8F0]">
+                      {/* Y-Axis Guidelines */}
+                      <div className="absolute inset-x-0 top-6 bottom-12 flex flex-col justify-between pointer-events-none px-4 opacity-40">
+                        <div className="border-b border-dashed border-[#CBD5E1] w-full flex justify-between text-xs font-mono text-[#64748B]"><span>{maxValue}</span></div>
+                        <div className="border-b border-dashed border-[#CBD5E1] w-full flex justify-between text-xs font-mono text-[#64748B]"><span>{Math.round(maxValue / 2)}</span></div>
+                        <div className="border-b border-dashed border-[#CBD5E1] w-full flex justify-between text-xs font-mono text-[#64748B]"><span>0</span></div>
+                      </div>
+
+                      {/* Dynamic Bar Columns */}
+                      <div className={`relative z-10 grid gap-1.5 sm:gap-2 items-end min-h-[210px] sm:min-h-[240px] pt-8 pb-4 px-2 sm:px-4 ${
+                        data.labels.length === 4 
+                          ? 'grid-cols-4' 
+                          : data.labels.length === 6 
+                            ? 'grid-cols-6' 
+                            : data.labels.length === 7 
+                              ? 'grid-cols-7' 
+                              : 'grid-cols-6 sm:grid-cols-12'
+                      }`}>
+                        {data.labels.map((label, idx) => {
+                          const driverAppVal = data.datasets.driverApp[idx] || 0
+                          const pubAppVal = data.datasets.pubApp[idx] || 0
+                          const driverReportVal = data.datasets.driverReport[idx] || 0
+                          const userReportVal = data.datasets.userReport[idx] || 0
+
+                          const isHovered = chartHoverIndex === idx
+
+                          return (
+                            <div 
+                              key={idx}
+                              onMouseEnter={() => setChartHoverIndex(idx)}
+                              onMouseLeave={() => setChartHoverIndex(null)}
+                              className={`flex flex-col items-center justify-end h-full relative cursor-pointer p-1 sm:p-2 rounded-xl transition-all ${
+                                isHovered ? 'bg-[#2563EB]/5 scale-[1.02]' : ''
+                              }`}
+                            >
+                              {/* Hover Tooltip */}
+                              {isHovered && (
+                                <div className="absolute bottom-full mb-3 z-30 bg-[#0F172A] text-white p-3.5 rounded-2xl shadow-xl text-xs whitespace-nowrap min-w-[160px] pointer-events-none border border-slate-700">
+                                  <div className="font-black border-b border-slate-700 pb-1.5 mb-2 text-blue-400 text-sm">{label}</div>
+                                  {visibleSeries.driverApp && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>การสมัครผู้ให้บริการขับรถ:</span> <b className="text-white">{driverAppVal}</b></div>}
+                                  {visibleSeries.pubApp && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>การสมัครสถานบันเทิง:</span> <b className="text-white">{pubAppVal}</b></div>}
+                                  {visibleSeries.driverReport && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>รายงานผู้ให้บริการขับรถ:</span> <b className="text-white">{driverReportVal}</b></div>}
+                                  {visibleSeries.userReport && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>รายงานผู้ใช้บริการ:</span> <b className="text-white">{userReportVal}</b></div>}
+                                </div>
+                              )}
+
+                              {/* Bars Container */}
+                              <div className="flex items-end justify-center gap-1 sm:gap-2 w-full h-[150px] sm:h-[180px]">
+                                {visibleSeries.driverApp && (
+                                  <div 
+                                    style={{ height: `${(driverAppVal / maxValue) * 100}%` }} 
+                                    className="w-2 sm:w-4 lg:w-5 bg-[#2563EB] rounded-t-lg transition-all duration-300 hover:brightness-110 shadow-xs"
+                                  />
+                                )}
+                                {visibleSeries.pubApp && (
+                                  <div 
+                                    style={{ height: `${(pubAppVal / maxValue) * 100}%` }} 
+                                    className="w-2 sm:w-4 lg:w-5 bg-[#0EA5E9] rounded-t-lg transition-all duration-300 hover:brightness-110 shadow-xs"
+                                  />
+                                )}
+                                {visibleSeries.driverReport && (
+                                  <div 
+                                    style={{ height: `${(driverReportVal / maxValue) * 100}%` }} 
+                                    className="w-2 sm:w-4 lg:w-5 bg-[#EF4444] rounded-t-lg transition-all duration-300 hover:brightness-110 shadow-xs"
+                                  />
+                                )}
+                                {visibleSeries.userReport && (
+                                  <div 
+                                    style={{ height: `${(userReportVal / maxValue) * 100}%` }} 
+                                    className="w-2 sm:w-4 lg:w-5 bg-[#EC4899] rounded-t-lg transition-all duration-300 hover:brightness-110 shadow-xs"
+                                  />
+                                )}
+                              </div>
+
+                              {/* Column Label */}
+                              <span className={`text-[10px] sm:text-xs font-black mt-2.5 truncate transition-colors text-center w-full ${isHovered ? 'text-[#2563EB]' : 'text-[#64748B]'}`}>
+                                {label}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* 4 Interactive Period Overview Stat Cards */}
+                    {(() => {
+                      const now = new Date()
+                      const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+                      const currentMonth = now.getMonth()
+                      const currentYear = now.getFullYear()
+
+                      const dayOfWeek = (now.getDay() + 6) % 7 // 0 = Mon, 6 = Sun
+                      const startOfWeek = new Date(now)
+                      startOfWeek.setHours(0, 0, 0, 0)
+                      startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek)
+
+                      const countInPeriods = (items: any[], dateKey: string) => {
+                        let day = 0, week = 0, month = 0, year = 0;
+                        (items || []).forEach(item => {
+                          if (!item[dateKey]) return
+                          const d = parseThaiDate(item[dateKey])
+                          const dateStr = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+                          const m = d.getMonth()
+                          const yr = d.getFullYear()
+
+                          if (dateStr === todayStr) day++
+                          if (d >= startOfWeek && d <= now) week++
+                          if (m === currentMonth && yr === currentYear) month++
+                          if (yr === currentYear) year++
+                        })
+                        return { day, week, month, year }
+                      }
+
+                      const drv = countInPeriods(drivers, 'regisdate')
+                      const pub = countInPeriods(pubs, 'regisdate')
+                      const drvRep = countInPeriods(driverReports, 'reportdate')
+                      const usrRep = countInPeriods(userReports, 'reportdate')
+
+                      // Custom range stats
+                      const sDate = new Date(`${chartStartDate}T00:00:00+07:00`)
+                      const eDate = new Date(`${chartEndDate}T23:59:59.999+07:00`)
+                      const validStart = sDate <= eDate ? sDate : eDate
+                      const validEnd = sDate <= eDate ? eDate : sDate
+
+                      const countCustom = (items: any[], dateKey: string) => {
+                        return (items || []).filter(item => {
+                          if (!item[dateKey]) return false
+                          const d = parseThaiDate(item[dateKey])
+                          return d >= validStart && d <= validEnd
+                        }).length
+                      }
+                      const customDrv = countCustom(drivers, 'regisdate')
+                      const customPub = countCustom(pubs, 'regisdate')
+                      const customDrvRep = countCustom(driverReports, 'reportdate')
+                      const customUsrRep = countCustom(userReports, 'reportdate')
+
+                      const periodStats = [
+                        {
+                          key: 'day' as const,
+                          label: 'กิจกรรมวันนี้',
+                          total: drv.day + pub.day + drvRep.day + usrRep.day,
+                          apps: drv.day + pub.day,
+                          reports: drvRep.day + usrRep.day,
+                          icon: Clock,
+                          color: 'text-pink-600',
+                          activeBorder: 'border-pink-500 ring-2 ring-pink-500/20 bg-pink-50/40',
+                        },
+                        {
+                          key: 'week' as const,
+                          label: 'กิจกรรมสัปดาห์นี้',
+                          total: drv.week + pub.week + drvRep.week + usrRep.week,
+                          apps: drv.week + pub.week,
+                          reports: drvRep.week + usrRep.week,
+                          icon: Calendar,
+                          color: 'text-blue-600',
+                          activeBorder: 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/40',
+                        },
+                        {
+                          key: 'month' as const,
+                          label: 'กิจกรรมเดือนนี้',
+                          total: drv.month + pub.month + drvRep.month + usrRep.month,
+                          apps: drv.month + pub.month,
+                          reports: drvRep.month + usrRep.month,
+                          icon: TrendingUp,
+                          color: 'text-indigo-600',
+                          activeBorder: 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/40',
+                        },
+                        {
+                          key: (chartTimeframe === 'custom' ? 'custom' : 'year') as any,
+                          label: chartTimeframe === 'custom' ? 'กิจกรรมตามช่วงวันที่เลือก' : 'กิจกรรมปีนี้',
+                          total: chartTimeframe === 'custom' ? (customDrv + customPub + customDrvRep + customUsrRep) : (drv.year + pub.year + drvRep.year + usrRep.year),
+                          apps: chartTimeframe === 'custom' ? (customDrv + customPub) : (drv.year + pub.year),
+                          reports: chartTimeframe === 'custom' ? (customDrvRep + customUsrRep) : (drvRep.year + usrRep.year),
+                          icon: BarChart3,
+                          color: chartTimeframe === 'custom' ? 'text-purple-600' : 'text-emerald-600',
+                          activeBorder: chartTimeframe === 'custom' ? 'border-purple-500 ring-2 ring-purple-500/20 bg-purple-50/40' : 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/40',
+                        },
+                      ]
+
+                      return (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                          {periodStats.map((stat) => {
+                            const IconComp = stat.icon
+                            const isSelected = chartTimeframe === stat.key
+                            return (
+                              <div
+                                key={stat.key}
+                                onClick={() => {
+                                  setChartTimeframe(stat.key)
+                                }}
+                                className={`p-5 bg-white border rounded-2xl shadow-xs flex flex-col justify-between cursor-pointer transition-all duration-200 hover:scale-[1.01] ${
+                                  isSelected ? stat.activeBorder : 'border-[#E2E8F0] hover:border-slate-300'
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={`p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl ${stat.color} shrink-0`}>
+                                    <IconComp className="w-5 h-5" />
+                                  </div>
+                                  <span className="text-sm sm:text-base font-bold text-[#0F172A]">
+                                    {stat.label}
+                                  </span>
+                                </div>
+                                <div className="mt-4">
+                                  <div className="text-3xl font-black font-manrope text-[#0F172A]">{stat.total} <span className="text-sm font-bold text-[#64748B]">รายการ</span></div>
+                                  <div className="text-xs font-bold text-[#64748B] mt-2 flex items-center gap-2">
+                                    <span className="text-blue-600 font-extrabold">สมัคร {stat.apps}</span>
+                                    <span>•</span>
+                                    <span className="text-red-500 font-extrabold">ร้องเรียน {stat.reports}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )
+                    })()}
+                  </div>
+                )
+              })()}
+            </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: driver-app */}
+        {activeTab === 'driver-app' && (
+          <div className="p-6 bg-white border border-[#E2E8F0] rounded-2xl shadow-sm flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h2 className="text-2xl font-black font-manrope text-[#0F172A]">รายการอนุมัติผู้ให้บริการขับรถ (Driver Applications)</h2>
+              <span className="text-sm font-bold text-[#64748B]">
+                {statusFilter === 'รอดำเนินการ' ? 'รอดำเนินการพิจารณา' : statusFilter === 'All' ? 'รายการทั้งหมด' : statusFilter}
               </span>
             </div>
-            <button onClick={handleLogout} style={styles.logoutBtn}>
-              ออกจากระบบ
-            </button>
-          </div>
-        </header>
 
-        {/* Main Content Inner */}
-        <main style={styles.mainContent}>
-
-          {/* ═════════════════════════════════════════════════════════
-              TAB: HOME (Dashboard Overview)
-              ═════════════════════════════════════════════════════════ */}
-          {activeTab === 'home' && (
-            <div style={styles.homeTabContainer}>
-              <div style={styles.welcomeBanner}>
-                <h2 style={styles.welcomeTitle}>Welcome Back, System Administrator! 👋</h2>
-                <p style={styles.welcomeDesc}>
-                  ยินดีต้อนรับเข้าสู่ระบบจัดการและควบคุมระบบ SafeSeat ในระบบมีข้อมูลสมัครงานและการร้องเรียนดังสถิติด้านล่าง
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl">
+              <div className="md:col-span-6 flex items-center gap-2.5 px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl shadow-xs">
+                <Search className="w-5 h-5 text-[#2563EB] shrink-0" />
+                <input
+                  type="text"
+                  placeholder="ค้นหาชื่อ, username, อีเมล, เบอร์โทร, เลขบัตร..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="bg-transparent text-sm text-[#0F172A] outline-none w-full font-semibold"
+                />
+                {searchQuery && (
+                  <button type="button" onClick={() => setSearchQuery('')} className="text-sm text-gray-400 hover:text-red-500 font-bold">✕</button>
+                )}
               </div>
 
-              {loadingStats ? (
-                <div style={styles.skeletonGrid}>
-                  {[1, 2, 3, 4].map(n => (
-                    <div key={n} style={styles.skeletonCard} />
-                  ))}
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                  {/* ── Section 1: ข้อมูลสมัครสมาชิก ── */}
-                  <div>
-                    <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#475569', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span>📝</span> การจัดการข้อมูลสมัครสมาชิก
-                    </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-                      {/* Card: Driver Applications */}
-                      <div onClick={() => setActiveTab('driver-app')} style={{ ...styles.statCard, borderColor: '#6366f1' }}>
-                        <div style={styles.statCardHeader}>
-                          <span style={{ ...styles.statIconBadge, backgroundColor: 'rgba(99,102,241,0.12)', color: '#6366f1' }}>🚗</span>
-                          <span style={styles.statCardLabel}>การสมัครเป็นคนขับรถ</span>
-                        </div>
-                        <div style={styles.statNumberGroup}>
-                          <span style={styles.statMainNumber}>{stats?.drivers.total}</span>
-                          <span style={{ ...styles.statSubNumber, color: '#38bdf8' }}>รอพิจารณา {stats?.drivers.pending} รายการ</span>
-                        </div>
-                        <div style={styles.statCardFooter}>คลิกเพื่อพิจารณาและอนุมัติบัญชีคนขับทั้งหมด ➔</div>
-                      </div>
+              <div className="md:col-span-3 flex items-center gap-2.5 px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl shadow-xs">
+                <Calendar className="w-5 h-5 text-[#2563EB] shrink-0" />
+                <input
+                  type="date"
+                  value={dateFilter}
+                  onChange={e => setDateFilter(e.target.value)}
+                  className="bg-transparent text-sm font-semibold text-[#0F172A] outline-none w-full cursor-pointer"
+                  title="กรองตามวันที่ยื่นสมัคร"
+                />
+                {dateFilter && (
+                  <button type="button" onClick={() => setDateFilter('')} className="text-sm text-gray-400 hover:text-red-500 font-bold">✕</button>
+                )}
+              </div>
 
-                      {/* Card: Pub Applications */}
-                      <div onClick={() => setActiveTab('pub-app')} style={{ ...styles.statCard, borderColor: '#06b6d4' }}>
-                        <div style={styles.statCardHeader}>
-                          <span style={{ ...styles.statIconBadge, backgroundColor: 'rgba(6,182,212,0.12)', color: '#06b6d4' }}>🏪</span>
-                          <span style={styles.statCardLabel}>การสมัครร้านค้า / สถานบันเทิง</span>
-                        </div>
-                        <div style={styles.statNumberGroup}>
-                          <span style={styles.statMainNumber}>{stats?.pubs.total}</span>
-                          <span style={{ ...styles.statSubNumber, color: '#22d3ee' }}>รอพิจารณา {stats?.pubs.pending} ร้านค้า</span>
-                        </div>
-                        <div style={styles.statCardFooter}>คลิกเพื่อพิจารณาและอนุมัติร้านค้าทั้งหมด ➔</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ── Section 2: รายงานความประพฤติ ── */}
-                  <div>
-                    <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#475569', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span>🚨</span> รายงานความประพฤติและการร้องเรียน
-                    </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-                      {/* Card: Driver Reports */}
-                      <div onClick={() => setActiveTab('driver-report')} style={{ ...styles.statCard, borderColor: '#f43f5e' }}>
-                        <div style={styles.statCardHeader}>
-                          <span style={{ ...styles.statIconBadge, backgroundColor: 'rgba(244,63,94,0.12)', color: '#f43f5e' }}>🚨</span>
-                          <span style={styles.statCardLabel}>รายงานความประพฤติคนขับ</span>
-                        </div>
-                        <div style={styles.statNumberGroup}>
-                          <span style={styles.statMainNumber}>{stats?.driverReports.total}</span>
-                          <span style={{ ...styles.statSubNumber, color: '#f43f5e' }}>รอแก้ไข {stats?.driverReports.pending} รายงาน</span>
-                        </div>
-                        <div style={styles.statCardFooter}>คลิกเพื่อจัดการรายงานความประพฤติทั้งหมด ➔</div>
-                      </div>
-
-                      {/* Card: User Reports */}
-                      <div onClick={() => setActiveTab('user-report')} style={{ ...styles.statCard, borderColor: '#ec4899' }}>
-                        <div style={styles.statCardHeader}>
-                          <span style={{ ...styles.statIconBadge, backgroundColor: 'rgba(236,72,153,0.12)', color: '#ec4899' }}>👤</span>
-                          <span style={styles.statCardLabel}>รายงานความประพฤติลูกค้า</span>
-                        </div>
-                        <div style={{ ...styles.statNumberGroup, marginBottom: 8 }}>
-                          <span style={styles.statMainNumber}>{stats?.userReports.total}</span>
-                          <span style={{ ...styles.statSubNumber, color: '#ec4899' }}>รอแก้ไข {stats?.userReports.pending} รายงาน</span>
-                        </div>
-                        <div style={styles.statCardFooter}>คลิกเพื่อจัดการรายงานความประพฤติทั้งหมด ➔</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <div className="md:col-span-3">
+                <select
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value)}
+                  className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-sm font-extrabold text-[#0F172A] outline-none cursor-pointer shadow-xs"
+                >
+                  <option value="รอดำเนินการ">🟡 รอดำเนินการ (Pending)</option>
+                  <option value="อนุมัติแล้ว">🟢 อนุมัติแล้ว (Approved)</option>
+                  <option value="All">📋 รายการทั้งหมด (All)</option>
+                </select>
+              </div>
             </div>
-          )}
 
-          {/* ═════════════════════════════════════════════════════════
-              TAB: DRIVER APPLICATIONS (พิจารณาอนุมัติคนขับ)
-              ═════════════════════════════════════════════════════════ */}
-          {activeTab === 'driver-app' && (
-            <div style={styles.panelCard}>
-              <h2 style={styles.panelTitle}>Driver Application Registration Management</h2>
+            {loadingData ? (
+              <div className="p-12 text-center text-sm font-bold text-[#64748B]">กำลังโหลดข้อมูล...</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[700px]">
+                  <thead>
+                    <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] text-xs font-black uppercase tracking-wider">
+                      <th className="p-4">Username</th>
+                      <th className="p-4">ชื่อ - นามสกุล</th>
+                      <th className="p-4">อีเมล / เบอร์โทร</th>
+                      <th className="p-4">วันที่สมัคร</th>
+                      <th className="p-4">สถานะ</th>
+                      <th className="p-4 text-right">รายละเอียด</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E2E8F0] text-sm text-[#0F172A] font-medium">
+                    {drivers.filter(d => {
+                      const q = searchQuery.toLowerCase().trim()
+                      const matchSearch = !q || 
+                        d.username.toLowerCase().includes(q) || 
+                        `${d.firstname} ${d.lastname}`.toLowerCase().includes(q) ||
+                        (d.email && d.email.toLowerCase().includes(q)) ||
+                        (d.phoneno && d.phoneno.includes(q)) ||
+                        (d.idcard && d.idcard.includes(q))
+                      
+                      const regStatus = String(d.registerstatus || '')
+                      const matchStatus = 
+                        statusFilter === 'All' ||
+                        regStatus === statusFilter ||
+                        (statusFilter === 'รอดำเนินการ' && (regStatus === 'รอดำเนินการ' || regStatus === 'pending')) ||
+                        (statusFilter === 'อนุมัติแล้ว' && (regStatus === 'อนุมัติแล้ว' || regStatus === 'approved'))
 
-              {/* Filters Box */}
-              <div style={styles.filterBar}>
-                <div style={styles.filterGroup}>
-                  <label style={styles.filterLabel}>Search :</label>
-                  <input
-                    type="text"
-                    placeholder="search driverId, name..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    style={styles.filterInput}
-                  />
-                </div>
-                <div style={styles.filterGroup}>
-                  <label style={styles.filterLabel}>Date :</label>
-                  <input
-                    type="date"
-                    value={dateFilter}
-                    onChange={e => setDateFilter(e.target.value)}
-                    style={styles.filterInput}
-                  />
-                </div>
-                <div style={styles.filterGroup}>
-                  <label style={styles.filterLabel}>Status :</label>
-                  <select
-                    value={statusFilter}
-                    onChange={e => setStatusFilter(e.target.value)}
-                    style={styles.filterSelect}
-                  >
-                    <option value="All">All Statuses</option>
-                    <option value="รอดำเนินการ">Pending (รอดำเนินการ)</option>
-                    <option value="อนุมัติแล้ว">Approved (อนุมัติแล้ว)</option>
-                    <option value="ปฏิเสธ">Rejected (ปฏิเสธ)</option>
-                  </select>
-                </div>
-              </div>
+                      const matchDate = !dateFilter || getThaiDateString(d.regisdate) === dateFilter
 
-              {/* Dynamic Tabs list inside table */}
-              <div style={styles.tableTabRow}>
-                <button
-                  onClick={() => setStatusFilter('All')}
-                  style={{ ...styles.tableTab, ...(statusFilter === 'All' ? styles.tableTabActive : {}) }}
-                >
-                  All Applications ({drivers.length})
-                </button>
-                <button
-                  onClick={() => setStatusFilter('รอดำเนินการ')}
-                  style={{ ...styles.tableTab, ...(statusFilter === 'รอดำเนินการ' ? styles.tableTabActive : {}) }}
-                >
-                  Pending ({drivers.filter(d => d.registerstatus === 'รอดำเนินการ').length})
-                </button>
-                <button
-                  onClick={() => setStatusFilter('อนุมัติแล้ว')}
-                  style={{ ...styles.tableTab, ...(statusFilter === 'อนุมัติแล้ว' ? styles.tableTabActive : {}) }}
-                >
-                  Approved ({drivers.filter(d => d.registerstatus === 'อนุมัติแล้ว').length})
-                </button>
-              </div>
-
-              {/* Table Data */}
-              {loadingData ? (
-                <div style={styles.skeletonTable}>
-                  {[1, 2, 3, 4, 5].map(n => (
-                    <div key={n} style={styles.skeletonRow} />
-                  ))}
-                </div>
-              ) : (
-                <div style={styles.tableResponsive}>
-                  <table style={styles.table}>
-                    <thead>
-                      <tr>
-                        <th style={styles.th}>Username (Phone)</th>
-                        <th style={styles.th}>Driver Name</th>
-                        <th style={styles.th}>Email</th>
-                        <th style={styles.th}>Date Registered</th>
-                        <th style={styles.th}>Status</th>
-                        <th style={styles.th}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {drivers
-                        .filter(d => {
-                          const matchesSearch =
-                            d.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            `${d.firstname} ${d.lastname}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            d.email.toLowerCase().includes(searchQuery.toLowerCase())
-
-                          const matchesStatus = statusFilter === 'All' || d.registerstatus === statusFilter
-
-                          const matchesDate = !dateFilter || d.regisdate.startsWith(dateFilter)
-
-                          return matchesSearch && matchesStatus && matchesDate
-                        })
-                        .map(driver => (
-                          <tr key={driver.username} style={styles.tr}>
-                            <td style={{ ...styles.td, fontWeight: 600 }}>#{driver.username}</td>
-                            <td style={styles.td}>{driver.firstname} {driver.lastname}</td>
-                            <td style={styles.td}>{driver.email}</td>
-                            <td style={styles.td}>{formatThaiDate(driver.regisdate)}</td>
-                            <td style={styles.td}>
-                              <span style={{
-                                ...styles.statusDot,
-                                backgroundColor:
-                                  driver.registerstatus === 'อนุมัติแล้ว' ? '#10b981' :
-                                    driver.registerstatus === 'ปฏิเสธ' ? '#ef4444' : '#fbbf24'
-                              }} />
-                              {driver.registerstatus === 'อนุมัติแล้ว' && 'อนุมัติแล้ว'}
-                              {driver.registerstatus === 'ปฏิเสธ' && 'ปฏิเสธคำขอ'}
-                              {driver.registerstatus === 'รอดำเนินการ' && 'รอดำเนินการ'}
-                            </td>
-                            <td style={styles.td}>
+                      return matchSearch && matchStatus && matchDate
+                    }).sort((a, b) => {
+                      const isPendingA = a.registerstatus !== 'อนุมัติแล้ว' && a.registerstatus !== 'ปฏิเสธ'
+                      const isPendingB = b.registerstatus !== 'อนุมัติแล้ว' && b.registerstatus !== 'ปฏิเสธ'
+                      if (isPendingA && !isPendingB) return -1
+                      if (!isPendingA && isPendingB) return 1
+                      return new Date(b.regisdate || 0).getTime() - new Date(a.regisdate || 0).getTime()
+                    }).map(driver => (
+                      <tr key={driver.username} className="hover:bg-[#F8FAFC] transition-colors">
+                        <td className="p-4 font-mono font-black text-[#0F172A] text-sm">{driver.username}</td>
+                        <td className="p-4 font-bold text-sm">{driver.firstname} {driver.lastname}</td>
+                        <td className="p-4">
+                          <div className="text-[#64748B] text-sm font-semibold">{driver.email}</div>
+                          <div className="text-xs font-mono text-[#94A3B8] font-bold mt-0.5">{driver.phoneno}</div>
+                        </td>
+                        <td className="p-4 text-sm font-semibold">{formatThaiDate(driver.regisdate)}</td>
+                        <td className="p-4">
+                          <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold border ${
+                            driver.registerstatus === 'อนุมัติแล้ว' 
+                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600' 
+                              : driver.registerstatus === 'ปฏิเสธ'
+                              ? 'bg-red-500/10 border-red-500/30 text-red-600'
+                              : 'bg-amber-500/10 border-amber-500/30 text-amber-600'
+                          }`}>
+                            <span className="w-2 h-2 rounded-full bg-current"></span>
+                            {driver.registerstatus === 'อนุมัติแล้ว' ? 'อนุมัติแล้ว' : driver.registerstatus === 'ปฏิเสธ' ? 'ปฏิเสธ' : 'รอดำเนินการ'}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right">
+                          {(() => {
+                            const isProcessed = driver.registerstatus === 'อนุมัติแล้ว' || driver.registerstatus === 'ปฏิเสธ'
+                            return (
                               <button
                                 onClick={() => setSelectedDriver(driver)}
-                                style={styles.viewDetailBtn}
+                                className={`px-4 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
+                                  isProcessed
+                                    ? 'bg-[#F1F5F9] hover:bg-[#E2E8F0] border border-[#CBD5E1] text-[#475569] shadow-xs'
+                                    : 'bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-sm'
+                                }`}
                               >
-                                View Details
+                                {isProcessed ? 'ดูข้อมูล ➔' : 'ตรวจสอบข้อมูล ➔'}
                               </button>
-                            </td>
-                          </tr>
-                        ))}
-                      {drivers.length === 0 && (
-                        <tr>
-                          <td colSpan={6} style={styles.tdNoData}>ไม่มีข้อมูลการสมัครเข้าทำงานของคนขับรถ</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ═════════════════════════════════════════════════════════
-              TAB: PUB & RESTAURANT APPLICATIONS (พิจารณาอนุมัติร้านค้า)
-              ═════════════════════════════════════════════════════════ */}
-          {activeTab === 'pub-app' && (
-            <div style={styles.panelCard}>
-              <h2 style={styles.panelTitle}>Pub & Restaurant Application Registration Management</h2>
-
-              {/* Filters Box */}
-              <div style={styles.filterBar}>
-                <div style={styles.filterGroup}>
-                  <label style={styles.filterLabel}>Search :</label>
-                  <input
-                    type="text"
-                    placeholder="search pub name, username..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    style={styles.filterInput}
-                  />
-                </div>
-                <div style={styles.filterGroup}>
-                  <label style={styles.filterLabel}>Status :</label>
-                  <select
-                    value={statusFilter}
-                    onChange={e => setStatusFilter(e.target.value)}
-                    style={styles.filterSelect}
-                  >
-                    <option value="All">All Statuses</option>
-                    <option value="pending">Pending (รอการพิจารณา)</option>
-                    <option value="approved">Approved (อนุมัติแล้ว)</option>
-                    <option value="rejected">Rejected (ไม่ผ่านการอนุมัติ)</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Dynamic Tabs list inside table */}
-              <div style={styles.tableTabRow}>
-                <button
-                  onClick={() => setStatusFilter('All')}
-                  style={{ ...styles.tableTab, ...(statusFilter === 'All' ? styles.tableTabActive : {}) }}
-                >
-                  All Restaurants ({pubs.length})
-                </button>
-                <button
-                  onClick={() => setStatusFilter('pending')}
-                  style={{ ...styles.tableTab, ...(statusFilter === 'pending' ? styles.tableTabActive : {}) }}
-                >
-                  Pending ({pubs.filter(p => p.regisstatus === 'pending').length})
-                </button>
-                <button
-                  onClick={() => setStatusFilter('approved')}
-                  style={{ ...styles.tableTab, ...(statusFilter === 'approved' ? styles.tableTabActive : {}) }}
-                >
-                  Approved ({pubs.filter(p => p.regisstatus === 'approved').length})
-                </button>
-              </div>
-
-              {/* Table Data */}
-              {loadingData ? (
-                <div style={styles.skeletonTable}>
-                  {[1, 2, 3, 4, 5].map(n => (
-                    <div key={n} style={styles.skeletonRow} />
-                  ))}
-                </div>
-              ) : (
-                <div style={styles.tableResponsive}>
-                  <table style={styles.table}>
-                    <thead>
-                      <tr>
-                        <th style={styles.th}>Username</th>
-                        <th style={styles.th}>Pub / Restaurant Name</th>
-                        <th style={styles.th}>Email</th>
-                        <th style={styles.th}>Status</th>
-                        <th style={styles.th}>Actions</th>
+                            )
+                          })()}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {pubs
-                        .filter(p => {
-                          const matchesSearch =
-                            p.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            p.pubname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            p.pubemail.toLowerCase().includes(searchQuery.toLowerCase())
+                    ))}
+                    {drivers.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-sm text-[#64748B] font-bold">ไม่มีคำขอสมัครผู้ให้บริการขับรถในระบบขณะนี้</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
 
-                          const matchesStatus = statusFilter === 'All' || p.regisstatus === statusFilter
+        {/* TAB: pub-app */}
+        {activeTab === 'pub-app' && (
+          <div className="p-6 bg-white border border-[#E2E8F0] rounded-2xl shadow-sm flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h2 className="text-2xl font-black font-manrope text-[#0F172A]">รายการอนุมัติพาร์ทเนอร์สถานบันเทิง (Partner Venue Applications)</h2>
+              <span className="text-sm font-bold text-[#64748B]">
+                {statusFilter === 'รอดำเนินการ' ? 'รอดำเนินการพิจารณา' : statusFilter === 'All' ? 'รายการทั้งหมด' : statusFilter}
+              </span>
+            </div>
 
-                          const matchesDate = !dateFilter || p.regisdate.startsWith(dateFilter)
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl">
+              <div className="md:col-span-6 flex items-center gap-2.5 px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl shadow-xs">
+                <Search className="w-5 h-5 text-[#2563EB] shrink-0" />
+                <input
+                  type="text"
+                  placeholder="ค้นหาชื่อสถานบันเทิง, username, อีเมล, เบอร์โทร, เลขผู้เสียภาษี..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="bg-transparent text-sm text-[#0F172A] outline-none w-full font-semibold"
+                />
+                {searchQuery && (
+                  <button type="button" onClick={() => setSearchQuery('')} className="text-sm text-gray-400 hover:text-red-500 font-bold">✕</button>
+                )}
+              </div>
 
-                          return matchesSearch && matchesStatus && matchesDate
-                        })
-                        .map(pub => (
-                          <tr key={pub.username} style={styles.tr}>
-                            <td style={{ ...styles.td, fontWeight: 600 }}>#{pub.username}</td>
-                            <td style={styles.td}>{pub.pubname}</td>
-                            <td style={styles.td}>{pub.pubemail}</td>
-                            <td style={styles.td}>
-                              <span style={{
-                                ...styles.statusDot,
-                                backgroundColor:
-                                  pub.regisstatus === 'approved' ? '#10b981' :
-                                    pub.regisstatus === 'rejected' ? '#ef4444' : '#fbbf24'
-                              }} />
-                              {pub.regisstatus === 'approved' && 'อนุมัติแล้ว'}
-                              {pub.regisstatus === 'rejected' && 'ไม่ผ่านการอนุมัติ'}
-                              {pub.regisstatus === 'pending' && 'รอพิจารณา'}
-                            </td>
-                            <td style={styles.td}>
+              <div className="md:col-span-3 flex items-center gap-2.5 px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl shadow-xs">
+                <Calendar className="w-5 h-5 text-[#2563EB] shrink-0" />
+                <input
+                  type="date"
+                  value={dateFilter}
+                  onChange={e => setDateFilter(e.target.value)}
+                  className="bg-transparent text-sm font-semibold text-[#0F172A] outline-none w-full cursor-pointer"
+                  title="กรองตามวันที่ยื่นสมัคร"
+                />
+                {dateFilter && (
+                  <button type="button" onClick={() => setDateFilter('')} className="text-sm text-gray-400 hover:text-red-500 font-bold">✕</button>
+                )}
+              </div>
+
+              <div className="md:col-span-3">
+                <select
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value)}
+                  className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-sm font-extrabold text-[#0F172A] outline-none cursor-pointer shadow-xs"
+                >
+                  <option value="รอดำเนินการ">🟡 รอดำเนินการ (Pending)</option>
+                  <option value="อนุมัติแล้ว">🟢 อนุมัติแล้ว (Approved)</option>
+                  <option value="All">📋 รายการทั้งหมด (All)</option>
+                </select>
+              </div>
+            </div>
+
+            {loadingData ? (
+              <div className="p-12 text-center text-sm font-bold text-[#64748B]">กำลังโหลดข้อมูล...</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[700px]">
+                  <thead>
+                    <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] text-xs font-black uppercase tracking-wider">
+                      <th className="p-4">Username</th>
+                      <th className="p-4">ชื่อสถานประกอบการ</th>
+                      <th className="p-4">อีเมล / เบอร์โทร</th>
+                      <th className="p-4">วันที่สมัคร</th>
+                      <th className="p-4">สถานะ</th>
+                      <th className="p-4 text-right">รายละเอียด</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E2E8F0] text-sm text-[#0F172A] font-medium">
+                    {pubs.filter(p => {
+                      const q = searchQuery.toLowerCase().trim()
+                      const matchSearch = !q || 
+                        p.username.toLowerCase().includes(q) || 
+                        p.pubname.toLowerCase().includes(q) ||
+                        (p.pubemail && p.pubemail.toLowerCase().includes(q)) ||
+                        (p.pubphone && p.pubphone.includes(q)) ||
+                        (p.taxnumber && p.taxnumber.includes(q))
+                      
+                      const pubStatus = String(p.regisstatus || '')
+                      const matchStatus = 
+                        statusFilter === 'All' ||
+                        pubStatus === statusFilter || 
+                        (statusFilter === 'รอดำเนินการ' && (pubStatus === 'pending' || pubStatus === 'รอดำเนินการ')) ||
+                        (statusFilter === 'อนุมัติแล้ว' && (pubStatus === 'approved' || pubStatus === 'อนุมัติแล้ว'))
+
+                      const matchDate = !dateFilter || getThaiDateString(p.regisdate) === dateFilter
+
+                      return matchSearch && matchStatus && matchDate
+                    }).sort((a, b) => {
+                      const isPendingA = a.regisstatus !== 'approved' && a.regisstatus !== 'rejected' && (a as any).regisstatus !== 'อนุมัติแล้ว' && (a as any).regisstatus !== 'ปฏิเสธ'
+                      const isPendingB = b.regisstatus !== 'approved' && b.regisstatus !== 'rejected' && (b as any).regisstatus !== 'อนุมัติแล้ว' && (b as any).regisstatus !== 'ปฏิเสธ'
+                      if (isPendingA && !isPendingB) return -1
+                      if (!isPendingA && isPendingB) return 1
+                      return new Date(b.regisdate || 0).getTime() - new Date(a.regisdate || 0).getTime()
+                    }).map(pub => (
+                      <tr key={pub.username} className="hover:bg-[#F8FAFC] transition-colors">
+                        <td className="p-4 font-mono font-black text-[#0F172A] text-sm">{pub.username}</td>
+                        <td className="p-4 font-bold text-sm">{pub.pubname}</td>
+                        <td className="p-4">
+                          <div className="text-[#64748B] text-sm font-semibold">{pub.pubemail}</div>
+                          <div className="text-xs font-mono text-[#94A3B8] font-bold mt-0.5">{pub.pubphone}</div>
+                        </td>
+                        <td className="p-4 text-sm font-semibold">{formatThaiDate(pub.regisdate)}</td>
+                        <td className="p-4">
+                          <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold border ${
+                            pub.regisstatus === 'approved' || (pub as any).regisstatus === 'อนุมัติแล้ว' 
+                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600' 
+                              : pub.regisstatus === 'rejected' || (pub as any).regisstatus === 'ปฏิเสธ'
+                              ? 'bg-red-500/10 border-red-500/30 text-red-600'
+                              : 'bg-amber-500/10 border-amber-500/30 text-amber-600'
+                          }`}>
+                            <span className="w-2 h-2 rounded-full bg-current"></span>
+                            {pub.regisstatus === 'approved' || (pub as any).regisstatus === 'อนุมัติแล้ว' ? 'อนุมัติแล้ว' : pub.regisstatus === 'rejected' || (pub as any).regisstatus === 'ปฏิเสธ' ? 'ปฏิเสธ' : 'รอดำเนินการ'}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right">
+                          {(() => {
+                            const isProcessed = pub.regisstatus === 'approved' || pub.regisstatus === 'rejected' || (pub as any).regisstatus === 'อนุมัติแล้ว' || (pub as any).regisstatus === 'ปฏิเสธ'
+                            return (
                               <button
                                 onClick={() => setSelectedPub(pub)}
-                                style={styles.viewDetailBtn}
+                                className={`px-4 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
+                                  isProcessed
+                                    ? 'bg-[#F1F5F9] hover:bg-[#E2E8F0] border border-[#CBD5E1] text-[#475569] shadow-xs'
+                                    : 'bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-sm'
+                                }`}
                               >
-                                View Details
+                                {isProcessed ? 'ดูข้อมูล ➔' : 'ตรวจสอบข้อมูล ➔'}
                               </button>
-                            </td>
-                          </tr>
-                        ))}
-                      {pubs.length === 0 && (
-                        <tr>
-                          <td colSpan={5} style={styles.tdNoData}>ไม่มีข้อมูลการสมัครประกอบกิจการร้านค้าในระบบ</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ═════════════════════════════════════════════════════════
-              TAB: DRIVER REPORTS (รายงานความประพฤติคนขับ)
-              ═════════════════════════════════════════════════════════ */}
-          {activeTab === 'driver-report' && (
-            <div style={styles.panelCard}>
-              <h2 style={styles.panelTitle}>Driver Behavior & Conduct Reports</h2>
-
-              {/* Table Data */}
-              {loadingData ? (
-                <div style={styles.skeletonTable}>
-                  {[1, 2, 3, 4, 5].map(n => (
-                    <div key={n} style={styles.skeletonRow} />
-                  ))}
-                </div>
-              ) : (
-                <div style={styles.tableResponsive}>
-                  <table style={styles.table}>
-                    <thead>
-                      <tr>
-                        <th style={styles.th}>Report ID</th>
-                        <th style={styles.th}>Report Date</th>
-                        <th style={styles.th}>Type</th>
-                        <th style={styles.th}>Booking Request ID</th>
-                        <th style={styles.th}>Status</th>
-                        <th style={styles.th}>Actions</th>
+                            )
+                          })()}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {driverReports.map(report => (
-                        <tr key={report.driverreportid} style={styles.tr}>
-                          <td style={{ ...styles.td, fontWeight: 600 }}>#R-DRV-{report.driverreportid}</td>
-                          <td style={styles.td}>{formatThaiDate(report.reportdate)}</td>
-                          <td style={styles.td}>{report.reporttype}</td>
-                          <td style={styles.td}>#BOOKING-{report.reportindex || '—'}</td>
-                          <td style={styles.td}>
-                            <span style={{
-                              ...styles.statusDot,
-                              backgroundColor: report.status === 'แก้ไขแล้ว' ? '#10b981' : '#f43f5e'
-                            }} />
-                            {report.status}
-                          </td>
-                          <td style={styles.td}>
-                            <button
-                              onClick={() => {
-                                setSelectedReport(report)
-                                setSelectedReportType('driver')
-                              }}
-                              style={styles.viewDetailBtn}
-                            >
-                              View Details
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                      {driverReports.length === 0 && (
-                        <tr>
-                          <td colSpan={6} style={styles.tdNoData}>ไม่มีการร้องเรียนการแจ้งความประพฤติคนขับในระบบขณะนี้</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ═════════════════════════════════════════════════════════
-              TAB: USER REPORTS (รายงานความประพฤติลูกค้า)
-              ═════════════════════════════════════════════════════════ */}
-          {activeTab === 'user-report' && (
-            <div style={styles.panelCard}>
-              <h2 style={styles.panelTitle}>Customer Conduct Reports</h2>
-
-              {/* Table Data */}
-              {loadingData ? (
-                <div style={styles.skeletonTable}>
-                  {[1, 2, 3, 4, 5].map(n => (
-                    <div key={n} style={styles.skeletonRow} />
-                  ))}
-                </div>
-              ) : (
-                <div style={styles.tableResponsive}>
-                  <table style={styles.table}>
-                    <thead>
+                    ))}
+                    {pubs.length === 0 && (
                       <tr>
-                        <th style={styles.th}>Report ID</th>
-                        <th style={styles.th}>Report Date</th>
-                        <th style={styles.th}>Type</th>
-                        <th style={styles.th}>Booking Request ID</th>
-                        <th style={styles.th}>Status</th>
-                        <th style={styles.th}>Actions</th>
+                        <td colSpan={6} className="p-8 text-center text-sm text-[#64748B] font-bold">ไม่พบข้อมูลคำขอพาร์ทเนอร์สถานบันเทิงในระบบ</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {userReports.map(report => (
-                        <tr key={report.userreportid} style={styles.tr}>
-                          <td style={{ ...styles.td, fontWeight: 600 }}>#R-USR-{report.userreportid}</td>
-                          <td style={styles.td}>{formatThaiDate(report.reportdate)}</td>
-                          <td style={styles.td}>{report.reporttype}</td>
-                          <td style={styles.td}>#BOOKING-{report.request_id || '—'}</td>
-                          <td style={styles.td}>
-                            <span style={{
-                              ...styles.statusDot,
-                              backgroundColor: report.status === 'อนุมัติแล้ว' || report.status === 'แก้ไขแล้ว' ? '#10b981' :
-                                              report.status === 'ไม่อนุมัติ' ? '#ef4444' : '#fbbf24'
-                            }} />
-                            <span style={{
-                              fontWeight: 600,
-                              color: report.status === 'อนุมัติแล้ว' || report.status === 'แก้ไขแล้ว' ? '#10b981' :
-                                     report.status === 'ไม่อนุมัติ' ? '#ef4444' : '#d97706'
-                            }}>
-                              {report.status}
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: driver-report */}
+        {activeTab === 'driver-report' && (
+          <div className="p-6 bg-white border border-[#E2E8F0] rounded-2xl shadow-sm flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h2 className="text-2xl font-black font-manrope text-[#0F172A]">รายงานความประพฤติผู้ให้บริการขับรถ (Driver Reports)</h2>
+              <span className="text-sm font-bold text-[#64748B]">
+                {statusFilter === 'รอดำเนินการ' ? 'รอดำเนินการตรวจสอบ' : statusFilter === 'All' ? 'รายการทั้งหมด' : statusFilter}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl">
+              <div className="md:col-span-6 flex items-center gap-2.5 px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl shadow-xs">
+                <Search className="w-5 h-5 text-[#2563EB] shrink-0" />
+                <input
+                  type="text"
+                  placeholder="ค้นหาหัวข้อ, รายละเอียด, รหัสรายงาน, หรือ Booking ID..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="bg-transparent text-sm text-[#0F172A] outline-none w-full font-semibold"
+                />
+                {searchQuery && (
+                  <button type="button" onClick={() => setSearchQuery('')} className="text-sm text-gray-400 hover:text-red-500 font-bold">✕</button>
+                )}
+              </div>
+
+              <div className="md:col-span-3 flex items-center gap-2.5 px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl shadow-xs">
+                <Calendar className="w-5 h-5 text-[#2563EB] shrink-0" />
+                <input
+                  type="date"
+                  value={dateFilter}
+                  onChange={e => setDateFilter(e.target.value)}
+                  className="bg-transparent text-sm font-semibold text-[#0F172A] outline-none w-full cursor-pointer"
+                  title="กรองตามวันที่แจ้งรายงาน"
+                />
+                {dateFilter && (
+                  <button type="button" onClick={() => setDateFilter('')} className="text-sm text-gray-400 hover:text-red-500 font-bold">✕</button>
+                )}
+              </div>
+
+              <div className="md:col-span-3">
+                <select
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value)}
+                  className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-sm font-extrabold text-[#0F172A] outline-none cursor-pointer shadow-xs"
+                >
+                  <option value="รอดำเนินการ">🟡 รอดำเนินการ (Pending)</option>
+                  <option value="อนุมัติแล้ว">🟢 อนุมัติแล้ว (Approved)</option>
+                  <option value="All">📋 รายการทั้งหมด (All)</option>
+                </select>
+              </div>
+            </div>
+
+            {loadingData ? (
+              <div className="p-12 text-center text-sm font-bold text-[#64748B]">กำลังโหลดข้อมูล...</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[700px]">
+                  <thead>
+                    <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] text-xs font-black uppercase tracking-wider">
+                      <th className="p-4">Report ID</th>
+                      <th className="p-4">วันที่แจ้ง</th>
+                      <th className="p-4">หัวข้อรายงาน</th>
+                      <th className="p-4">รหัสอ้างอิงการจอง</th>
+                      <th className="p-4">สถานะ</th>
+                      <th className="p-4 text-right">รายละเอียด</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E2E8F0] text-sm text-[#0F172A] font-medium">
+                    {driverReports.filter(r => {
+                      const q = searchQuery.toLowerCase().trim()
+                      const matchSearch = !q || 
+                        (r.reporttype && r.reporttype.toLowerCase().includes(q)) || 
+                        (r.reportdetail && r.reportdetail.toLowerCase().includes(q)) ||
+                        String(r.driverreportid).includes(q) ||
+                        String(r.request_id || '').includes(q) ||
+                        String(r.reportindex || '').includes(q)
+                      
+                      const rawStatus = String(r.status || r.reportstatus || '').trim()
+                      const isApproved = rawStatus === 'แก้ไขแล้ว' || rawStatus === 'อนุมัติแล้ว' || rawStatus === 'approved'
+                      const isRejected = rawStatus === 'ปฏิเสธ' || rawStatus === 'ไม่อนุมัติ' || rawStatus === 'rejected'
+                      if (isRejected) return false
+                      const isPending = !isApproved
+
+                      const matchStatus = 
+                        statusFilter === 'All' ||
+                        (statusFilter === 'อนุมัติแล้ว' && isApproved) ||
+                        (statusFilter === 'รอดำเนินการ' && isPending)
+
+                      const matchDate = !dateFilter || getThaiDateString(r.reportdate) === dateFilter
+
+                      return matchSearch && matchStatus && matchDate
+                    }).sort((a, b) => {
+                      const rawA = String(a.status || a.reportstatus || '').trim()
+                      const isPendingA = rawA !== 'แก้ไขแล้ว' && rawA !== 'อนุมัติแล้ว' && rawA !== 'approved'
+                      const rawB = String(b.status || b.reportstatus || '').trim()
+                      const isPendingB = rawB !== 'แก้ไขแล้ว' && rawB !== 'อนุมัติแล้ว' && rawB !== 'approved'
+                      if (isPendingA && !isPendingB) return -1
+                      if (!isPendingA && isPendingB) return 1
+                      return new Date(b.reportdate || 0).getTime() - new Date(a.reportdate || 0).getTime()
+                    }).map(report => {
+                      const rawStatus = String(report.status || report.reportstatus || '').trim()
+                      const isApproved = rawStatus === 'แก้ไขแล้ว' || rawStatus === 'อนุมัติแล้ว' || rawStatus === 'approved'
+                      const isRejected = rawStatus === 'ปฏิเสธ' || rawStatus === 'ไม่อนุมัติ' || rawStatus === 'rejected'
+                      const displayStatus = isApproved ? 'อนุมัติแล้ว' : isRejected ? 'ปฏิเสธ' : 'รอดำเนินการ'
+                      const badgeStyle = isApproved 
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600' 
+                        : isRejected 
+                        ? 'bg-red-500/10 border-red-500/30 text-red-600' 
+                        : 'bg-amber-500/10 border-amber-500/30 text-amber-600'
+
+                      return (
+                        <tr key={report.driverreportid} className="hover:bg-[#F8FAFC] transition-colors">
+                          <td className="p-4 font-mono font-black text-[#0F172A] text-sm">{report.driverreportid}</td>
+                          <td className="p-4 text-sm font-semibold">{formatThaiDate(report.reportdate)}</td>
+                          <td className="p-4 font-bold text-sm text-[#0F172A]">{formatReportType(report.reporttype)}</td>
+                          <td className="p-4 font-mono font-bold text-sm text-[#0F172A]">BOOKING-{report.request_id || report.reportindex || '—'}</td>
+                          <td className="p-4">
+                            <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold border ${badgeStyle}`}>
+                              <span className="w-2 h-2 rounded-full bg-current"></span>
+                              {displayStatus}
                             </span>
                           </td>
-                          <td style={styles.td}>
-                            <button
-                              onClick={() => {
-                                setSelectedReport(report)
-                                setSelectedReportType('user')
-                              }}
-                              style={styles.viewDetailBtn}
-                            >
-                              View Details
-                            </button>
+                        <td className="p-4 text-right">
+                          {(() => {
+                            const isProcessed = report.status === 'อนุมัติแล้ว' || report.status === 'แก้ไขแล้ว' || report.status === 'ปฏิเสธ' || report.status === 'ไม่อนุมัติ'
+                            return (
+                              <button
+                                onClick={() => {
+                                  setSelectedReport(report)
+                                  setSelectedReportType('driver')
+                                }}
+                                className={`px-4 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
+                                  isProcessed
+                                    ? 'bg-[#F1F5F9] hover:bg-[#E2E8F0] border border-[#CBD5E1] text-[#475569] shadow-xs'
+                                    : 'bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-sm'
+                                }`}
+                              >
+                                {isProcessed ? 'ดูข้อมูล ➔' : 'ตรวจสอบ ➔'}
+                              </button>
+                            )
+                          })()}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                    {driverReports.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-sm text-[#64748B] font-bold">ไม่มีรายการร้องเรียนผู้ให้บริการขับรถตามเงื่อนไขที่ค้นหา</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: user-report */}
+        {activeTab === 'user-report' && (
+          <div className="p-6 bg-white border border-[#E2E8F0] rounded-2xl shadow-sm flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h2 className="text-2xl font-black font-manrope text-[#0F172A]">รายงานความประพฤติผู้ใช้บริการ (Customer Reports)</h2>
+              <span className="text-sm font-bold text-[#64748B]">
+                {statusFilter === 'รอดำเนินการ' ? 'รอดำเนินการตรวจสอบ' : statusFilter === 'All' ? 'รายการทั้งหมด' : statusFilter}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5 p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl">
+              <div className="md:col-span-6 flex items-center gap-2.5 px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl shadow-xs">
+                <Search className="w-5 h-5 text-[#2563EB] shrink-0" />
+                <input
+                  type="text"
+                  placeholder="ค้นหาหัวข้อ, รายละเอียด, รหัสรายงาน, หรือ Booking ID..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="bg-transparent text-sm text-[#0F172A] outline-none w-full font-semibold"
+                />
+                {searchQuery && (
+                  <button type="button" onClick={() => setSearchQuery('')} className="text-sm text-gray-400 hover:text-red-500 font-bold">✕</button>
+                )}
+              </div>
+
+              <div className="md:col-span-3 flex items-center gap-2.5 px-3.5 py-2.5 bg-white border border-[#E2E8F0] rounded-xl shadow-xs">
+                <Calendar className="w-5 h-5 text-[#2563EB] shrink-0" />
+                <input
+                  type="date"
+                  value={dateFilter}
+                  onChange={e => setDateFilter(e.target.value)}
+                  className="bg-transparent text-sm font-semibold text-[#0F172A] outline-none w-full cursor-pointer"
+                  title="กรองตามวันที่แจ้งรายงาน"
+                />
+                {dateFilter && (
+                  <button type="button" onClick={() => setDateFilter('')} className="text-sm text-gray-400 hover:text-red-500 font-bold">✕</button>
+                )}
+              </div>
+
+              <div className="md:col-span-3">
+                <select
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value)}
+                  className="w-full bg-white border border-[#E2E8F0] rounded-xl px-3.5 py-2.5 text-sm font-extrabold text-[#0F172A] outline-none cursor-pointer shadow-xs"
+                >
+                  <option value="รอดำเนินการ">🟡 รอดำเนินการ (Pending)</option>
+                  <option value="อนุมัติแล้ว">🟢 อนุมัติแล้ว (Approved)</option>
+                  <option value="All">📋 รายการทั้งหมด (All)</option>
+                </select>
+              </div>
+            </div>
+
+            {loadingData ? (
+              <div className="p-12 text-center text-sm font-bold text-[#64748B]">กำลังโหลดข้อมูล...</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[700px]">
+                  <thead>
+                    <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] text-xs font-black uppercase tracking-wider">
+                      <th className="p-4">Report ID</th>
+                      <th className="p-4">วันที่แจ้ง</th>
+                      <th className="p-4">หัวข้อรายงาน</th>
+                      <th className="p-4">รหัสอ้างอิงการจอง</th>
+                      <th className="p-4">สถานะ</th>
+                      <th className="p-4 text-right">รายละเอียด</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E2E8F0] text-sm text-[#0F172A] font-medium">
+                    {userReports.filter(r => {
+                      const q = searchQuery.toLowerCase().trim()
+                      const matchSearch = !q || 
+                        (r.reporttype && r.reporttype.toLowerCase().includes(q)) || 
+                        (r.reportdetail && r.reportdetail.toLowerCase().includes(q)) ||
+                        String(r.userreportid).includes(q) ||
+                        String(r.request_id || '').includes(q)
+                      
+                      const rawStatus = String(r.status || r.reportstatus || '').trim()
+                      const isApproved = rawStatus === 'แก้ไขแล้ว' || rawStatus === 'อนุมัติแล้ว' || rawStatus === 'approved'
+                      const isRejected = rawStatus === 'ปฏิเสธ' || rawStatus === 'ไม่อนุมัติ' || rawStatus === 'rejected'
+                      if (isRejected) return false
+                      const isPending = !isApproved
+
+                      const matchStatus = 
+                        statusFilter === 'All' ||
+                        (statusFilter === 'อนุมัติแล้ว' && isApproved) ||
+                        (statusFilter === 'รอดำเนินการ' && isPending)
+
+                      const matchDate = !dateFilter || getThaiDateString(r.reportdate) === dateFilter
+
+                      return matchSearch && matchStatus && matchDate
+                    }).sort((a, b) => {
+                      const rawA = String(a.status || a.reportstatus || '').trim()
+                      const isPendingA = rawA !== 'แก้ไขแล้ว' && rawA !== 'อนุมัติแล้ว' && rawA !== 'approved'
+                      const rawB = String(b.status || b.reportstatus || '').trim()
+                      const isPendingB = rawB !== 'แก้ไขแล้ว' && rawB !== 'อนุมัติแล้ว' && rawB !== 'approved'
+                      if (isPendingA && !isPendingB) return -1
+                      if (!isPendingA && isPendingB) return 1
+                      return new Date(b.reportdate || 0).getTime() - new Date(a.reportdate || 0).getTime()
+                    }).map(report => {
+                      const rawStatus = String(report.status || report.reportstatus || '').trim()
+                      const isApproved = rawStatus === 'แก้ไขแล้ว' || rawStatus === 'อนุมัติแล้ว' || rawStatus === 'approved'
+                      const isRejected = rawStatus === 'ปฏิเสธ' || rawStatus === 'ไม่อนุมัติ' || rawStatus === 'rejected'
+                      const displayStatus = isApproved ? 'อนุมัติแล้ว' : isRejected ? 'ปฏิเสธ' : 'รอดำเนินการ'
+                      const badgeStyle = isApproved 
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600' 
+                        : isRejected 
+                        ? 'bg-red-500/10 border-red-500/30 text-red-600' 
+                        : 'bg-amber-500/10 border-amber-500/30 text-amber-600'
+
+                      return (
+                        <tr key={report.userreportid} className="hover:bg-[#F8FAFC] transition-colors">
+                          <td className="p-4 font-mono font-black text-[#0F172A] text-sm">{report.userreportid}</td>
+                          <td className="p-4 text-sm font-semibold">{formatThaiDate(report.reportdate)}</td>
+                          <td className="p-4 font-bold text-sm text-[#0F172A]">{formatReportType(report.reporttype)}</td>
+                          <td className="p-4 font-mono font-bold text-sm text-[#0F172A]">BOOKING-{report.request_id || '—'}</td>
+                          <td className="p-4">
+                            <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-extrabold border ${badgeStyle}`}>
+                              <span className="w-2 h-2 rounded-full bg-current"></span>
+                              {displayStatus}
+                            </span>
                           </td>
-                        </tr>
-                      ))}
-                      {userReports.length === 0 && (
-                        <tr>
-                          <td colSpan={6} style={styles.tdNoData}>ไม่มีการร้องเรียนประวัติความประพฤติลูกค้าในระบบขณะนี้</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                        <td className="p-4 text-right">
+                          {(() => {
+                            const isProcessed = report.status === 'อนุมัติแล้ว' || report.status === 'แก้ไขแล้ว' || report.status === 'ปฏิเสธ' || report.status === 'ไม่อนุมัติ'
+                            return (
+                              <button
+                                onClick={() => {
+                                  setSelectedReport(report)
+                                  setSelectedReportType('user')
+                                }}
+                                className={`px-4 py-2 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
+                                  isProcessed
+                                    ? 'bg-[#F1F5F9] hover:bg-[#E2E8F0] border border-[#CBD5E1] text-[#475569] shadow-xs'
+                                    : 'bg-[#2563EB] hover:bg-[#1D4ED8] text-white shadow-sm'
+                                }`}
+                              >
+                                {isProcessed ? 'ดูข้อมูล ➔' : 'ตรวจสอบ ➔'}
+                              </button>
+                            )
+                          })()}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                    {userReports.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-sm text-[#64748B] font-bold">ไม่มีรายการร้องเรียนผู้ใช้บริการตามเงื่อนไขที่ค้นหา</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+      </main>
+
+      {}
+      {selectedDriver && (() => {
+        let docs: Record<string, string> = {}
+        if (selectedDriver.regisimagepath) {
+          try {
+            const parsed = JSON.parse(selectedDriver.regisimagepath)
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+              docs = parsed
+            } else if (typeof selectedDriver.regisimagepath === 'string') {
+              docs = { profile: selectedDriver.regisimagepath }
+            }
+          } catch {
+            docs = { profile: selectedDriver.regisimagepath }
+          }
+        }
+
+        const carObj = Array.isArray(selectedDriver.drivercar) ? selectedDriver.drivercar[0] : selectedDriver.drivercar
+        const carBrand = carObj?.carbrand || carObj?.car_brand || '—'
+        const carModel = carObj?.carmodel || carObj?.car_model || '—'
+        const carColor = carObj?.carcolor || carObj?.car_color || '—'
+        const carPlate = carObj?.carplate || carObj?.carplateno || carObj?.carPlateNo || carObj?.car_plate_no || carObj?.car_plate || '—'
+        const rawCarImg = carObj?.carimagepath || carObj?.carImagePath || carObj?.car_image_path || (carObj as any)?.car_image || (carObj as any)?.image
+        const carImg = formatSupabaseImageUrl(rawCarImg)
+
+        const docItems = [
+          { label: '📸 รูปโปรไฟล์ใบหน้า', url: formatSupabaseImageUrl(docs.profile) },
+          { label: '🚗 รูปถ่ายยานพาหนะ', url: carImg },
+          { label: '🪪 ใบขับขี่', url: formatSupabaseImageUrl(docs.driverLicense) },
+          { label: '⚖️ ประวัติอาชญากรรม', url: formatSupabaseImageUrl(docs.criminalRecord) },
+          { label: '🏥 ใบรับรองแพทย์', url: formatSupabaseImageUrl(docs.medicalCertificate) },
+          { label: '📜 อบรม 1: ขับขี่ปลอดภัย', url: formatSupabaseImageUrl(docs.trainingCert1) },
+          { label: '📜 อบรม 2: ปฐมพยาบาล', url: formatSupabaseImageUrl(docs.trainingCert2) },
+          ...(docs.trainingCert3 ? [{ label: '📜 อบรม 3', url: formatSupabaseImageUrl(docs.trainingCert3) }] : []),
+          ...(docs.trainingCert4 ? [{ label: '📜 อบรม 4', url: formatSupabaseImageUrl(docs.trainingCert4) }] : []),
+        ].filter(item => Boolean(item.url))
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 md:p-6 overflow-y-auto">
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl max-w-4xl w-full p-6 md:p-8 shadow-2xl flex flex-col gap-6 max-h-[90vh] overflow-y-auto my-auto">
+              <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-4">
+                <div>
+                  <h3 className="text-2xl font-black font-manrope text-[var(--color-text)]">พิจารณาผู้ให้บริการขับรถ: @{selectedDriver.username}</h3>
+                  <p className="text-sm font-semibold text-[var(--color-text-muted)] mt-1">ยื่นสมัครเมื่อ: {formatThaiDate(selectedDriver.regisdate)}</p>
                 </div>
-              )}
-            </div>
-          )}
+                <button onClick={() => setSelectedDriver(null)} className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-2xl font-bold">✕</button>
+              </div>
 
-        </main>
-      </div>
-
-      {/* ═════════════════════════════════════════════════════════
-          MODAL: DRIVER DETAILS & REVIEW (อนุมัติ/ปฏิเสธ คนขับ)
-          ═════════════════════════════════════════════════════════ */}
-      {selectedDriver && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalCardLarge}>
-            {/* Header */}
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>พิจารณาใบสมัครคนขับ: @{selectedDriver.username}</h3>
-              <button onClick={() => setSelectedDriver(null)} style={styles.modalCloseBtn}>✕</button>
-            </div>
-
-            {/* Content Body */}
-            <div style={styles.modalBodyTwoCol}>
-              {/* Profile details */}
-              <div style={styles.modalDetailsCol}>
-                <h4 style={styles.sectionTitle}>ข้อมูลส่วนบุคคลของคนขับ</h4>
-                <div style={styles.detailGrid}>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>ชื่อ-นามสกุล</span>
-                    <span style={styles.detailValue}>{selectedDriver.firstname} {selectedDriver.lastname}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>เพศ</span>
-                    <span style={styles.detailValue}>{selectedDriver.gender === 1 ? 'ชาย' : 'หญิง'}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>เบอร์โทรศัพท์</span>
-                    <span style={styles.detailValue}>{selectedDriver.phoneno}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>อีเมล</span>
-                    <span style={styles.detailValue}>{selectedDriver.email}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>เลขบัตรประชาชน</span>
-                    <span style={styles.detailValue}>{selectedDriver.idcard}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>เลขบัญชีธนาคาร</span>
-                    <span style={styles.detailValue}>{selectedDriver.bankaccountno}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>วันที่สมัครเข้าทำงาน</span>
-                    <span style={styles.detailValue}>{formatThaiDate(selectedDriver.regisdate)}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>สถานะปัจจุบัน</span>
-                    <span style={{
-                      ...styles.detailValue,
-                      color:
-                        selectedDriver.registerstatus === 'อนุมัติแล้ว' ? '#10b981' :
-                          selectedDriver.registerstatus === 'ปฏิเสธ' ? '#ef4444' : '#fbbf24',
-                      fontWeight: 700
-                    }}>
-                      {selectedDriver.registerstatus}
-                    </span>
-                  </div>
+              {/* Data Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm bg-[var(--color-surface)] p-5 rounded-2xl border border-[var(--color-border)]">
+                <div>
+                  <span className="text-[var(--color-text-muted)] text-xs font-bold block mb-0.5">ชื่อ - นามสกุล</span>
+                  <span className="font-bold text-base text-[var(--color-text)]">{selectedDriver.firstname} {selectedDriver.lastname}</span>
                 </div>
-
-                {selectedDriver.drivercar ? (
-                  <>
-                    <h4 style={styles.sectionTitle}>ข้อมูลยานพาหนะของคนขับ</h4>
-                    <div style={styles.detailGrid}>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>ยี่ห้อรถยนต์</span>
-                        <span style={styles.detailValue}>{selectedDriver.drivercar.carbrand}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>รุ่นรถยนต์</span>
-                        <span style={styles.detailValue}>{selectedDriver.drivercar.carmodel}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>สีรถยนต์</span>
-                        <span style={styles.detailValue}>{selectedDriver.drivercar.carcolor}</span>
-                      </div>
-                      <div style={styles.detailItem}>
-                        <span style={styles.detailLabel}>เลขทะเบียนรถ</span>
-                        <span style={styles.detailValue}>{selectedDriver.drivercar.carplateno}</span>
-                      </div>
+                <div>
+                  <span className="text-[var(--color-text-muted)] text-xs font-bold block mb-0.5">เบอร์โทรศัพท์</span>
+                  <span className="font-bold text-base text-[var(--color-text)] font-mono">{selectedDriver.phoneno}</span>
+                </div>
+                <div>
+                  <span className="text-[var(--color-text-muted)] text-xs font-bold block mb-0.5">อีเมล</span>
+                  <span className="font-bold text-sm text-[var(--color-text)]">{selectedDriver.email || '—'}</span>
+                </div>
+                <div>
+                  <span className="text-[var(--color-text-muted)] text-xs font-bold block mb-0.5">หมายเลขบัตรประชาชน</span>
+                  <span className="font-bold text-base text-[var(--color-text)] font-mono">{selectedDriver.idcard || '—'}</span>
+                </div>
+                <div>
+                  <span className="text-[var(--color-text-muted)] text-xs font-bold block mb-0.5">เลขบัญชีธนาคาร</span>
+                  <span className="font-bold text-base text-[var(--color-text)] font-mono">{selectedDriver.bankaccountno || '—'}</span>
+                </div>
+                <div>
+                  <span className="text-[var(--color-text-muted)] text-xs font-bold block mb-0.5">เพศ</span>
+                  <span className="font-bold text-base text-[var(--color-text)]">{selectedDriver.gender === 2 ? 'หญิง' : 'ชาย'}</span>
+                </div>
+                {carObj && (
+                  <div className="md:col-span-2 pt-3 border-t border-[var(--color-border)]">
+                    <span className="text-[var(--color-text-muted)] text-xs font-bold block mb-1.5">ข้อมูลยานพาหนะ</span>
+                    <div className="flex flex-wrap gap-3 font-bold text-sm text-[var(--color-text)]">
+                      <span className="px-3 py-1.5 bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl">ยี่ห้อ: {carBrand}</span>
+                      <span className="px-3 py-1.5 bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl">รุ่น: {carModel}</span>
+                      <span className="px-3 py-1.5 bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl">สี: {carColor}</span>
+                      <span className="px-3 py-1.5 bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/30 rounded-xl font-mono">ทะเบียน: {carPlate}</span>
                     </div>
-                  </>
-                ) : (
-                  <div style={styles.warningInfoBox}>
-                    ⚠️ ไม่พบข้อมูลยานพาหนะของคนขับรายนี้
                   </div>
                 )}
               </div>
 
-              {/* Documents uploads */}
-              <div style={styles.modalDocsCol}>
-                <h4 style={styles.sectionTitle}>เอกสารหลักฐานประกอบสมัครงาน</h4>
-                {selectedDriver.regisimagepath ? (
-                  <div style={styles.docsPreviewContainer}>
-                    {/* Render ID Card */}
-                    <div style={styles.docImageBlock}>
-                      <span style={styles.docImageTitle}>📄 1. บัตรประจำตัวประชาชน / ID Card</span>
-                      <img
-                        src={parseDriverImages(selectedDriver.regisimagepath).profile || '/id_card_sample_1779780992637.png'}
-                        alt="ID Card"
-                        style={styles.docImage}
-                      />
-                    </div>
-                    {/* Render License */}
-                    <div style={styles.docImageBlock}>
-                      <span style={styles.docImageTitle}>🪪 2. ใบอนุญาตขับขี่รถยนต์ / Driver License</span>
-                      <img
-                        src={parseDriverImages(selectedDriver.regisimagepath).driverLicense || '/driver_license_sample_1779780889940.png'}
-                        alt="Driver License"
-                        style={styles.docImage}
-                      />
-                    </div>
-                    {/* Render Tax */}
-                    <div style={styles.docImageBlock}>
-                      <span style={styles.docImageTitle}>🏷️ 3. ป้ายภาษีรถยนต์ / Tax Sticker</span>
-                      <img
-                        src={parseDriverImages(selectedDriver.regisimagepath).medicalCertificate || '/tax_sticker_sample_1779781212366.png'}
-                        alt="Tax Sticker"
-                        style={styles.docImage}
-                      />
-                    </div>
-                    {/* Render Bank Book */}
-                    <div style={styles.docImageBlock}>
-                      <span style={styles.docImageTitle}>🏦 4. สมุดบัญชีธนาคาร / Bank Book</span>
-                      <img
-                        src={parseDriverImages(selectedDriver.regisimagepath).criminalRecord || '/bank_book_sample_1779781264995.png'}
-                        alt="Bank Book"
-                        style={styles.docImage}
-                      />
-                    </div>
+              {/* Documents */}
+              <div>
+                <h4 className="text-base font-black text-[#2563EB] mb-3 flex items-center gap-2">
+                  <FileText className="w-5 h-5" /> ภาพถ่ายเอกสารและหลักฐานการสมัครทั้งหมด ({docItems.length} รายการ)
+                </h4>
+                {docItems.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3.5">
+                    {docItems.map((item, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => setPreviewImageUrl(item.url!)}
+                        className="group relative bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl overflow-hidden cursor-pointer hover:border-[#2563EB] transition-all shadow-sm"
+                      >
+                        <div className="aspect-[4/3] w-full relative bg-black/40 overflow-hidden">
+                          <img
+                            src={item.url}
+                            alt={item.label}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                            <Eye className="w-7 h-7 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </div>
+                        <div className="p-2.5 text-xs font-extrabold text-[var(--color-text)] truncate text-center bg-[var(--color-card)] border-t border-[var(--color-border)]">
+                          {item.label}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  <p style={{ color: '#64748b' }}>ไม่มีการอัปโหลดไฟล์หลักฐานเอกสาร</p>
+                  <div className="p-6 text-center text-sm font-bold text-[var(--color-text-muted)] bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)]">
+                    ไม่มีรูปภาพเอกสารในระบบ
+                  </div>
                 )}
               </div>
-            </div>
 
-            {/* Actions Footer */}
-            <div style={styles.modalFooter}>
-              <button
-                onClick={() => setSelectedDriver(null)}
-                style={styles.modalCancelBtn}
-                disabled={actionLoading}
-              >
-                ย้อนกลับ
-              </button>
+              {/* Action buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E2E8F0] pt-4">
+                {selectedDriver.registerstatus === 'อนุมัติแล้ว' ? (
+                  <div className="flex items-center gap-2 text-sm font-bold text-emerald-600 bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-200">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span>คำขอสมัครนี้ได้รับการอนุมัติเรียบร้อยแล้ว</span>
+                  </div>
+                ) : selectedDriver.registerstatus === 'ปฏิเสธ' ? (
+                  <div className="flex items-center gap-2 text-sm font-bold text-red-600 bg-red-50 px-4 py-2 rounded-xl border border-red-200">
+                    <XCircle className="w-5 h-5" />
+                    <span>คำขอสมัครนี้ถูกปฏิเสธแล้ว</span>
+                  </div>
+                ) : (
+                  <div className="text-sm text-[#64748B] font-semibold">
+                    กรุณาตรวจสอบเอกสารและข้อมูลก่อนดำเนินการ
+                  </div>
+                )}
 
-              {selectedDriver.registerstatus === 'รอดำเนินการ' && (
-                <div style={styles.modalBtnGroup}>
-                  <button
-                    onClick={() => handleDriverStatus(selectedDriver.username, 'ปฏิเสธ')}
-                    style={styles.modalRejectBtn}
-                    disabled={actionLoading}
-                  >
-                    {actionLoading ? 'กำลังบันทึก...' : 'ปฏิเสธคำขอ (Reject)'}
-                  </button>
-                  <button
-                    onClick={() => handleDriverStatus(selectedDriver.username, 'อนุมัติแล้ว')}
-                    style={styles.modalApproveBtn}
-                    disabled={actionLoading}
-                  >
-                    {actionLoading ? 'กำลังบันทึก...' : 'อนุมัติรับคนขับรถ (Approve)'}
-                  </button>
+                <div className="flex items-center gap-3">
+                  {selectedDriver.registerstatus !== 'อนุมัติแล้ว' && selectedDriver.registerstatus !== 'ปฏิเสธ' ? (
+                    <>
+                      <button onClick={() => promptDriverReject(selectedDriver.username)} className="px-6 py-2.5 bg-[#EF4444]/10 border border-[#EF4444]/30 text-[#EF4444] hover:bg-[#EF4444] hover:text-white rounded-xl text-sm font-extrabold cursor-pointer transition-all">
+                        ปฏิเสธคำขอ
+                      </button>
+                      <button onClick={() => promptDriverApprove(selectedDriver.username)} className="px-6 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-sm font-extrabold cursor-pointer shadow-sm transition-all">
+                        อนุมัติคำขอผู้ให้บริการขับรถ ✓
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => setSelectedDriver(null)} className="px-6 py-2.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#0F172A] border border-[#CBD5E1] rounded-xl text-sm font-extrabold cursor-pointer transition-all">
+                      ปิดหน้าต่าง
+                    </button>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
-      {/* ═════════════════════════════════════════════════════════
-          MODAL: PUB DETAILS & REVIEW (อนุมัติ/ปฏิเสธ ร้านประกอบการ)
-          ═════════════════════════════════════════════════════════ */}
-      {selectedPub && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalCardLarge}>
-            {/* Header */}
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>พิจารณาใบสมัครร้านค้า: @{selectedPub.username}</h3>
-              <button onClick={() => setSelectedPub(null)} style={styles.modalCloseBtn}>✕</button>
+      {/* MODAL: PUB DETAIL */}
+      {selectedPub && (() => {
+        let parsedPubDocs: Record<string, string> = {}
+        if (selectedPub.regisimagepath) {
+          try {
+            const parsed = JSON.parse(selectedPub.regisimagepath)
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+              parsedPubDocs = parsed
+            }
+          } catch {}
+        }
+
+        const licenseUrl =
+          parsedPubDocs.license ||
+          parsedPubDocs.licenseImage ||
+          parsedPubDocs.regisImagePath ||
+          parsedPubDocs.regisimagepath ||
+          (selectedPub as any).licenseImagePath ||
+          (selectedPub as any).licenseimagepath ||
+          selectedPub.regisimagepath ||
+          null
+
+        const shopUrl =
+          (selectedPub as any).pubimagepath ||
+          (selectedPub as any).pubImagePath ||
+          (selectedPub as any).pub_image_path ||
+          (selectedPub as any).shopimagepath ||
+          (selectedPub as any).shopImagePath ||
+          (selectedPub as any).storefrontimagepath ||
+          (selectedPub as any).storefrontImagePath ||
+          (selectedPub as any).storefront ||
+          (selectedPub as any).shop ||
+          (selectedPub as any).image ||
+          parsedPubDocs.pubimagepath ||
+          parsedPubDocs.pubImagePath ||
+          parsedPubDocs.shop ||
+          parsedPubDocs.shopImage ||
+          parsedPubDocs.storefront ||
+          parsedPubDocs.storefrontImage ||
+          null
+
+        const pubDocItems = [
+          { label: '📄 ใบอนุญาตประกอบการ', url: formatSupabaseImageUrl(licenseUrl), placeholderIcon: '📄' },
+          { label: '🏪 ภาพถ่ายบรรยากาศสถานบันเทิง', url: formatSupabaseImageUrl(shopUrl), placeholderIcon: '🏪' },
+        ]
+
+        const isPubApproved = selectedPub.regisstatus === 'approved' || (selectedPub as any).regisstatus === 'อนุมัติแล้ว'
+        const isPubRejected = selectedPub.regisstatus === 'rejected' || (selectedPub as any).regisstatus === 'ปฏิเสธ'
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 md:p-6 overflow-y-auto">
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl max-w-4xl w-full p-6 md:p-8 shadow-2xl flex flex-col gap-6 max-h-[90vh] overflow-y-auto my-auto">
+              <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-4">
+                <div>
+                  <h3 className="text-2xl font-black font-manrope text-[var(--color-text)]">พิจารณาสถานบันเทิง: {selectedPub.pubname}</h3>
+                  <p className="text-sm font-semibold text-[var(--color-text-muted)] mt-1">Username: @{selectedPub.username} | ยื่นสมัครเมื่อ: {formatThaiDate(selectedPub.regisdate)}</p>
+                </div>
+                <button onClick={() => setSelectedPub(null)} className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-2xl font-bold">✕</button>
+              </div>
+
+              {/* Info Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm bg-[var(--color-surface)] p-5 rounded-2xl border border-[var(--color-border)]">
+                <div>
+                  <span className="text-[var(--color-text-muted)] text-xs font-bold block mb-0.5">ชื่อสถานประกอบการ</span>
+                  <span className="font-bold text-base text-[var(--color-text)]">{selectedPub.pubname}</span>
+                </div>
+                <div>
+                  <span className="text-[var(--color-text-muted)] text-xs font-bold block mb-0.5">เบอร์โทรศัพท์ติดต่อ</span>
+                  <span className="font-bold text-base text-[var(--color-text)] font-mono">{selectedPub.pubphone}</span>
+                </div>
+                <div>
+                  <span className="text-[var(--color-text-muted)] text-xs font-bold block mb-0.5">อีเมล</span>
+                  <span className="font-bold text-sm text-[var(--color-text)]">{selectedPub.pubemail}</span>
+                </div>
+                <div>
+                  <span className="text-[var(--color-text-muted)] text-xs font-bold block mb-0.5">เลขประจำตัวผู้เสียภาษี</span>
+                  <span className="font-bold text-base text-[var(--color-text)] font-mono">{selectedPub.taxnumber || '—'}</span>
+                </div>
+                <div>
+                  <span className="text-[var(--color-text-muted)] text-xs font-bold block mb-0.5">เลขบัญชีธนาคาร</span>
+                  <span className="font-bold text-base text-[var(--color-text)] font-mono">{selectedPub.bankaccountno} ({selectedPub.bankaccountname})</span>
+                </div>
+                <div>
+                  <span className="text-[var(--color-text-muted)] text-xs font-bold block mb-0.5">เวลาเปิด - ปิด</span>
+                  <span className="font-bold text-base text-[var(--color-text)]">{selectedPub.pubopen} - {selectedPub.pubclose} น.</span>
+                </div>
+              </div>
+
+              {/* Documents & Storefront Images */}
+              <div>
+                <h4 className="text-base font-black text-[#2563EB] mb-3 flex items-center gap-2">
+                  <FileText className="w-5 h-5" /> เอกสารและภาพถ่ายประกอบการสมัครสถานบันเทิง
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {pubDocItems.map((item, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => item.url && setPreviewImageUrl(item.url)}
+                      className={`group relative bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden shadow-sm transition-all ${
+                        item.url ? 'cursor-pointer hover:border-[#2563EB]' : 'opacity-80'
+                      }`}
+                    >
+                      <div className="aspect-[4/3] w-full relative bg-black/40 overflow-hidden flex items-center justify-center">
+                        {item.url ? (
+                          <>
+                            <img
+                              src={item.url}
+                              alt={item.label}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                              <Eye className="w-7 h-7 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center p-6 text-center gap-2">
+                            <span className="text-4xl">{item.placeholderIcon}</span>
+                            <span className="text-xs font-bold text-[var(--color-text-muted)]">
+                              ไม่มีไฟล์แนบในระบบ
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-3 text-xs sm:text-sm font-extrabold text-[var(--color-text)] text-center bg-[var(--color-card)] border-t border-[var(--color-border)] flex items-center justify-center gap-1.5">
+                        <span>{item.label}</span>
+                        {item.url ? (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500 font-bold">
+                            แนบแล้ว
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-500 font-bold">
+                            รอแนบ
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E2E8F0] pt-4">
+                {isPubApproved ? (
+                  <div className="flex items-center gap-2 text-sm font-bold text-emerald-600 bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-200">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span>สถานบันเทิงนี้ได้รับการอนุมัติเรียบร้อยแล้ว</span>
+                  </div>
+                ) : isPubRejected ? (
+                  <div className="flex items-center gap-2 text-sm font-bold text-red-600 bg-red-50 px-4 py-2 rounded-xl border border-red-200">
+                    <XCircle className="w-5 h-5" />
+                    <span>คำขอพาร์ทเนอร์นี้ถูกปฏิเสธแล้ว</span>
+                  </div>
+                ) : (
+                  <div className="text-sm text-[#64748B] font-semibold">
+                    กรุณาตรวจสอบเอกสารและใบอนุญาตก่อนอนุมัติ
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3">
+                  {!isPubApproved && !isPubRejected ? (
+                    <>
+                      <button onClick={() => promptPubReject(selectedPub.username)} className="px-6 py-2.5 bg-[#EF4444]/10 border border-[#EF4444]/30 text-[#EF4444] hover:bg-[#EF4444] hover:text-white rounded-xl text-sm font-extrabold cursor-pointer transition-all">
+                        ปฏิเสธคำขอสถานบันเทิง
+                      </button>
+                      <button onClick={() => promptPubApprove(selectedPub.username)} className="px-6 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-sm font-extrabold cursor-pointer shadow-sm transition-all">
+                        อนุมัติคำขอสถานบันเทิง ✓
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => setSelectedPub(null)} className="px-6 py-2.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#0F172A] border border-[#CBD5E1] rounded-xl text-sm font-extrabold cursor-pointer transition-all">
+                      ปิดหน้าต่าง
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
+          </div>
+        )
+      })()}
 
-            {/* Content Body */}
-            <div style={styles.modalBodyTwoCol}>
-              <div style={styles.modalDetailsCol}>
-                <h4 style={styles.sectionTitle}>ข้อมูลผู้ประกอบการ & พิกัดร้านค้า</h4>
-                <div style={styles.detailGrid}>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>ชื่อร้านประกอบกิจการ</span>
-                    <span style={styles.detailValue}>{selectedPub.pubname}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>เบอร์โทรศัพท์ติดต่อ</span>
-                    <span style={styles.detailValue}>{selectedPub.pubphone}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>อีเมลติดต่อ</span>
-                    <span style={styles.detailValue}>{selectedPub.pubemail}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>เลขผู้เสียภาษี 13 หลัก</span>
-                    <span style={styles.detailValue}>{selectedPub.taxnumber}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>เวลาเปิดทำการ</span>
-                    <span style={styles.detailValue}>{selectedPub.pubopen} น.</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>เวลาปิดทำการ</span>
-                    <span style={styles.detailValue}>{selectedPub.pubclose} น.</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>ชื่อบัญชีผู้รับโอนเงิน</span>
-                    <span style={styles.detailValue}>{selectedPub.bankaccountname}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>เลขบัญชีธนาคาร</span>
-                    <span style={styles.detailValue}>{selectedPub.bankaccountno}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>วันที่ยื่นส่งเอกสาร</span>
-                    <span style={styles.detailValue}>{formatThaiDate(selectedPub.regisdate)}</span>
-                  </div>
-                  <div style={styles.detailItem}>
-                    <span style={styles.detailLabel}>สถานะใบคำขอสมัคร</span>
-                    <span style={{
-                      ...styles.detailValue,
-                      color:
-                        selectedPub.regisstatus === 'approved' ? '#10b981' :
-                          selectedPub.regisstatus === 'rejected' ? '#ef4444' : '#fbbf24',
-                      fontWeight: 700
-                    }}>
-                      {selectedPub.regisstatus === 'approved' && 'อนุมัติแล้ว'}
-                      {selectedPub.regisstatus === 'rejected' && 'ไม่ผ่านการอนุมัติ'}
-                      {selectedPub.regisstatus === 'pending' && 'รอการพิจารณา (Pending)'}
+      {/* MODAL: REPORT DETAIL */}
+      {selectedReport && selectedReportType && (() => {
+        let reportImgs: string[] = []
+        if (selectedReport.reportimages && Array.isArray(selectedReport.reportimages) && selectedReport.reportimages.length > 0) {
+          reportImgs = selectedReport.reportimages
+        } else if (selectedReport.reportimagepath) {
+          reportImgs = String(selectedReport.reportimagepath).split(',').map(s => s.trim()).filter(Boolean)
+        }
+
+        const isReportApproved = selectedReport.status === 'แก้ไขแล้ว' || selectedReport.status === 'อนุมัติแล้ว'
+        const isReportRejected = selectedReport.status === 'ปฏิเสธ' || selectedReport.status === 'ไม่อนุมัติ'
+
+        return (
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 md:p-6 overflow-y-auto">
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl max-w-3xl w-full p-6 md:p-8 shadow-2xl flex flex-col gap-6 max-h-[90vh] overflow-y-auto my-auto">
+              <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-4">
+                <div>
+                  <h3 className="text-2xl font-black font-manrope text-[var(--color-text)]">
+                    รายละเอียดคำร้องเรียน ({selectedReportType === 'driver' ? 'ผู้ให้บริการขับรถ' : 'ผู้ใช้บริการ'})
+                  </h3>
+                  <p className="text-sm font-semibold text-[var(--color-text-muted)] mt-1">
+                    ID: {selectedReportType === 'driver' ? selectedReport.driverreportid : selectedReport.userreportid} | วันที่แจ้ง: {formatThaiDate(selectedReport.reportdate)}
+                  </p>
+                </div>
+                <button onClick={() => setSelectedReport(null)} className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-2xl font-bold">✕</button>
+              </div>
+
+              {/* Detail Box */}
+              <div className="flex flex-col gap-4 text-sm bg-[var(--color-surface)] p-5 rounded-2xl border border-[var(--color-border)]">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--color-border)] pb-3">
+                  <div>
+                    <span className="text-[var(--color-text-muted)] block font-mono text-xs font-bold uppercase">หัวข้อรายงาน</span>
+                    <span className="font-bold text-[#0F172A] text-base mt-0.5 block">
+                      {formatReportType(selectedReport.reporttype)}
                     </span>
                   </div>
-                </div>
-              </div>
-
-              {/* Uploaded Store License / storefront */}
-              <div style={styles.modalDocsCol}>
-                <h4 style={styles.sectionTitle}>ใบอนุญาตประกอบกิจการ / ภาพถ่ายหน้าร้าน</h4>
-                <div style={styles.docsPreviewContainer}>
-                  <div style={styles.docImageBlock}>
-                    <span style={styles.docImageTitle}>📄 ใบอนุญาตจดทะเบียนสถานบริการ / Store License</span>
-                    <img
-                      src={selectedPub.regisimagepath || '/driver_license_sample_1779780889940.png'}
-                      alt="Store License"
-                      style={styles.docImage}
-                    />
+                  <div>
+                    <span className="text-[var(--color-text-muted)] block font-mono text-xs font-bold uppercase text-right">อ้างอิงการจอง</span>
+                    <span className="font-bold text-[var(--color-text)] text-base font-mono">BOOKING-{selectedReport.request_id || selectedReport.reportindex || '—'}</span>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Actions Footer */}
-            <div style={styles.modalFooter}>
-              <button
-                onClick={() => setSelectedPub(null)}
-                style={styles.modalCancelBtn}
-                disabled={actionLoading}
-              >
-                ย้อนกลับ
-              </button>
-
-              {selectedPub.regisstatus === 'pending' && (
-                <div style={styles.modalBtnGroup}>
-                  <button
-                    onClick={() => handlePubStatus(selectedPub.username, 'rejected')}
-                    style={styles.modalRejectBtn}
-                    disabled={actionLoading}
-                  >
-                    {actionLoading ? 'กำลังบันทึก...' : 'ปฏิเสธ (Reject)'}
-                  </button>
-                  <button
-                    onClick={() => handlePubStatus(selectedPub.username, 'approved')}
-                    style={styles.modalApproveBtn}
-                    disabled={actionLoading}
-                  >
-                    {actionLoading ? 'กำลังบันทึก...' : 'อนุมัติคำขอร้านค้า (Approve)'}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ═════════════════════════════════════════════════════════
-          MODAL: REPORT DETAILS & RESOLVE (แก้ไข/ปรับปรุงสถานะรายงาน)
-          ═════════════════════════════════════════════════════════ */}
-      {selectedReport && selectedReportType && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalCardMedium}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>
-                รายละเอียดรายงานร้องเรียนความประพฤติ (Role: {selectedReportType === 'driver' ? 'คนขับรถ' : 'ลูกค้า'})
-              </h3>
-              <button onClick={() => {
-                setSelectedReport(null)
-                setSelectedReportType(null)
-              }} style={styles.modalCloseBtn}>✕</button>
-            </div>
-
-            <div style={styles.modalBody}>
-              <div style={styles.reportDetailBox}>
-                <div style={styles.detailItem}>
-                  <span style={styles.detailLabel}>ประเภทการร้องเรียน</span>
-                  <span style={{ ...styles.detailValue, fontWeight: 700, color: '#f43f5e', fontSize: 16 }}>
-                    {selectedReport.reporttype}
-                  </span>
-                </div>
-                <div style={styles.detailItem}>
-                  <span style={styles.detailLabel}>รายละเอียดปัญหา / พฤติกรรมที่พบ</span>
-                  <span style={{ ...styles.detailValue, padding: '12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', lineHeight: 1.6 }}>
+                <div>
+                  <span className="text-[var(--color-text-muted)] block font-mono text-xs font-bold uppercase mb-1.5">รายละเอียดข้อความร้องเรียน</span>
+                  <p className="p-4 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl text-[var(--color-text)] leading-relaxed text-sm font-medium">
                     {selectedReport.reportdetail || 'ไม่ได้ระบุรายละเอียดเพิ่มเติม'}
-                  </span>
+                  </p>
                 </div>
-                <div style={styles.detailItem}>
-                  <span style={styles.detailLabel}>รหัสอ้างอิงการจอง (Booking ID)</span>
-                  <span style={styles.detailValue}>
-                    {selectedReportType === 'driver' ? `#BOOKING-${selectedReport.reportindex}` : `#BOOKING-${selectedReport.request_id}`}
-                  </span>
-                </div>
-                <div style={styles.detailItem}>
-                  <span style={styles.detailLabel}>วันที่แจ้งรายงานความประพฤติ</span>
-                  <span style={styles.detailValue}>{formatThaiDate(selectedReport.reportdate)}</span>
-                </div>
-                <div style={styles.detailItem}>
-                  <span style={styles.detailLabel}>สถานะการประสานงานของ Admin</span>
-                  <span style={{
-                    ...styles.detailValue,
-                    color: selectedReport.status === 'อนุมัติแล้ว' || selectedReport.status === 'แก้ไขแล้ว' ? '#10b981' :
-                           selectedReport.status === 'ไม่อนุมัติ' ? '#ef4444' : '#fbbf24',
-                    fontWeight: 700
-                  }}>
-                    {selectedReport.status}
-                  </span>
+              </div>
+
+              {/* Images */}
+              <div>
+                <h4 className="text-base font-black text-red-500 mb-3 flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5" /> ภาพถ่ายหลักฐานประกอบคำร้องเรียน ({reportImgs.length} ภาพ)
+                </h4>
+                {reportImgs.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+                    {reportImgs.map((imgUrl, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => setPreviewImageUrl(imgUrl)}
+                        className="group relative bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl overflow-hidden cursor-pointer hover:border-red-400 transition-all shadow-sm"
+                      >
+                        <div className="aspect-[4/3] w-full relative bg-black/40 overflow-hidden">
+                          <img
+                            src={imgUrl}
+                            alt={`หลักฐานที่ ${idx + 1}`}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                            <Eye className="w-7 h-7 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        </div>
+                        <div className="p-2.5 text-xs font-extrabold text-[var(--color-text)] text-center bg-[var(--color-card)] border-t border-[var(--color-border)] truncate">
+                          ภาพหลักฐานที่ {idx + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-6 text-center text-sm font-bold text-[var(--color-text-muted)] bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)]">
+                    ไม่มีรูปภาพหลักฐานแนบในรายงานนี้
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E2E8F0] pt-4">
+                {isReportApproved ? (
+                  <div className="flex items-center gap-2 text-sm font-bold text-emerald-600 bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-200">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span>รายงานนี้ได้รับการอนุมัติ / แก้ไขเรียบร้อยแล้ว</span>
+                  </div>
+                ) : isReportRejected ? (
+                  <div className="flex items-center gap-2 text-sm font-bold text-red-600 bg-red-50 px-4 py-2 rounded-xl border border-red-200">
+                    <XCircle className="w-5 h-5" />
+                    <span>รายงานนี้ถูกปฏิเสธแล้ว</span>
+                  </div>
+                ) : (
+                  <div className="text-sm text-[#64748B] font-semibold">
+                    กรุณาตรวจสอบหลักฐานและรายละเอียดก่อนดำเนินการ
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3">
+                  {!isReportApproved && !isReportRejected ? (
+                    <>
+                      <button 
+                        onClick={() => promptReportReject(selectedReportType === 'user' ? (selectedReport.userreportid || 0) : (selectedReport.driverreportid || 0), selectedReportType)} 
+                        className="px-6 py-2.5 bg-[#EF4444]/10 border border-[#EF4444]/30 text-[#EF4444] hover:bg-[#EF4444] hover:text-white rounded-xl text-sm font-extrabold cursor-pointer transition-all"
+                      >
+                        ปฏิเสธ / ลบรายงาน
+                      </button>
+                      <button 
+                        onClick={() => promptReportApprove(selectedReportType === 'user' ? (selectedReport.userreportid || 0) : (selectedReport.driverreportid || 0), selectedReportType)} 
+                        className="px-6 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-sm font-extrabold cursor-pointer shadow-sm transition-all"
+                      >
+                        อนุมัติรายงาน ✓
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => setSelectedReport(null)} className="px-6 py-2.5 bg-[#F1F5F9] hover:bg-[#E2E8F0] text-[#0F172A] border border-[#CBD5E1] rounded-xl text-sm font-extrabold cursor-pointer transition-all">
+                      ปิดหน้าต่าง
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
+          </div>
+        )
+      })()}
 
-            <div style={styles.modalFooter}>
+      {}
+      {previewImageUrl && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-lg flex items-center justify-center p-4 md:p-8 animate-fadeIn" onClick={() => setPreviewImageUrl(null)}>
+          <div className="relative max-w-5xl max-h-[90vh] flex flex-col items-center" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setPreviewImageUrl(null)}
+              className="absolute -top-12 right-0 text-white/80 hover:text-white text-sm font-bold bg-white/10 hover:bg-white/20 px-4 py-1.5 rounded-full backdrop-blur-md transition-colors"
+            >
+              ✕ ปิดหน้าต่าง
+            </button>
+            <img
+              src={previewImageUrl}
+              alt="รูปภาพขยาย"
+              className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-white/10"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Confirm Action */}
+      {confirmModal.isOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-6 animate-fade-in" onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}>
+          <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-3xl p-8 sm:p-10 max-w-3xl sm:max-w-4xl w-full shadow-2xl flex flex-col gap-6 text-center" onClick={e => e.stopPropagation()}>
+            <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto text-amber-500 text-3xl">
+              ⚠️
+            </div>
+            
+            <div className="w-full">
+              <h3 className="text-xl sm:text-2xl font-black text-[var(--color-text)] mb-3 font-manrope whitespace-nowrap">
+                {confirmModal.title}
+              </h3>
+              <p className="text-sm sm:text-base text-[var(--color-text-muted)] font-semibold sm:whitespace-nowrap px-2">
+                {confirmModal.message}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4 justify-center pt-2">
+              <button
+                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                className="px-7 py-3 rounded-full border border-[var(--color-border)] text-sm font-extrabold text-[var(--color-text-muted)] hover:bg-[var(--color-surface)] cursor-pointer transition-colors"
+              >
+                ยกเลิก (Cancel)
+              </button>
               <button
                 onClick={() => {
-                  setSelectedReport(null)
-                  setSelectedReportType(null)
+                  const action = confirmModal.onConfirm
+                  setConfirmModal(prev => ({ ...prev, isOpen: false }))
+                  action()
                 }}
-                style={styles.modalCancelBtn}
-                disabled={actionLoading}
+                className={`px-8 py-3 rounded-full !text-white text-sm font-extrabold shadow-lg cursor-pointer transition-all ${
+                  confirmModal.confirmBg?.includes('red')
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-[#2340A7] hover:bg-[#1D358F]'
+                }`}
+                style={{
+                  backgroundColor: confirmModal.confirmBg?.includes('red') ? '#dc2626' : '#2340A7',
+                  color: '#ffffff',
+                }}
               >
-                ปิดหน้าต่าง
+                {confirmModal.confirmText}
               </button>
-
-              {selectedReport.status === 'กำลังดำเนินการ' && (
-                selectedReportType === 'user' ? (
-                  <div style={styles.modalBtnGroup}>
-                    <button
-                      onClick={() => handleReportStatus(selectedReport.userreportid || 0, 'user', 'ไม่อนุมัติ')}
-                      style={styles.modalRejectBtn}
-                      disabled={actionLoading}
-                    >
-                      {actionLoading ? 'กำลังอัปเดต...' : 'ไม่อนุมัติ (Reject)'}
-                    </button>
-                    <button
-                      onClick={() => handleReportStatus(selectedReport.userreportid || 0, 'user', 'อนุมัติแล้ว')}
-                      style={styles.modalApproveBtn}
-                      disabled={actionLoading}
-                    >
-                      {actionLoading ? 'กำลังอัปเดต...' : 'อนุมัติ (Approve)'}
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => handleReportStatus(selectedReport.driverreportid || 0, 'driver', 'แก้ไขแล้ว')}
-                    style={styles.modalApproveBtn}
-                    disabled={actionLoading}
-                  >
-                    {actionLoading ? 'กำลังอัปเดต...' : 'ทำเครื่องหมายว่า "แก้ไขเสร็จสิ้นแล้ว"'}
-                  </button>
-                )
-              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Styles declared inside standard React styles object to prevent Tailwind dependencies */}
-      <style>{`
-        body {
-          background-color: #f1f5f9;
-        }
-      `}</style>
+      {}
+      <AlertModal
+        isOpen={showLogoutModal}
+        title="คุณต้องการออกจากระบบใช่หรือไม่?"
+        message="เมื่อออกจากระบบ คุณจะต้องลงชื่อเข้าใช้งานใหม่อีกครั้งเพื่อทำรายการต่อ"
+        type="confirm"
+        confirmText="ยืนยัน"
+        cancelText="ยกเลิก"
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={confirmLogout}
+      />
+
     </div>
   )
-}
-
-// ── Shared Premium Visual System Styles ───────────────────────
-const styles: { [key: string]: React.CSSProperties } = {
-  dashboardContainer: {
-    display: 'flex',
-    minHeight: '100vh',
-    width: '100%',
-    backgroundColor: '#f1f5f9',
-    color: '#0f172a',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  // Background cyber lights
-  bgGlowPurple: {
-    display: 'none',
-  },
-  bgGlowCyan: {
-    display: 'none',
-  },
-
-  // ─── Sidebar Styles ───
-  sidebar: {
-    width: '300px',
-    backgroundColor: '#ffffff',
-    borderRight: '1px solid #e2e8f0',
-    display: 'flex',
-    flexDirection: 'column',
-    position: 'relative',
-    zIndex: 5,
-  },
-  sidebarHeader: {
-    padding: '32px 24px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    borderBottom: '1px solid #f1f5f9',
-  },
-  adminShieldWrapper: {
-    width: '64px',
-    height: '64px',
-    borderRadius: '50%',
-    background: '#4f46e5',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: '16px',
-  },
-  adminShieldIcon: {
-    fontSize: '32px',
-  },
-  sidebarAdminTitle: {
-    fontSize: '20px',
-    fontWeight: 700,
-    color: '#0f172a',
-    margin: '0 0 4px 0',
-    letterSpacing: '0.5px',
-  },
-  sidebarAdminRole: {
-    fontSize: '13px',
-    color: '#4f46e5',
-    fontWeight: 500,
-    margin: 0,
-    textTransform: 'uppercase',
-    letterSpacing: '1px',
-  },
-  sidebarNav: {
-    padding: '24px 16px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-    flex: 1,
-    overflowY: 'auto',
-  },
-  navGroupLabel: {
-    fontSize: '11px',
-    fontWeight: 700,
-    color: '#94a3b8',
-    textTransform: 'uppercase',
-    letterSpacing: '1.5px',
-    margin: '20px 0 6px 12px',
-  },
-  navItem: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '12px 16px',
-    borderRadius: '12px',
-    backgroundColor: 'transparent',
-    color: '#1e293b',
-    border: 'none',
-    fontSize: '14px',
-    fontWeight: 500,
-    cursor: 'pointer',
-    textAlign: 'left',
-    transition: 'all 0.2s ease',
-    position: 'relative',
-    width: '100%',
-  },
-  navIcon: {
-    fontSize: '18px',
-    marginRight: '14px',
-  },
-  navItemActive: {
-    backgroundColor: '#eef2ff',
-    color: '#4f46e5',
-    fontWeight: 600,
-    boxShadow: 'inset 4px 0 0 #4f46e5',
-  },
-  badgePending: {
-    position: 'absolute',
-    right: '16px',
-    backgroundColor: '#3b82f6',
-    color: '#ffffff',
-    fontSize: '11px',
-    fontWeight: 700,
-    padding: '2px 8px',
-    borderRadius: '10px',
-  },
-  badgeReportPending: {
-    position: 'absolute',
-    right: '16px',
-    backgroundColor: '#ef4444',
-    color: '#ffffff',
-    fontSize: '11px',
-    fontWeight: 700,
-    padding: '2px 8px',
-    borderRadius: '10px',
-  },
-  sidebarFooter: {
-    padding: '20px',
-    borderTop: '1px solid #f1f5f9',
-  },
-  adminInfoBox: {
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '12px 16px',
-    borderRadius: '10px',
-    backgroundColor: '#f8fafc',
-    border: '1px solid #e2e8f0',
-  },
-
-  // ─── Main Contents Layout Styles ───
-  mainContainer: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    zIndex: 2,
-    position: 'relative',
-    overflowY: 'auto',
-    height: '100vh',
-  },
-  header: {
-    padding: '24px 40px',
-    borderBottom: '1px solid #e2e8f0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-  },
-  breadcrumb: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-  },
-  crumbParent: {
-    fontSize: '14px',
-    color: '#334155',
-    fontWeight: 500,
-  },
-  crumbDivider: {
-    fontSize: '12px',
-    color: '#cbd5e1',
-  },
-  crumbCurrent: {
-    fontSize: '14px',
-    color: '#4f46e5',
-    fontWeight: 600,
-  },
-  headerRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '24px',
-  },
-  logoTitle: {
-    fontSize: '16px',
-    fontWeight: 700,
-    letterSpacing: '1px',
-    color: '#4f46e5',
-    margin: 0,
-    textTransform: 'uppercase',
-  },
-  logoutBtn: {
-    backgroundColor: 'rgba(239,68,68,0.08)',
-    color: '#dc2626',
-    border: '1px solid rgba(239,68,68,0.2)',
-    borderRadius: '8px',
-    padding: '8px 16px',
-    fontSize: '13px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-
-  mainContent: {
-    padding: '40px',
-    flex: 1,
-  },
-
-  // ─── TAB: HOME (สถิติแผงควบคุม) ───
-  homeTabContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '32px',
-  },
-  welcomeBanner: {
-    padding: '32px',
-    borderRadius: '20px',
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
-  },
-  welcomeTitle: {
-    fontSize: '24px',
-    fontWeight: 700,
-    color: '#0f172a',
-    margin: '0 0 10px 0',
-  },
-  welcomeDesc: {
-    fontSize: '15px',
-    color: '#475569',
-    margin: 0,
-    lineHeight: 1.6,
-  },
-  statsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    gap: '24px',
-  },
-  statCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: '16px',
-    border: '1px solid #e2e8f0',
-    padding: '24px',
-    cursor: 'pointer',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-    position: 'relative',
-    overflow: 'hidden',
-    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
-  },
-  statCardHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-  },
-  statIconBadge: {
-    width: '40px',
-    height: '40px',
-    borderRadius: '10px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '20px',
-  },
-  statCardLabel: {
-    fontSize: '14px',
-    fontWeight: 600,
-    color: '#1e293b',
-  },
-  statNumberGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  statMainNumber: {
-    fontSize: '36px',
-    fontWeight: 700,
-    color: '#0f172a',
-    lineHeight: 1.1,
-  },
-  statSubNumber: {
-    fontSize: '13px',
-    marginTop: '6px',
-    fontWeight: 500,
-  },
-  statCardFooter: {
-    fontSize: '12px',
-    color: '#94a3b8',
-    borderTop: '1px solid #f1f5f9',
-    paddingTop: '12px',
-    marginTop: '6px',
-    fontWeight: 500,
-  },
-
-  // ─── TABLES AND CONTROLS PANEL ───
-  panelCard: {
-    backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '20px',
-    padding: '32px',
-    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)',
-  },
-  panelTitle: {
-    fontSize: '20px',
-    fontWeight: 700,
-    color: '#0f172a',
-    margin: '0 0 24px 0',
-  },
-  filterBar: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '24px',
-    backgroundColor: '#f8fafc',
-    border: '1px solid #e2e8f0',
-    borderRadius: '14px',
-    padding: '20px',
-    marginBottom: '28px',
-  },
-  filterGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-    flex: 1,
-    minWidth: '200px',
-  },
-  filterLabel: {
-    fontSize: '13px',
-    fontWeight: 600,
-    color: '#1e293b',
-  },
-  filterInput: {
-    backgroundColor: '#ffffff',
-    border: '1px solid #cbd5e1',
-    borderRadius: '8px',
-    padding: '10px 14px',
-    color: '#0f172a',
-    fontSize: '14px',
-    outline: 'none',
-    transition: 'all 0.2s',
-  },
-  filterSelect: {
-    backgroundColor: '#ffffff',
-    border: '1px solid #cbd5e1',
-    borderRadius: '8px',
-    padding: '10px 14px',
-    color: '#0f172a',
-    fontSize: '14px',
-    outline: 'none',
-    cursor: 'pointer',
-  },
-  tableTabRow: {
-    display: 'flex',
-    gap: '12px',
-    marginBottom: '20px',
-    borderBottom: '1px solid #e2e8f0',
-    paddingBottom: '12px',
-  },
-  tableTab: {
-    padding: '8px 16px',
-    backgroundColor: 'transparent',
-    color: '#64748b',
-    border: 'none',
-    fontSize: '14px',
-    fontWeight: 500,
-    cursor: 'pointer',
-    position: 'relative',
-    transition: 'all 0.2s',
-  },
-  tableTabActive: {
-    color: '#4f46e5',
-    fontWeight: 600,
-  },
-  tableResponsive: {
-    width: '100%',
-    overflowX: 'auto',
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    textAlign: 'left',
-  },
-  th: {
-    padding: '16px 20px',
-    borderBottom: '2px solid #e2e8f0',
-    color: '#334155',
-    fontSize: '13px',
-    fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-  },
-  tr: {
-    borderBottom: '1px solid #e2e8f0',
-    transition: 'background-color 0.2s',
-  },
-  td: {
-    padding: '16px 20px',
-    fontSize: '14px',
-    color: '#1e293b',
-  },
-  statusDot: {
-    display: 'inline-block',
-    width: '8px',
-    height: '8px',
-    borderRadius: '50%',
-    marginRight: '8px',
-  },
-  viewDetailBtn: {
-    backgroundColor: 'rgba(79,70,229,0.06)',
-    color: '#4f46e5',
-    border: '1px solid rgba(79,70,229,0.2)',
-    borderRadius: '6px',
-    padding: '6px 12px',
-    fontSize: '12px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  tdNoData: {
-    padding: '40px',
-    textAlign: 'center',
-    color: '#1e293b',
-    fontSize: '15px',
-  },
-
-  // ─── MODAL DIALOGS ───
-  modalOverlay: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100vw',
-    height: '100vh',
-    backgroundColor: 'rgba(15,23,42,0.4)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 100,
-    padding: '24px',
-  },
-  modalCardLarge: {
-    backgroundColor: '#ffffff',
-    border: '1px solid #cbd5e1',
-    borderRadius: '24px',
-    width: '100%',
-    maxWidth: '1000px',
-    maxHeight: '90vh',
-    display: 'flex',
-    flexDirection: 'column',
-    boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
-    overflow: 'hidden',
-  },
-  modalCardMedium: {
-    backgroundColor: '#ffffff',
-    border: '1px solid #cbd5e1',
-    borderRadius: '24px',
-    width: '100%',
-    maxWidth: '650px',
-    maxHeight: '85vh',
-    display: 'flex',
-    flexDirection: 'column',
-    boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
-    overflow: 'hidden',
-  },
-  modalHeader: {
-    padding: '24px 32px',
-    borderBottom: '1px solid #e2e8f0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  modalTitle: {
-    fontSize: '18px',
-    fontWeight: 700,
-    color: '#0f172a',
-    margin: 0,
-  },
-  modalCloseBtn: {
-    background: 'none',
-    border: 'none',
-    color: '#64748b',
-    fontSize: '20px',
-    cursor: 'pointer',
-    transition: 'color 0.2s',
-  },
-  modalBody: {
-    padding: '32px',
-    overflowY: 'auto',
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  modalBodyTwoCol: {
-    padding: '32px',
-    overflowY: 'auto',
-    flex: 1,
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '32px',
-    backgroundColor: '#ffffff',
-  },
-  modalDetailsCol: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px',
-  },
-  modalDocsCol: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px',
-  },
-  sectionTitle: {
-    fontSize: '15px',
-    fontWeight: 700,
-    color: '#4f46e5',
-    textTransform: 'uppercase',
-    letterSpacing: '0.5px',
-    margin: '0 0 10px 0',
-    borderBottom: '1px solid rgba(79,70,229,0.2)',
-    paddingBottom: '8px',
-  },
-  detailGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '16px 24px',
-  },
-  detailItem: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-  },
-  detailLabel: {
-    fontSize: '12px',
-    fontWeight: 600,
-    color: '#475569',
-  },
-  detailValue: {
-    fontSize: '14px',
-    color: '#0f172a',
-    fontWeight: 500,
-  },
-  warningInfoBox: {
-    padding: '12px 16px',
-    backgroundColor: 'rgba(245,158,11,0.08)',
-    border: '1px solid rgba(245,158,11,0.25)',
-    borderRadius: '10px',
-    color: '#d97706',
-    fontSize: '13px',
-    fontWeight: 500,
-  },
-  docsPreviewContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px',
-    maxHeight: '500px',
-    overflowY: 'auto',
-    paddingRight: '12px',
-  },
-  docImageBlock: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-  },
-  docImageTitle: {
-    fontSize: '13px',
-    fontWeight: 600,
-    color: '#475569',
-  },
-  docImage: {
-    width: '100%',
-    height: 'auto',
-    borderRadius: '12px',
-    border: '1px solid #e2e8f0',
-    background: '#f8fafc',
-  },
-  modalFooter: {
-    padding: '24px 32px',
-    borderTop: '1px solid #e2e8f0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#f8fafc',
-  },
-  modalCancelBtn: {
-    backgroundColor: '#ffffff',
-    color: '#475569',
-    border: '1px solid #cbd5e1',
-    borderRadius: '8px',
-    padding: '10px 20px',
-    fontSize: '14px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  modalBtnGroup: {
-    display: 'flex',
-    gap: '16px',
-  },
-  modalRejectBtn: {
-    backgroundColor: 'rgba(239,68,68,0.08)',
-    color: '#ef4444',
-    border: '1px solid rgba(239,68,68,0.2)',
-    borderRadius: '8px',
-    padding: '10px 20px',
-    fontSize: '14px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  modalApproveBtn: {
-    backgroundColor: '#4f46e5',
-    color: '#ffffff',
-    border: 'none',
-    borderRadius: '8px',
-    padding: '10px 24px',
-    fontSize: '14px',
-    fontWeight: 700,
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-  },
-  reportDetailBox: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '24px',
-  },
-
-  // Skeletons
-  skeletonGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-    gap: '24px',
-  },
-  skeletonCard: {
-    height: '160px',
-    backgroundColor: '#e2e8f0',
-    borderRadius: '16px',
-    border: '1px solid #e2e8f0',
-    animation: 'pulse 1.5s infinite',
-  },
-  skeletonTable: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-  },
-  skeletonRow: {
-    height: '48px',
-    backgroundColor: '#e2e8f0',
-    borderRadius: '8px',
-    animation: 'pulse 1.5s infinite',
-  }
 }

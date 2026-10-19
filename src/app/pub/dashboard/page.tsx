@@ -1,8 +1,13 @@
 'use client'
+
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import api from '@/services/api'
+import Navbar from '@/components/ui/Navbar'
+import Footer from '@/components/ui/Footer'
+import FloatingNav from '@/components/ui/FloatingNav'
+import { Car, FileText, BarChart3, Shield, Radio, CheckCircle2, ArrowRight } from 'lucide-react'
 
+// หน้าแดชบอร์ดหลักสำหรับสถานบันเทิงพาร์ทเนอร์ (Pub / Venue Dashboard)
 export default function PubDashboardPage() {
   const router = useRouter()
   const [pubUser, setPubUser] = useState<any>(null)
@@ -10,18 +15,14 @@ export default function PubDashboardPage() {
   useEffect(() => {
     const userStr = localStorage.getItem('pub_user')
     if (!userStr) { router.push('/login'); return }
-    setPubUser(JSON.parse(userStr))
-    // Clear saved request form data when landing on dashboard
+    const parsed = JSON.parse(userStr)
+    if (parsed.regisstatus !== 'approved' && parsed.regisstatus !== 'อนุมัติแล้ว') {
+      router.push('/status')
+      return
+    }
+    setPubUser(parsed)
     localStorage.removeItem('safeseat_request_form')
   }, [router])
-
-  const handleLogout = () => {
-    const isConfirmed = window.confirm('คุณต้องการออกจากระบบใช่หรือไม่?')
-    if (isConfirmed) {
-      localStorage.removeItem('pub_user')
-      router.push('/login')
-    }
-  }
 
   if (!pubUser) return null
   const pubName = pubUser.pubname || pubUser.username || 'PUB'
@@ -29,305 +30,156 @@ export default function PubDashboardPage() {
   const cards = [
     {
       id: 'request',
-      title: 'เรียกรถให้ลูกค้า',
-      subtitle: 'Request Driver',
-      desc: 'เรียกพนักงานขับรถแทนให้ลูกค้าของคุณ รับส่งถึงที่หมายปลอดภัยทุกเส้นทาง',
-      btnLabel: 'เรียกรถเดี๋ยวนี้',
-      accentColor: '#4f46e5',
+      code: 'SERVICE // 01',
+      title: 'เรียกรถให้ผู้ใช้บริการ',
+      subtitle: 'REQUEST DESIGNATED DRIVER',
+      desc: 'เรียกผู้ให้บริการขับรถมืออาชีพให้ผู้ใช้บริการของคุณ รับส่งถึงที่หมายอย่างปลอดภัยตลอดเส้นทาง',
+      btnLabel: 'เรียกผู้ให้บริการขับรถตอนนี้',
+      icon: Car,
+      colorClass: 'text-[#2340A7]',
+      borderHover: 'hover:border-[#2340A7]',
+      btnBg: 'bg-gradient-to-r from-[#2340A7] to-[#2563EB]',
       path: '/pub/request-driver',
-      image: '/images/request_driver_mockup.png',
     },
     {
       id: 'list',
+      code: 'SERVICE // 02',
       title: 'ประวัติการเรียกรถ',
-      subtitle: 'Service History',
-      desc: 'ตรวจสอบรายการและติดตามสถานะการเดินทางของลูกค้าทุกครั้ง',
-      btnLabel: 'ดูประวัติ',
-      accentColor: '#059669',
+      subtitle: 'SERVICE HISTORY & STATUS',
+      desc: 'ตรวจสอบรายการ ติดตามสถานะการเดินทางแบบเรียลไทม์ และเช็คประวัติย้อนหลังของผู้ใช้บริการ',
+      btnLabel: 'ดูประวัติการเรียกรถ',
+      icon: FileText,
+      colorClass: 'text-[#2563EB]',
+      borderHover: 'hover:border-[#2563EB]',
+      btnBg: 'bg-gradient-to-r from-[#2340A7] to-[#2563EB]',
       path: '/pub/service-info',
-      image: '/images/service_history_mockup.png',
     },
     {
       id: 'summary',
+      code: 'SERVICE // 03',
       title: 'ผลสรุปบริการ',
-      subtitle: 'Service Summary',
-      desc: 'ดูยอดรวมการใช้บริการ ส่วนแบ่งรายได้ และสถิติประจำเดือนของร้านคุณ',
-      btnLabel: 'ดูสรุปผล',
-      accentColor: '#0891b2',
+      subtitle: 'ANALYTICS & REVENUE SUMMARY',
+      desc: 'ดูยอดรวมการใช้บริการ ส่วนแบ่งรายได้พาร์ทเนอร์ และสถิติสรุปประจำเดือนของสถานบันเทิง',
+      btnLabel: 'ดูผลสรุปรายได้',
+      icon: BarChart3,
+      colorClass: 'text-[#059669]',
+      borderHover: 'hover:border-[#059669]',
+      btnBg: 'bg-gradient-to-r from-[#2340A7] to-[#2563EB]',
       path: '/pub/summary',
-      image: '/images/service_summary_mockup.png',
     },
   ]
 
+  const badges = [
+    { icon: CheckCircle2, label: 'สถานะบัญชี', value: 'อนุมัติแล้ว (APPROVED)', color: 'text-[#059669]' },
+    { icon: Shield, label: 'ระดับความปลอดภัย', value: 'สูงสุด (MAXIMUM HIGH)', color: 'text-[#2340A7]' },
+    { icon: Radio, label: 'ระบบจ่ายงาน', value: 'เปิดใช้งาน 24/7 ACTIVE', color: 'text-[#2563EB]' },
+  ]
+
   return (
-    <div style={s.page}>
+    <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
+      
+      {}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#2340A7]/10 rounded-full blur-[140px]"></div>
+      </div>
 
-      {/* ── Navbar ── */}
-      <nav style={s.navbar}>
-        <div style={s.navLeft}>
-          <div style={s.logoCircle}>🛡️</div>
-          <span style={s.logoText}>Safe<span style={s.logoAccent}>Seat</span></span>
-        </div>
-        <div style={s.navRight}>
-          <span style={s.navGreeting}>สวัสดี, <strong>{pubName}</strong></span>
-          <button style={s.logoutBtn} className="pub-logout-btn" onClick={handleLogout}>ออกจากระบบ</button>
-        </div>
-      </nav>
+      <div className="gradient-blur"></div>
+      <Navbar />
+      <FloatingNav />
 
-      {/* ── Header with beautiful Night Pub/Lounge background image ── */}
-      <header style={s.pageHeader}>
-        <div style={s.headerOverlay}>
-          <h1 style={s.pageTitle}>ยินดีต้อนรับ, {pubName} 👋</h1>
-          <p style={s.pageSubtitle}>เลือกเมนูด้านล่างเพื่อเริ่มต้นใช้งานระบบ SafeSeat สำหรับพาร์ทเนอร์ร้านค้าของคุณ</p>
-        </div>
-      </header>
+      <main className="relative z-10 max-w-7xl mx-auto px-6 pt-48 pb-24 flex flex-col gap-12">
+        
+        {}
+        <section className="flex flex-col items-start">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-card)] border border-[var(--color-border)] backdrop-blur-md mb-4">
+            <span className="w-2 h-2 rounded-full bg-[#2340A7] animate-pulse"></span>
+            <span className="text-xs font-bold text-[#2340A7] uppercase tracking-widest font-manrope">
+              VENUE PARTNER DASHBOARD
+            </span>
+          </div>
 
-      {/* ── Cards ── */}
-      <main style={s.main}>
-        <div style={s.cardGrid}>
-          {cards.map(card => (
-            <div key={card.id} style={s.card} className={`glass-card pub-card-${card.id}`}>
-              {/* Header Image */}
-              <img src={card.image} alt={card.title} style={s.cardImg} />
+          <h1 className="text-4xl sm:text-5xl font-bold font-manrope tracking-tight leading-tight mb-3 text-[var(--color-text)]">
+            ยินดีต้อนรับ,{' '}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2340A7] to-[#2563EB]">
+              {pubName}
+            </span>
+          </h1>
 
-              <div style={s.cardContent}>
-                {/* Text */}
-                <div style={s.cardText}>
-                  <span style={{ ...s.cardSubtitle, color: card.accentColor }}>{card.subtitle}</span>
-                  <h3 style={s.cardTitle}>{card.title}</h3>
-                  <p style={s.cardDesc}>{card.desc}</p>
+          <p className="text-base sm:text-lg text-[var(--color-text-muted)] leading-relaxed font-light max-w-none whitespace-nowrap">
+            จัดการบริการเรียกรถแทนให้ผู้ใช้บริการ ติดตามสถานะเดินทาง และดูสรุปผลสถิติรายได้ของสถานบริการ
+          </p>
+        </section>
+
+        {}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {cards.map((card) => {
+            const IconComp = card.icon
+            return (
+              <div
+                key={card.id}
+                onClick={() => router.push(card.path)}
+                className={`group p-8 bg-[var(--color-card)] border border-[var(--color-border)] ${card.borderHover} rounded-2xl shadow-xl flex flex-col justify-between gap-6 cursor-pointer transition-all duration-300 hover:-translate-y-1`}
+              >
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-mono font-bold tracking-widest text-[#2340A7]">
+                      {card.code}
+                    </span>
+                    <div className="p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl group-hover:scale-110 transition-transform">
+                      <IconComp className={`w-6 h-6 ${card.colorClass}`} />
+                    </div>
+                  </div>
+
+                  <span className={`text-xs font-bold tracking-wider ${card.colorClass}`}>
+                    {card.subtitle}
+                  </span>
+
+                  <h3 className="text-2xl font-bold font-manrope text-[var(--color-text)]">
+                    {card.title}
+                  </h3>
+
+                  <p className="text-sm text-[var(--color-text-muted)] leading-relaxed font-light">
+                    {card.desc}
+                  </p>
                 </div>
 
-                {/* Button */}
                 <button
-                  className="pub-card-btn"
-                  style={{
-                    ...s.cardBtn,
-                    backgroundColor: card.accentColor,
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => router.push(card.path)}
+                  onClick={(e) => { e.stopPropagation(); router.push(card.path); }}
+                  className="w-full py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1E40AF] !text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  style={{ color: '#ffffff' }}
                 >
-                  {card.btnLabel} →
+                  <span className="!text-white" style={{ color: '#ffffff' }}>{card.btnLabel}</span> <ArrowRight className="w-4 h-4 !text-white" style={{ color: '#ffffff' }} />
                 </button>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
-        {/* Stats row */}
-        <div style={s.statsRow}>
-          {[
-            { icon: '✅', label: 'บัญชีได้รับการอนุมัติ', value: 'Approved' },
-            { icon: '🛡️', label: 'ระดับความปลอดภัย', value: 'สูงสุด' },
-            { icon: '📞', label: 'ช่องทางติดต่อ', value: '24/7' },
-          ].map((item, i) => (
-            <div key={i} style={s.statItem}>
-              <span style={{ fontSize: 20 }}>{item.icon}</span>
-              <div>
-                <div style={s.statLabel}>{item.label}</div>
-                <div style={s.statValue}>{item.value}</div>
+        {}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {badges.map((b, i) => {
+            const IconComp = b.icon
+            return (
+              <div key={i} className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl flex items-center gap-4 shadow-md">
+                <div className="p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shrink-0">
+                  <IconComp className={`w-6 h-6 ${b.color}`} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-mono font-bold tracking-wider text-[var(--color-text-muted)] uppercase">
+                    {b.label}
+                  </span>
+                  <span className={`text-sm font-bold font-manrope mt-0.5 ${b.color}`}>
+                    {b.value}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
+
       </main>
 
-      <footer style={s.footer}>
-        © 2026 Safe Seat Application. All rights reserved.
-      </footer>
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap');
-        * { box-sizing: border-box; font-family: 'Kanit', 'Inter', sans-serif; }
-        .pub-card-request:hover, .pub-card-summary:hover, .pub-card-list:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.09), 0 0 0 1px rgba(79, 70, 229, 0.12) !important;
-          border-color: #c7d2fe !important;
-        }
-        .pub-logout-btn:hover {
-          background: rgba(255,255,255,0.12) !important;
-          border-color: rgba(255,255,255,0.2) !important;
-        }
-        .pub-card-btn:hover {
-          filter: brightness(1.08);
-          transform: translateY(-1px);
-        }
-      `}</style>
+      <Footer />
     </div>
   )
 }
-
-const s: { [k: string]: React.CSSProperties } = {
-  page: {
-    minHeight: '100vh',
-    backgroundColor: '#f8fafc',
-    fontFamily: "'Kanit', 'Inter', sans-serif",
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  navbar: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '0 48px',
-    height: 64,
-    backgroundColor: '#0f172a',
-    position: 'sticky',
-    top: 0,
-    zIndex: 100,
-  },
-  navLeft: { display: 'flex', alignItems: 'center', gap: 10 },
-  logoCircle: {
-    width: 34, height: 34,
-    borderRadius: '8px',
-    backgroundColor: 'rgba(79, 70, 229, 0.15)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 17,
-    border: '1px solid rgba(99, 102, 241, 0.3)',
-  },
-  logoText: { fontSize: 18, fontWeight: 700, color: '#f1f5f9', letterSpacing: '-0.3px' },
-  logoAccent: { color: '#818cf8' },
-  navRight: { display: 'flex', alignItems: 'center', gap: 16 },
-  navGreeting: { fontSize: 13, color: '#94a3b8' },
-  logoutBtn: {
-    background: 'rgba(255,255,255,0.07)',
-    border: '1px solid rgba(255,255,255,0.12)',
-    borderRadius: 8,
-    padding: '6px 14px',
-    fontSize: 13,
-    color: '#cbd5e1',
-    cursor: 'pointer',
-    fontFamily: "'Kanit', sans-serif",
-    transition: 'background 150ms ease, border-color 150ms ease',
-  },
-  pageHeader: {
-    backgroundImage: "linear-gradient(160deg, #0b0f1a 0%, #1e1b4b 60%, #0f172a 100%), url('/images/pub_dashboard_bg.png')",
-    backgroundBlendMode: 'overlay',
-    backgroundPosition: 'center',
-    backgroundSize: 'cover',
-    color: '#ffffff',
-    padding: '64px 48px 56px',
-    textAlign: 'center',
-    borderBottom: '1px solid rgba(99, 102, 241, 0.15)',
-  },
-  headerOverlay: {
-    maxWidth: 680,
-    margin: '0 auto',
-  },
-  pageTitle: {
-    fontSize: 30,
-    fontWeight: 700,
-    margin: '0 0 10px 0',
-    lineHeight: 1.3,
-    letterSpacing: '-0.5px',
-  },
-  pageSubtitle: {
-    fontSize: 15,
-    color: 'rgba(255, 255, 255, 0.7)',
-    margin: 0,
-    lineHeight: 1.65,
-    fontWeight: 400,
-  },
-  main: {
-    flex: 1,
-    padding: '40px 24px 60px',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  cardGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: 24,
-    width: '100%',
-    maxWidth: 1020,
-    marginBottom: 32,
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    border: '1px solid #e2e8f0',
-    overflow: 'hidden',
-    transition: 'box-shadow 250ms cubic-bezier(0.16, 1, 0.3, 1), border-color 250ms ease, transform 250ms cubic-bezier(0.16, 1, 0.3, 1)',
-    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.03)',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  cardImg: {
-    width: '100%',
-    height: '140px',
-    objectFit: 'cover',
-  },
-  cardContent: {
-    padding: '20px 24px 24px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 16,
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  cardText: { display: 'flex', flexDirection: 'column', gap: 4 },
-  cardSubtitle: {
-    fontSize: 11,
-    fontWeight: 700,
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.7px',
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 700,
-    color: '#0f172a',
-    margin: '2px 0 0',
-    letterSpacing: '-0.2px',
-  },
-  cardDesc: {
-    fontSize: 13.5,
-    color: '#64748b',
-    lineHeight: 1.6,
-    margin: '4px 0 0',
-    fontWeight: 400,
-  },
-  cardBtn: {
-    border: 'none',
-    borderRadius: 10,
-    padding: '11px 18px',
-    color: '#ffffff',
-    fontSize: 14,
-    fontWeight: 600,
-    fontFamily: "'Kanit', sans-serif",
-    cursor: 'pointer',
-    transition: 'filter 150ms ease, transform 150ms ease',
-    letterSpacing: '0.1px',
-  },
-  statsRow: {
-    display: 'flex',
-    gap: 0,
-    backgroundColor: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: 14,
-    padding: '18px 28px',
-    width: '100%',
-    maxWidth: 1020,
-    boxShadow: '0 1px 4px rgba(15, 23, 42, 0.04)',
-  },
-  statItem: {
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-    padding: '0 20px',
-    borderRight: '1px solid #f1f5f9',
-  },
-  statLabel: { fontSize: 12, color: '#94a3b8', marginBottom: 2, fontWeight: 400 },
-  statValue: { fontSize: 14, fontWeight: 700, color: '#0f172a' },
-  footer: {
-    padding: '20px 48px',
-    borderTop: '1px solid #f1f5f9',
-    textAlign: 'center',
-    fontSize: 12,
-    color: '#94a3b8',
-    backgroundColor: '#ffffff',
-  },
-}
-

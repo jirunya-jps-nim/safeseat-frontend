@@ -1,98 +1,78 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// app/page.tsx
-// หน้าแรกของระบบ SafeSeat (Home Page) - ตรงตาม Mockup Wireframe
-// ═══════════════════════════════════════════════════════════════
 
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
+import FloatingNav from '@/components/ui/FloatingNav'
 import api from '@/services/api'
+import { useTheme } from '@/components/ThemeContext'
+import { ArrowRight, Search, Shield, Zap, Car, Star, Bot, Code, Layers, Check, User, MapPin, Clock, ShieldCheck, Sparkles, PhoneCall, CheckCircle2 } from 'lucide-react'
 
-const SLIDES = [
-  {
-    title: 'SafeSeat แพลตฟอร์มป้องกันอุบัติเหตุเมาแล้วขับ',
-    subtitle: 'ส่งคุณและรถยนต์กลับบ้านปลอดภัย ไร้กังวลเรื่องการเดินทางขากลับ',
-    badge: '🛡️ มาตรฐานความปลอดภัยสูงสุด',
-    image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=900&auto=format&fit=crop',
-  },
-  {
-    title: 'บริการเรียกพนักงานขับรถแทน (Customer)',
-    subtitle: 'คนขับมืออาชีพขับรถของคุณส่งถึงบ้าน ปลอดภัยและมั่นใจทุกเส้นทาง',
-    badge: '📱 ปลอดภัยตลอดเส้นทางด้วยคนขับส่วนตัว',
-    image: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?q=80&w=900&auto=format&fit=crop',
-  },
-  {
-    title: 'พาร์ทเนอร์ร้านค้าและสถานบันเทิง (Venues)',
-    subtitle: 'เรียกรถให้ลูกค้ากลับบ้านปลอดภัย พร้อมสิทธิประโยชน์โปรโมทร้านค้า',
-    badge: '🏪 ยกระดับภาพลักษณ์ความปลอดภัยของร้าน',
-    image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=900&auto=format&fit=crop',
-  },
-  {
-    title: 'พนักงานขับรถแทน SafeSeat (Drivers)',
-    subtitle: 'สร้างรายได้เสริมมั่นคง เลือกรับงานและวันเวลาได้อิสระตามต้องการ',
-    badge: '💼 รายได้เสริมที่มั่นคง เวลางานยืดหยุ่น',
-    image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?q=80&w=900&auto=format&fit=crop',
-  }
-]
+// แผนที่จริงแบบ Interactive แสดงสถานบันเทิงจริงในเชียงใหม่
+const ChiangMaiHeroMap = dynamic(() => import('@/components/ui/ChiangMaiHeroMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full min-h-[420px] rounded-3xl bg-slate-100 dark:bg-slate-900 animate-pulse flex items-center justify-center border border-slate-200 dark:border-slate-800">
+      <span className="text-xs font-bold text-slate-400">กำลังโหลดแผนที่เชียงใหม่...</span>
+    </div>
+  )
+})
 
 const encodeId = (id: number | string | undefined) => {
   if (!id) return '';
-  const offset = 100000000;
-  const num = Number(id);
-  if (isNaN(num)) return String(id);
-  return (offset + num).toString(36).toUpperCase();
+  return String(id);
 };
 
 const decodeId = (input: string) => {
   const clean = input.replace('#', '').trim();
   if (!clean) return null;
-  if (/^\d+$/.test(clean) && clean.length < 6) {
-    return parseInt(clean, 10);
-  }
-  const offset = 100000000;
-  const num = parseInt(clean.toLowerCase(), 36);
-  if (isNaN(num)) return null;
-  const decoded = num - offset;
-  return decoded > 0 ? decoded : null;
+  const num = parseInt(clean, 10);
+  return isNaN(num) ? null : num;
 };
 
+// หน้าหลักเว็บไซต์ SafeSeat (Landing Page) & ระบบค้นหาติดตามการเดินทางเรียลไทม์
 export default function HomePage() {
   const router = useRouter()
-  const [activeSlide, setActiveSlide] = useState(0)
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
 
-  // Search states for customer / acquaintance tracking
+  // สถานะค้นหารหัสติดตามการเดินทาง
   const [searchCode, setSearchCode] = useState('')
   const [searchError, setSearchError] = useState('')
   const [searching, setSearching] = useState(false)
+  const [multipleMatches, setMultipleMatches] = useState<any[] | null>(null)
 
-  const handleSearchCode = async () => {
+  // ค้นหารหัสบริการและเปิดแท็บใหม่ติดตามสถานะ
+  const handleSearchCode = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     const cleanInput = searchCode.replace('#', '').trim()
     if (!cleanInput) return
     setSearchError('')
     setSearching(true)
+    setMultipleMatches(null)
 
     const decodedId = decodeId(cleanInput)
     if (!decodedId) {
-      setSearchError('❌ รหัสการเรียกไม่ถูกต้อง')
+      setSearchError('❌ ไม่พบรหัสบริการนี้ กรุณาตรวจสอบอีกครั้ง')
       setSearching(false)
       return
     }
 
     try {
       const res = await api.get(`/pub/service-request/${decodedId}`)
-      if (res.data.success && res.data.data) {
-        if (res.data.data.requestType === 'user') {
-          // ถ้างานถูกสร้างขึ้นโดย User ให้ส่งไปหน้าติดตามผู้ใช้ทั่วไป (/trip) โดยใช้ไอดีตรงๆ
-          router.push(`/trip?id=${decodedId}`)
+      if (res.data.success) {
+        if (res.data.isMultiple && res.data.matches && res.data.matches.length > 0) {
+          setMultipleMatches(res.data.matches)
+        } else if (res.data.data) {
+          const targetUrl = res.data.data.requestType === 'user' ? `/trip?id=${decodedId}` : `/tracking?id=${decodedId}`
+          window.open(targetUrl, '_blank')
         } else {
-          // ถ้างานถูกสร้างขึ้นโดย Pub ให้ส่งไปหน้าติดตามทางผ่านร้านค้า (/tracking) โดยใช้รหัสบีบอัด
-          const alphaCode = encodeId(decodedId)
-          router.push(`/tracking?id=${alphaCode}`)
+          setSearchError('❌ ไม่พบข้อมูลบริการสำหรับรหัสนี้')
         }
       } else {
-        setSearchError('❌ ไม่พบข้อมูลการบริการสำหรับรหัสนี้')
+        setSearchError('❌ ไม่พบข้อมูลบริการสำหรับรหัสนี้')
       }
     } catch (err) {
       setSearchError('❌ ไม่พบข้อมูลการบริการสำหรับรหัสนี้ หรือรหัสไม่ถูกต้อง')
@@ -101,689 +81,583 @@ export default function HomePage() {
     }
   }
 
-  // Auto-play slider
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % SLIDES.length)
-    }, 4500)
-    return () => clearInterval(timer)
-  }, [])
-
-  const nextSlide = () => {
-    setActiveSlide((prev) => (prev + 1) % SLIDES.length)
-  }
-
-  const prevSlide = () => {
-    setActiveSlide((prev) => (prev - 1 + SLIDES.length) % SLIDES.length)
-  }
-
-  const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  const handleRegisterClick = () => {
-    router.push('/register')
-  }
-
   return (
-    <div style={styles.page}>
+    <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
+      
+      {/* Background Gradients & Effects */}
+      <div className="fixed inset-0 z-0 pointer-events-none bg-[var(--color-bg)] transition-colors duration-300">
+        <div className="absolute top-0 left-0 w-[1px] h-[1px] bg-transparent stars-1 animate-[animStar_50s_linear_infinite]"></div>
+        <div className="absolute top-0 left-0 w-[2px] h-[2px] bg-transparent stars-2 animate-[animStar_80s_linear_infinite]"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[850px] bg-[#2340A7]/10 rounded-full blur-[150px]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(35,64,167,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(35,64,167,0.05)_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(circle_at_center,black_40%,transparent_80%)]"></div>
+      </div>
+
+      {/* Top Gradient Blur */}
+      <div className="gradient-blur"></div>
+
+      {/* Navbar */}
       <Navbar />
 
-      {/* ── ส่วนที่ 1: Slideshow Banner (ความกว้างเท่าหน้าจอ, สูง 360px และใช้ภาพถ่ายจริงประกอบสไลด์) ── */}
-      <section style={styles.sliderSection}>
-        <div className="home-slider-container" style={styles.sliderContainerInline}>
-          {/* Arrow Left */}
-          <button onClick={prevSlide} className="arrow-btn" style={styles.arrowLeft} aria-label="Previous Slide">
-            ◀
-          </button>
-
-          {/* Slide Layout */}
-          <div className="home-slide-grid" style={styles.slideGridInline}>
-            {/* Left side: Text Content */}
-            <div className="home-slide-text" style={styles.slideTextContainerInline}>
-              <div style={styles.slideBadge}>
-                {SLIDES[activeSlide].badge}
-              </div>
-              <h2 style={styles.slideTitle}>
-                {SLIDES[activeSlide].title}
-              </h2>
-              <p style={styles.slideSubtitle}>
-                {SLIDES[activeSlide].subtitle}
-              </p>
-            </div>
-
-            {/* Right side: Blended Photo */}
-            <div className="home-slide-image" style={styles.slideImageContainerInline}>
-              <div style={styles.imageGradientOverlay} />
-              <img
-                src={SLIDES[activeSlide].image}
-                alt={SLIDES[activeSlide].title}
-                style={styles.slideImage}
-              />
-            </div>
-          </div>
-
-          {/* Arrow Right */}
-          <button onClick={nextSlide} className="arrow-btn" style={styles.arrowRight} aria-label="Next Slide">
-            ▶
-          </button>
-
-          {/* Dot Indicators */}
-          <div style={styles.dotsContainer}>
-            {SLIDES.map((_, index) => (
-              <div
-                key={index}
-                onClick={() => setActiveSlide(index)}
-                style={{
-                  ...styles.dot,
-                  backgroundColor: index === activeSlide ? '#ffffff' : 'rgba(255, 255, 255, 0.4)',
-                  width: index === activeSlide ? '24px' : '8px',
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <main style={styles.main}>
-        {/* ── ส่วนที่ 2: Logo & Main Slogan ── */}
-        <section style={styles.sloganSection}>
-          <div style={styles.logoBadge}>
-            <span style={styles.logoBadgeIcon}>🛡️</span> SafeSeat
-          </div>
-          <h1 style={styles.sloganTitle}>
-            แพลตฟอร์มสนับสนุนการป้องกันเมาแล้วขับด้วยบริการผู้ขับขี่แทน
-          </h1>
-
-          {/* ช่องค้นหารหัสการเรียกสำหรับผู้ใช้หรือคนรู้จัก */}
-          <div style={{ width: '100%', maxWidth: 600, margin: '0 auto 28px', padding: '0 20px', textAlign: 'center' }}>
-            <div style={{
-              display: 'flex',
-              gap: 8,
-              backgroundColor: '#ffffff',
-              padding: 6,
-              borderRadius: 16,
-              border: searchError ? '2px solid #ef4444' : '2px solid #cbd5e1',
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-              transition: 'all 0.2s'
-            }}>
-              <input 
-                type="text"
-                placeholder="🔍 ใส่รหัสการเรียก (เช่น 1NJCHY) เพื่อค้นหาและติดตาม..."
-                value={searchCode}
-                onChange={(e) => setSearchCode(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleSearchCode(); }}
-                style={{
-                  flex: 1,
-                  border: 'none',
-                  outline: 'none',
-                  padding: '12px 12px 12px 16px',
-                  fontSize: 14,
-                  fontFamily: "'Prompt', sans-serif",
-                  backgroundColor: 'transparent',
-                  color: '#0f172a',
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleSearchCode}
-                disabled={searching}
-                style={{
-                  backgroundColor: '#4f46e5',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: 12,
-                  padding: '12px 24px',
-                  fontWeight: 700,
-                  fontSize: 14,
-                  cursor: searching ? 'not-allowed' : 'pointer',
-                  fontFamily: "'Prompt', sans-serif",
-                  transition: 'all 0.2s',
-                  opacity: searching ? 0.7 : 1,
-                  boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)',
-                }}
-              >
-                {searching ? 'ค้นหา...' : 'ค้นหา'}
-              </button>
-            </div>
-            {searchError && (
-              <p style={{ color: '#ef4444', fontSize: 13, marginTop: 10, textAlign: 'center', fontWeight: 600, margin: '10px 0 0' }}>
-                {searchError}
-              </p>
+      <main className="relative z-10">
+        
+        {/* =========================================================================
+            SECTION 1: HERO & REALTIME TRACKING SEARCH (2-COLUMN WHITE THEME LAYOUT)
+            ========================================================================= */}
+        <section className={`relative min-h-[90vh] flex items-center justify-center pt-32 sm:pt-36 pb-20 px-6 sm:px-10 lg:px-12 overflow-hidden transition-colors duration-500 ${
+          isDark 
+            ? 'bg-[#050714]' 
+            : 'bg-gradient-to-b from-[#FFFFFF] via-[#F8FAFC] to-[#EFF6FF]/60'
+        }`}>
+          
+          {/* Subtle Background Glows */}
+          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+            {isDark ? (
+              <>
+                <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] bg-[#2340A7]/15 rounded-full blur-[140px]"></div>
+                <div className="absolute top-1/2 right-10 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[130px]"></div>
+              </>
+            ) : (
+              <>
+                <div className="absolute top-10 left-10 w-[550px] h-[550px] bg-blue-100/50 rounded-full blur-[120px]"></div>
+                <div className="absolute bottom-10 right-10 w-[600px] h-[600px] bg-indigo-50/60 rounded-full blur-[140px]"></div>
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(35,64,167,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(35,64,167,0.03)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black_60%,transparent_90%)]"></div>
+              </>
             )}
           </div>
 
-          {/* ปุ่มลัดเพื่อนำทางไปลงทะเบียน */}
-          <button onClick={handleRegisterClick} style={styles.registerCTA}>
-            ร่วมโครงการกับเราวันนี้ →
-          </button>
+          <div className="max-w-7xl w-full mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center">
+            
+            {/* LEFT COLUMN: HERO HEADLINE & SEARCH */}
+            <div className="lg:col-span-7 flex flex-col items-start text-left">
+
+              {/* Main Headline */}
+              <h1 className={`text-3xl sm:text-4xl md:text-5xl lg:text-[50px] xl:text-[54px] font-black tracking-tight font-manrope leading-[1.22] mb-6 animate-fade-up ${
+                isDark 
+                  ? 'text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]' 
+                  : 'text-[#0F172A]'
+              }`} style={{ animationDelay: '0.1s' }}>
+                <span className="block font-black">
+                  ทุกค่ำคืนมีผู้ให้บริการขับรถ
+                </span>
+                <span className="block font-black mt-1.5 whitespace-nowrap">
+                  พากลับบ้านอย่าง{' '}
+                  <span className={`font-black text-transparent bg-clip-text ${
+                    isDark 
+                      ? 'bg-gradient-to-r from-blue-400 via-sky-300 to-cyan-300' 
+                      : 'bg-gradient-to-r from-[#1D358F] via-[#2563EB] to-[#0044C9]'
+                  }`}>
+                    ปลอดภัย
+                  </span>
+                </span>
+              </h1>
+
+              {/* Sub-headline */}
+              <p className={`text-sm sm:text-base md:text-lg max-w-xl mb-8 leading-relaxed font-medium animate-fade-up ${
+                isDark 
+                  ? 'text-slate-300' 
+                  : 'text-[#334155]'
+              }`} style={{ animationDelay: '0.2s' }}>
+                ผู้ขับขี่แทนมืออาชีพที่ผ่านการตรวจสอบประวัติ นำทางด้วย GPS แบบเรียลไทม์ ส่งคุณและรถของคุณกลับถึงบ้าน โดยไม่ต้องกังวลเรื่องด่านตรวจหรืออุบัติเหตุ
+              </p>
+
+              {/* Live Tracking Search Box */}
+              <div className="w-full max-w-xl mb-7 animate-fade-up" style={{ animationDelay: '0.3s' }}>
+                <form onSubmit={handleSearchCode} className={`flex flex-col sm:flex-row items-center gap-2 p-2 rounded-2xl sm:rounded-full backdrop-blur-2xl border transition-all ${
+                  isDark 
+                    ? 'bg-slate-900/90 border-white/20 shadow-[0_15px_45px_rgba(0,0,0,0.6)]' 
+                    : 'bg-white border-slate-300/90 shadow-[0_10px_35px_rgba(35,64,167,0.12)] hover:border-blue-400'
+                }`}>
+                  <div className="flex-1 flex items-center gap-3 px-4 py-2 w-full">
+                    <Search className={`w-5 h-5 shrink-0 ${isDark ? 'text-cyan-400' : 'text-[#2340A7]'}`} />
+                    <input
+                      type="text"
+                      placeholder="ป้อนรหัสติดตามบริการ..."
+                      value={searchCode}
+                      onChange={(e) => setSearchCode(e.target.value)}
+                      style={{ background: 'transparent', backgroundColor: 'transparent', boxShadow: 'none' }}
+                      className={`w-full !bg-transparent text-sm focus:outline-none font-bold border-none ${
+                        isDark ? 'text-white placeholder-slate-400' : 'text-[#0F172A] placeholder-slate-400'
+                      }`}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={searching}
+                    style={{ color: '#ffffff' }}
+                    className={`w-full sm:w-auto px-7 py-3.5 !text-white font-extrabold text-sm tracking-wide rounded-xl sm:rounded-full transition-all shadow-md flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer shrink-0 ${
+                      isDark 
+                        ? 'bg-gradient-to-r from-[#2563EB] to-cyan-600 hover:from-[#1D4ED8] hover:to-cyan-700 hover:shadow-[0_0_25px_rgba(34,211,238,0.5)]' 
+                        : 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] hover:shadow-[0_4px_18px_rgba(35,64,167,0.35)]'
+                    }`}
+                  >
+                    <span style={{ color: '#ffffff' }}>{searching ? 'กำลังค้นหา...' : 'ติดตามสถานะ'}</span>
+                    <ArrowRight className="w-4 h-4 text-white" style={{ color: '#ffffff' }} />
+                  </button>
+                </form>
+
+                {/* Helper Example Code Tag */}
+                <div className={`mt-3.5 flex flex-wrap items-center gap-2 text-xs font-semibold ${
+                  isDark ? 'text-slate-300' : 'text-[#475569]'
+                }`}>
+                  <span>ตัวอย่างรหัสบริการ:</span>
+                  <span className={`px-3 py-0.5 rounded-lg font-black font-mono shadow-xs border ${
+                    isDark 
+                      ? 'bg-slate-900/90 border-cyan-500/30 text-cyan-300' 
+                      : 'bg-blue-50 border-blue-200 text-[#1D358F]'
+                  }`}>
+                    79
+                  </span>
+                </div>
+
+                {searchError && <p className="mt-3 text-sm text-red-600 font-black">{searchError}</p>}
+              </div>
+
+              {/* CTA Button */}
+              <div className="animate-fade-up" style={{ animationDelay: '0.4s' }}>
+                <button 
+                  onClick={() => router.push('/register')}
+                  className={`px-6 py-3.5 rounded-2xl border font-black text-sm transition-all duration-300 flex items-center gap-2.5 shadow-md cursor-pointer group ${
+                    isDark
+                      ? 'bg-slate-900/80 border-slate-700 text-white hover:bg-slate-800'
+                      : 'bg-white border-slate-300 text-[#0F172A] hover:bg-slate-50 hover:border-slate-400 hover:shadow-lg'
+                  }`}
+                >
+                  <span>เริ่มสมัครใช้งานระบบ</span>
+                  <ArrowRight className="w-4 h-4 text-[#2340A7] transition-transform group-hover:translate-x-1" />
+                </button>
+              </div>
+
+            </div>
+
+            {/* RIGHT COLUMN: REAL CHIANG MAI INTERACTIVE MAP WITH AUTHENTIC ENTERTAINMENT VENUES */}
+            <div className="lg:col-span-5 w-full flex justify-center lg:justify-end animate-fade-up min-h-[440px] sm:min-h-[480px] lg:min-h-[500px]" style={{ animationDelay: '0.2s' }}>
+              <ChiangMaiHeroMap />
+            </div>
+
+          </div>
         </section>
 
-        {/* ── ส่วนที่ 3: Section Tabs / Navigation (ผู้ใช้งาน / ผู้ประกอบการ / ผู้ขับขี่) ── */}
-        <div className="home-section-tabs" style={styles.sectionTabsInline}>
-          <div className="tab-btn" style={styles.tabItem} onClick={() => scrollToSection('user-section')}>ผู้ใช้งาน</div>
-          <div className="tab-btn" style={styles.tabItem} onClick={() => scrollToSection('pub-section')}>ผู้ประกอบการสถานบันเทิง</div>
-          <div className="tab-btn" style={styles.tabItem} onClick={() => scrollToSection('driver-section')}>ผู้ให้บริการขับรถ</div>
+        {/* =========================================================================
+            SECTION 2: SAFE SERVICE JOURNEY (3 STEPS WITH CINEMATIC PHOTO)
+            ========================================================================= */}
+        <section className="py-24 px-6 relative border-t border-[var(--color-border)] bg-[var(--color-surface)]/40">
+          <div className="max-w-7xl mx-auto">
+            
+            <div className="text-center max-w-5xl mx-auto mb-16">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-[#2340A7] text-xs font-bold uppercase tracking-wider mb-4">
+                <Shield className="w-3.5 h-3.5" /> ขั้นตอนการเดินทางที่อุ่นใจ
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-[var(--color-text)] tracking-tight font-manrope sm:whitespace-nowrap">
+                3 ขั้นตอนง่ายๆ ส่งคุณและรถยนต์กลับถึงบ้าน{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2340A7] to-[#2563EB]">
+                  อย่างปลอดภัย
+                </span>
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              
+              {/* Left Column: Cinematic Safe Arrival Photo */}
+              <div className="lg:col-span-6 relative rounded-3xl overflow-hidden border border-[var(--color-border)] shadow-2xl group">
+                <img 
+                  src="/images/safeseat_service_journey.png" 
+                  alt="Safe arrival and car handover by verified professional driver" 
+                  className="w-full h-full min-h-[380px] max-h-[500px] object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 sm:p-8 text-white">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/90 text-white rounded-full text-xs font-extrabold w-fit mb-2 shadow-md backdrop-blur-sm">
+                    <CheckCircle2 className="w-3.5 h-3.5" /> ส่งมอบรถยนต์ถึงบ้านอย่างปลอดภัย
+                  </div>
+                  <h4 className="text-xl sm:text-2xl font-black font-manrope">อุ่นใจทุกเส้นทาง ไร้กังวลเรื่องอุบัติเหตุและด่านตรวจ</h4>
+                  <p className="text-xs sm:text-sm text-slate-200 mt-1 font-medium">ผู้ให้บริการขับรถผ่านการคัดกรองประวัติอาชญากรรม 100% พร้อมประกันภัยคุ้มครองยานพาหนะ</p>
+                </div>
+              </div>
+
+              {/* Right Column: 3 Step Cards */}
+              <div className="lg:col-span-6 flex flex-col gap-4">
+                
+                {/* Step 1 */}
+                <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[#2340A7]/50 transition-all flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-[#2340A7]/10 text-[#2340A7] border border-[#2340A7]/20 flex items-center justify-center font-black text-xl shrink-0 font-manrope">
+                    1
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-[var(--color-text)] font-manrope flex items-center gap-2">
+                      แจ้งสถานบันเทิงหรือกรอกรหัสเรียกผู้ให้บริการขับรถ
+                    </h3>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-1 font-medium leading-relaxed">
+                      เพียงแจ้งพนักงานสถานบันเทิง หรือสแกน QR หน้าร้านเพื่อส่งคำขอผู้ให้บริการขับรถ โดยไม่ต้องดาวน์โหลดแอปพลิเคชันให้ยุ่งยาก
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[#2340A7]/50 transition-all flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 border border-blue-500/20 flex items-center justify-center font-black text-xl shrink-0 font-manrope">
+                    2
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-[var(--color-text)] font-manrope flex items-center gap-2">
+                      ติดตามผู้ให้บริการขับรถและแชร์รหัสการเดินทางแบบเรียลไทม์
+                    </h3>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-1 font-medium leading-relaxed">
+                      ดูพิกัดผู้ให้บริการขับรถที่กำลังเดินทางมาถึงสถานบันเทิง ตรวจสอบรูปถ่าย ทะเบียนรถ และแชร์ลิงก์ติดตามสถานะให้คนใกล้ชิดได้ทันที
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-sm hover:border-[#2340A7]/50 transition-all flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center justify-center font-black text-xl shrink-0 font-manrope">
+                    3
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-[var(--color-text)] font-manrope flex items-center gap-2">
+                      ผู้ให้บริการขับรถพาส่งถึงบ้านพร้อมส่งมอบกุญแจรถยนต์
+                    </h3>
+                    <p className="text-sm text-[var(--color-text-muted)] mt-1 font-medium leading-relaxed">
+                      พักผ่อนบนรถส่วนตัวของคุณอย่างสบายใจ ผู้ให้บริการขับรถมืออาชีพจะขับรถยนต์ไปจอดที่บ้านคุณอย่างเรียบร้อยและปลอดภัย 100%
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 3: FEATURES & ECOSYSTEM BENTO GRID
+            ========================================================================= */}
+        <section className="py-24 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-16 text-center max-w-5xl mx-auto animate-fade-up">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black text-[var(--color-text)] tracking-tight font-manrope mb-4 sm:whitespace-nowrap">
+                ระบบปฏิบัติการเพื่อความปลอดภัย{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2340A7] to-[#2563EB]">
+                  ยามค่ำคืนยุคใหม่
+                </span>
+              </h2>
+              <p className="text-sm sm:text-base text-[var(--color-text-muted)] font-medium">
+                ยุติความเสี่ยงการขับขี่ขณะมึนเมา ด้วยแพลตฟอร์มผู้ให้บริการขับรถแทนที่ผ่านการตรวจสอบประวัติ พร้อมระบบติดตาม GPS เรียลไทม์
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              
+              {/* Feature 1: Large Bento */}
+              <div className="lg:col-span-5 group relative overflow-hidden p-8 border border-[var(--color-border)] bg-[var(--color-card)] rounded-3xl shadow-xl flex flex-col justify-between">
+                <div className="relative z-10 h-full flex flex-col justify-between">
+                  <div>
+                    <div className="mb-6 inline-flex p-3.5 rounded-2xl bg-[#2340A7]/15 border border-[#2340A7]/40 text-[#2340A7]">
+                      <Bot className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-black text-[var(--color-text)] font-manrope mb-4 tracking-tight">การจัดส่งงานผู้ให้บริการขับรถอัตโนมัติ</h3>
+                    <p className="text-[var(--color-text-muted)] text-base sm:text-lg leading-relaxed font-normal">
+                      เชื่อมต่อสถานบันเทิงพาร์ทเนอร์กับผู้ให้บริการขับรถมืออาชีพใกล้เคียงในทันที ผ่านการตรวจสอบประวัติอาชญากรรม คำนวณเส้นทางอัตโนมัติ และมีประกันภัยคุ้มครองทุกการเดินทาง
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Feature 2 & Sub features */}
+              <div className="lg:col-span-7 flex flex-col gap-5">
+                
+                {/* Horizontal Bento */}
+                <div className="group relative overflow-hidden p-8 border border-[var(--color-border)] bg-[var(--color-card)] rounded-3xl shadow-md flex flex-col justify-between">
+                  <div className="relative z-10 flex flex-col h-full justify-between">
+                    <div className="mb-4 inline-flex p-3 rounded-2xl bg-blue-500/15 border border-blue-500/40 text-blue-500 w-fit">
+                      <Code className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl sm:text-2xl font-black text-[var(--color-text)] font-manrope mb-2">แชร์รหัสติดตามสถานะเรียลไทม์</h3>
+                      <p className="text-[var(--color-text-muted)] text-sm sm:text-base font-normal leading-relaxed">
+                        แชร์รหัสการเดินทาง (#10000001) ให้กับครอบครัวหรือคนใกล้ชิด เพื่อติดตามพิกัดการเดินทางกลับบ้านของคุณแบบสดๆ ผ่านหน้าเว็บ
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2 Small Bento Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 flex-1">
+                  
+                  <div className="group relative overflow-hidden p-8 border border-[var(--color-border)] bg-[var(--color-card)] rounded-3xl shadow-md flex flex-col justify-between">
+                    <div className="relative z-10">
+                      <div className="mb-4 inline-flex p-3 rounded-2xl bg-blue-500/15 border border-blue-500/40 text-blue-500 w-fit">
+                        <Zap className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-black text-[var(--color-text)] font-manrope mb-2 leading-snug">ปุ่มแจ้งเหตุฉุกเฉิน Smart SOS</h3>
+                      <p className="text-xs sm:text-sm text-[var(--color-text-muted)] font-normal leading-relaxed">
+                        เชื่อมต่อสายด่วนฉุกเฉินพร้อมส่งพิกัด GPS แม่นยำทันทีที่เกิดเหตุ เพื่อความปลอดภัยสูงสุด
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="group relative overflow-hidden p-8 border border-[var(--color-border)] bg-[var(--color-card)] rounded-3xl shadow-md flex flex-col justify-between">
+                    <div className="relative z-10">
+                      <div className="mb-4 inline-flex p-3 rounded-2xl bg-indigo-500/15 border border-indigo-500/40 text-indigo-500 w-fit">
+                        <Layers className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-black text-[var(--color-text)] font-manrope mb-2 leading-snug">เครือข่ายผู้ให้บริการขับรถคัดกรองเข้มงวด</h3>
+                      <p className="text-xs sm:text-sm text-[var(--color-text-muted)] font-normal leading-relaxed">
+                        ตรวจสอบประวัติอาชญากรรม ใบอนุญาตขับขี่ และมีมาตรฐานบริการสุภาพ มารยาทดีเยี่ยม
+                      </p>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 3: TESTIMONIAL BANNER
+            ========================================================================= */}
+        <div className="w-full bg-gradient-to-r from-[#2340A7] via-[#1D358F] to-[#2563EB] py-20 px-6 my-12 text-white shadow-2xl">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="flex justify-center gap-1 text-yellow-300 mb-6">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-6 h-6 fill-current" />
+              ))}
+            </div>
+            <h3 className="text-3xl md:text-5xl font-extrabold font-manrope leading-tight">
+              "SafeSeat ยกระดับความปลอดภัยให้แก่ผู้ใช้บริการของสถานบันเทิงเราอย่างสมบูรณ์แบบ เรื่องที่เคยเป็นความเสี่ยงสูง กลายเป็นเรื่องง่ายและอุ่นใจในไม่กี่นาที"
+            </h3>
+          </div>
         </div>
 
-        {/* ── ส่วนที่ 4: Cards Layout (2 คอลัมน์ด้านบน) ── */}
-        <section className="home-two-col" style={styles.twoColumnGridInline}>
-          {/* Card A: ผู้ใช้งาน */}
-          <div id="user-section" style={{...styles.card, scrollMarginTop: '100px'}}>
-            <div style={styles.cardHeader}>
-              <h2 style={styles.cardTitle}>ผู้ใช้งาน</h2>
-              <span style={styles.greenDot}>●</span>
-            </div>
-            <ul style={styles.detailList}>
-              <li style={styles.listItem}>📱 เรียกใช้งานสะดวก รวดเร็ว ผ่านทางเว็บแอปพลิเคชัน SafeSeat</li>
-              <li style={styles.listItem}>🚗 พนักงานขับรถส่วนตัวเดินทางไปขับรถยนต์ของท่านส่งกลับถึงที่บ้านอย่างปลอดภัย</li>
-              <li style={styles.listItem}>🛡️ อุ่นใจด้วยประกันอุบัติเหตุคุ้มครองรถยนต์และผู้โดยสารตลอดระยะการบริการ</li>
-              <li style={styles.listItem}>💰 อัตราค่าบริการสมเหตุสมผล คำนวณตามระยะทางจริงอย่างโปร่งใส</li>
-              <li style={styles.listItem}>⭐ พนักงานขับรถทุกคนผ่านการอบรมและตรวจสอบประวัติอาชญากรรมอย่างละเอียด</li>
-              <li style={styles.listItem}>📞 บริการช่วยเหลือฉุกเฉินและติดต่อสอบถามปัญหาได้ตลอด 24 ชั่วโมง</li>
-            </ul>
-          </div>
-
-          {/* Card B: ผู้ให้บริการขับรถ */}
-          <div id="driver-section" style={{...styles.card, scrollMarginTop: '100px'}}>
-            <div style={styles.cardHeader}>
-              <h2 style={styles.cardTitle}>ผู้ให้บริการขับรถ</h2>
-              <span style={styles.greenDot}>●</span>
-            </div>
-            <ul style={styles.detailList}>
-              <li style={styles.listItem}>💸 สร้างรายได้เสริมรายวัน รับเงินทันทีหลังเสร็จสิ้นการบริการในแต่ละงาน</li>
-              <li style={styles.listItem}>⏰ กำหนดเวลาทำงานได้อิสระ เลือกรับงานตามวันและเวลาที่สะดวก</li>
-              <li style={styles.listItem}>🛡️ คุ้มครองความปลอดภัยด้วยระบบสนับสนุนช่วยเหลือและแจ้งเหตุ SOS ฉุกเฉิน</li>
-              <li style={styles.listItem}>📱 ระบบแอปพลิเคชันนำทางล้ำสมัย ช่วยวางแผนการเดินทางได้อย่างสะดวกแม่นยำ</li>
-              <li style={styles.listItem}>🎓 ได้รับการฝึกอบรมการขับขี่ปลอดภัยและการบริการระดับมืออาชีพ</li>
-              <li style={styles.listItem}>🤝 ชุมชนครอบครัวคนขับ SafeSeat ร่วมแชร์ประสบการณ์และช่วยเหลือซึ่งกันและกัน</li>
-            </ul>
-          </div>
-        </section>
-
-        {/* ── ส่วนที่ 5: Card C: ผู้ประกอบการสถานบันเทิง (เต็มความกว้างพร้อม 3 รูป) ── */}
-        <section id="pub-section" style={{...styles.fullWidthSection, scrollMarginTop: '100px'}}>
-          <div style={styles.card}>
-            <div style={styles.cardHeader}>
-              <h2 style={styles.cardTitle}>ผู้ประกอบการสถานบันเทิง</h2>
-              <span style={styles.greenDot}>●</span>
-            </div>
-            <p style={styles.cardSubText}>
-              รายละเอียดการเข้าร่วมเป็นร้านค้าพาร์ทเนอร์เพื่ออำนวยความสะดวกในระบบ และสิทธิประโยชน์ในการส่งลูกค้ากลับบ้านอย่างปลอดภัย
-            </p>
-
-            {/* แถวแสดงข้อมูลพาร์ทเนอร์ร้านค้า 3 คอลัมน์ */}
-            <div className="home-pic-grid3" style={styles.picGrid3Inline}>
-              <div className="info-pic-box" style={styles.picBoxCustom}>
-                <img 
-                  src="https://images.unsplash.com/photo-1556742044-3c52d6e88c62?q=80&w=600&auto=format&fit=crop" 
-                  alt="ระบบการจองที่หน้าร้าน" 
-                  style={styles.cardHeaderImage} 
-                />
-                <div style={styles.picTitle}>ระบบการจองที่หน้าร้าน</div>
-                <div style={styles.picLabel}>มีแท็บเล็ตและระบบจองบริการให้ที่หน้าร้าน เพื่ออำนวยความสะดวกในการเรียกรถให้ลูกค้าได้ทันที</div>
-              </div>
-              <div className="info-pic-box" style={styles.picBoxCustom}>
-                <img 
-                  src="/images/tracking_mockup.png" 
-                  alt="ระบบตรวจสอบสถานะลูกค้า" 
-                  style={styles.cardHeaderImage} 
-                />
-                <div style={styles.picTitle}>ระบบตรวจสอบสถานะลูกค้า</div>
-                <div style={styles.picLabel}>สามารถติดตามการเดินทางกลับบ้านของลูกค้าได้ผ่านแดชบอร์ด เพื่อความอุ่นใจและใส่ใจในความปลอดภัยของลูกค้า</div>
-              </div>
-              <div className="info-pic-box" style={styles.picBoxCustom}>
-                <img 
-                  src="https://images.unsplash.com/photo-1549465220-1a8b9238cd48?q=80&w=600&auto=format&fit=crop" 
-                  alt="โปรโมทและคะแนนสะสม" 
-                  style={styles.cardHeaderImage} 
-                />
-                <div style={styles.picTitle}>โปรโมทและคะแนนสะสม</div>
-                <div style={styles.picLabel}>โปรโมทร้านค้าพันธมิตรบนแอปพลิเคชัน SafeSeat พร้อมรับคะแนนสะสมแลกสิทธิประโยชน์พิเศษมากมาย</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── ส่วนที่ 6: Section Information (6 คอลัมน์/ช่อง) ── */}
-        <section style={styles.fullWidthSection}>
-          <div style={styles.card}>
-            <div style={styles.cardHeader}>
-              <h2 style={styles.cardTitle}>Information</h2>
-              <span style={styles.greenDot}>●</span>
+        {/* =========================================================================
+            SECTION 4: PRICING & SERVICES
+            ========================================================================= */}
+        <section className="py-32 px-6 bg-[var(--color-bg)] relative border-t border-[var(--color-border)]">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-20">
+              <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-text)] font-manrope mb-4">แพ็กเกจและประเภทบริการ</h2>
+              <p className="text-[var(--color-text-muted)] font-normal">เลือกแพ็กเกจบริการที่ตอบโจทย์ความต้องการของคุณหรือสถานประกอบการ</p>
             </div>
 
-            {/* ข้อมูลประโยชน์และการทำงานของแพลตฟอร์ม 6 ช่อง */}
-            <div className="home-info-grid6" style={styles.infoGrid6Inline}>
-              <div className="info-pic-box" style={styles.picBoxCustom}>
-                <img 
-                  src="/images/prevent_accidents.png" 
-                  alt="ป้องกันอุบัติเหตุ" 
-                  style={styles.cardHeaderImageSmall} 
-                />
-                <div style={styles.picTitle}>ป้องกันอุบัติเหตุ</div>
-                <div style={styles.picLabel}>ร่วมเป็นส่วนสำคัญในการลดอัตราการเกิดอุบัติเหตุบนท้องถนนจากการเมาแล้วขับ เพื่อความปลอดภัยของชีวิตและทรัพย์สิน</div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              
+              {/* Option 1: Personal Trip */}
+              <div className="p-8 border border-[var(--color-border)] bg-[var(--color-card)] hover:border-[#2340A7]/60 transition-all rounded-2xl flex flex-col justify-between shadow-lg">
+                <div>
+                  <h3 className="text-xl font-bold font-manrope mb-2 text-[var(--color-text)]">บริการขับรถส่วนบุคคล</h3>
+                  <p className="text-[var(--color-text-muted)] text-sm mb-8 h-10 font-normal">สำหรับบุคคลทั่วไปที่ต้องการพนักงานขับรถแทนขับรถส่วนตัวกลับบ้าน</p>
+                  <div className="mb-8 flex items-baseline gap-1">
+                    <span className="text-[var(--color-text-muted)]">฿</span>
+                    <span className="text-5xl font-extrabold text-[var(--color-text)]">300</span>
+                    <span className="text-[var(--color-text-muted)] text-sm font-semibold">/เริ่มต้น</span>
+                  </div>
+                  <ul className="space-y-4 mb-8">
+                    <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-medium">
+                      <Check className="w-4 h-4 text-[#2340A7]" /> 1 ผู้ให้บริการขับรถประจำเที่ยวรถ
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-medium">
+                      <Check className="w-4 h-4 text-[#2340A7]" /> รหัสติดตามสถานะ GPS เรียลไทม์
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-medium">
+                      <Check className="w-4 h-4 text-[#2340A7]" /> ประกันภัยคุ้มครองยานพาหนะ
+                    </li>
+                  </ul>
+                </div>
+                <button 
+                  onClick={() => router.push('/tracking')}
+                  className="w-full py-3.5 px-4 bg-[var(--color-surface)] hover:bg-[#2340A7]/15 text-[var(--color-text)] border border-[var(--color-border)] rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
+                >
+                  ติดตามสถานะการเดินทาง
+                </button>
               </div>
-              <div className="info-pic-box" style={styles.picBoxCustom}>
-                <img 
-                  src="/images/law_checkpoint.png" 
-                  alt="หลีกเลี่ยงกฎหมาย" 
-                  style={styles.cardHeaderImageSmall} 
-                />
-                <div style={styles.picTitle}>หลีกเลี่ยงกฎหมาย</div>
-                <div style={styles.picLabel}>ลดความเสี่ยงจากการโดนด่านตรวจวัดปริมาณแอลกอฮอล์ ถูกยึดใบขับขี่ หรือถูกดำเนินคดีทางกฎหมายที่มีโทษรุนแรง</div>
+
+              {/* Option 2: Venue Partner (Featured) */}
+              <div className="relative p-8 border-2 border-[#2340A7] bg-[var(--color-card)] shadow-[0_0_45px_rgba(35,64,167,0.25)] rounded-2xl flex flex-col justify-between scale-105 z-10">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white text-[10px] font-bold uppercase tracking-widest px-3.5 py-1 rounded-full shadow-md">
+                  แนะนำสำหรับสถานบันเทิง
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold font-manrope mb-2 text-[var(--color-text)]">พาร์ทเนอร์สถานบริการ</h3>
+                  <p className="text-[var(--color-text-muted)] text-sm mb-8 h-10 font-normal">สำหรับสถานบันเทิง บาร์ คาราโอเกะ ที่ดูแลรถผู้ใช้บริการหน้าร้าน</p>
+                  <div className="mb-8 flex items-baseline gap-1">
+                    <span className="text-[var(--color-text-muted)]">฿</span>
+                    <span className="text-5xl font-extrabold text-[var(--color-text)]">0</span>
+                    <span className="text-[var(--color-text-muted)] text-sm font-semibold">/ไม่มีค่าแรกเข้า</span>
+                  </div>
+                  <ul className="space-y-4 mb-8">
+                    <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-semibold">
+                      <Check className="w-4 h-4 text-[#2340A7]" /> ระบบเรียกผู้ให้บริการขับรถผ่านแท็บเล็ต/QR
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-semibold">
+                      <Check className="w-4 h-4 text-[#2340A7]" /> จัดส่งผู้ให้บริการขับรถถึงสถานบันเทิงเป็นลำดับแรก
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-semibold">
+                      <Check className="w-4 h-4 text-[#2340A7]" /> แดชบอร์ดตรวจสอบสถิติเรียลไทม์
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-semibold">
+                      <Check className="w-4 h-4 text-[#2340A7]" /> ประชาสัมพันธ์สถานบันเทิงบนเครือข่าย
+                    </li>
+                  </ul>
+                </div>
+                <button 
+                  onClick={() => router.push('/register/pub')}
+                  className="w-full py-3.5 px-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] !text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer"
+                  style={{ color: '#ffffff' }}
+                >
+                  สมัครพาร์ทเนอร์สถานบันเทิง
+                </button>
               </div>
-              <div className="info-pic-box" style={styles.picBoxCustom}>
-                <img 
-                  src="/images/car_parked_home.png" 
-                  alt="รถจอดปลอดภัยที่บ้าน" 
-                  style={styles.cardHeaderImageSmall} 
-                />
-                <div style={styles.picTitle}>รถจอดปลอดภัยที่บ้าน</div>
-                <div style={styles.picLabel}>ไม่ต้องเป็นห่วงรถยนต์ส่วนตัวทิ้งไว้ข้ามคืนที่สถานบันเทิง มีคนขับรถพาทั้งตัวคุณและรถยนต์ของคุณส่งถึงบ้านอย่างอุ่นใจ</div>
+
+              {/* Option 3: Driver Partner */}
+              <div className="p-8 border border-[var(--color-border)] bg-[var(--color-card)] hover:border-[#2340A7]/60 transition-all rounded-2xl flex flex-col justify-between shadow-lg">
+                <div>
+                  <h3 className="text-xl font-bold font-manrope mb-2 text-[var(--color-text)]">ผู้ให้บริการขับรถ</h3>
+                  <p className="text-[var(--color-text-muted)] text-sm mb-8 h-10 font-normal">สำหรับผู้ให้บริการขับรถมืออาชีพที่ต้องการสร้างรายได้เสริมที่มั่นคง</p>
+                  <div className="mb-8 flex items-baseline gap-1">
+                    <span className="text-[var(--color-text-muted)]">รายได้</span>
+                    <span className="text-4xl font-extrabold text-[var(--color-text)]">ยืดหยุ่น</span>
+                    <span className="text-[var(--color-text-muted)] text-sm font-semibold">/ถอนเงินได้ทุกวัน</span>
+                  </div>
+                  <ul className="space-y-4 mb-8">
+                    <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-medium">
+                      <Check className="w-4 h-4 text-[#2340A7]" /> เลือกรอบและเวลาทำงานอิสระ
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-medium">
+                      <Check className="w-4 h-4 text-[#2340A7]" /> ปุ่มแจ้งเหตุฉุกเฉินคุ้มครองผู้ให้บริการขับรถ
+                    </li>
+                    <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-medium">
+                      <Check className="w-4 h-4 text-[#2340A7]" /> โอนเงินรายได้เข้าบัญชีทุกวัน
+                    </li>
+                  </ul>
+                </div>
+                <button 
+                  onClick={() => router.push('/register/driver')}
+                  className="w-full py-3.5 px-4 bg-[var(--color-surface)] hover:bg-[#2340A7]/15 text-[var(--color-text)] border border-[var(--color-border)] rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
+                >
+                  สมัครเป็นผู้ให้บริการขับรถ
+                </button>
               </div>
-              <div className="info-pic-box" style={styles.picBoxCustom}>
-                <img 
-                  src="/images/driver_profile_check.png" 
-                  alt="คัดกรองประวัติคนขับ" 
-                  style={{ ...styles.cardHeaderImageSmall, objectPosition: 'center bottom' }} 
-                />
-                <div style={styles.picTitle}>คัดกรองประวัติคนขับ</div>
-                <div style={styles.picLabel}>คนขับรถทดแทนทุกคนผ่านการตรวจสอบประวัติอาชญากรรมโดยตรงจากหน่วยงานภาครัฐ เพื่อความปลอดภัยสูงสุดของผู้รับบริการ</div>
-              </div>
-              <div className="info-pic-box" style={styles.picBoxCustom}>
-                <img 
-                  src="/images/gps_navigation_phone.png" 
-                  alt="ติดตามเรียลไทม์ GPS" 
-                  style={styles.cardHeaderImageSmall} 
-                />
-                <div style={styles.picTitle}>ติดตามเรียลไทม์ GPS</div>
-                <div style={styles.picLabel}>ระบบ GPS ประสิทธิภาพสูงสำหรับการแสดงพิกัดแบบเรียลไทม์ ช่วยให้คุณระบุตำแหน่งของรถยนต์และผู้ขับรถได้ตลอดเวลา</div>
-              </div>
-              <div className="info-pic-box" style={styles.picBoxCustom}>
-                <img 
-                  src="/images/sos_emergency_button.png" 
-                  alt="ปุ่ม SOS ช่วยเหลือ" 
-                  style={styles.cardHeaderImageSmall} 
-                />
-                <div style={styles.picTitle}>ปุ่ม SOS ช่วยเหลือ</div>
-                <div style={styles.picLabel}>ฟังก์ชันความปลอดภัยอัจฉริยะ ปุ่ม SOS สำหรับส่งพิกัดแจ้งเหตุฉุกเฉินไปยังทีมสนับสนุนทันทีเมื่อเกิดสถานการณ์ผิดปกติ</div>
-              </div>
+
             </div>
           </div>
         </section>
+
       </main>
 
+      {/* Multiple Matches Modal Popup */}
+      {multipleMatches && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in" onClick={() => setMultipleMatches(null)}>
+          <div className={`border rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative overflow-hidden transition-all duration-300 ${
+            isDark ? 'bg-[#0B132B] border-slate-700/80 text-white' : 'bg-white border-slate-200 text-[#0F172A]'
+          }`} onClick={e => e.stopPropagation()}>
+            <div className={`flex justify-between items-center pb-4 border-b mb-6 ${
+              isDark ? 'border-slate-700/80' : 'border-slate-200'
+            }`}>
+              <div className={`flex items-center gap-2.5 text-lg font-black font-manrope ${
+                isDark ? 'text-white' : 'text-[#0F172A]'
+              }`}>
+                <span className={`p-2 rounded-xl ${
+                  isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-[#1D358F] border border-blue-200/80'
+                }`}>
+                  <Layers className="w-5 h-5" />
+                </span>
+                พบข้อมูล 2 รายการซ้ำกัน ({multipleMatches[0]?.requestid})
+              </div>
+              <button 
+                onClick={() => setMultipleMatches(null)}
+                className={`font-black text-sm px-2.5 py-1 rounded-full cursor-pointer transition-colors ${
+                  isDark ? 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-[#0F172A]'
+                }`}
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className={`text-sm mb-6 leading-relaxed font-bold ${
+              isDark ? 'text-slate-200' : 'text-[#0F172A]'
+            }`}>
+              เนื่องจากรหัสหมายเลข <span className={`font-black ${isDark ? 'text-blue-400' : 'text-[#1D358F]'}`}>#{multipleMatches[0]?.requestid}</span> มีบันทึกอยู่ทั้งในระบบเรียกรถของผู้ใช้บริการ และระบบพาร์ทเนอร์สถานบันเทิง กรุณาเลือกรายการที่คุณต้องการติดตาม:
+            </p>
+
+            <div className="flex flex-col gap-3.5 mb-6">
+              {multipleMatches.map((item, idx) => {
+                const isUser = item.requestType === 'user'
+                return (
+                  <div
+                    key={idx}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      const reqId = item.requestid
+                      setMultipleMatches(null)
+                      const targetUrl = isUser ? `/trip?id=${reqId}` : `/tracking?id=${reqId}`
+                      window.open(targetUrl, '_blank')
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        const reqId = item.requestid
+                        setMultipleMatches(null)
+                        const targetUrl = isUser ? `/trip?id=${reqId}` : `/tracking?id=${reqId}`
+                        window.open(targetUrl, '_blank')
+                      }
+                    }}
+                    className={`p-4 rounded-2xl border text-left transition-all hover:scale-[1.01] flex items-center justify-between gap-4 cursor-pointer shadow-xs ${
+                      isDark
+                        ? (isUser 
+                            ? 'bg-slate-900/90 border-blue-500/40 hover:border-blue-400 hover:bg-blue-950/60'
+                            : 'bg-slate-900/90 border-indigo-500/40 hover:border-indigo-400 hover:bg-indigo-950/60')
+                        : (isUser
+                            ? 'bg-blue-50/80 hover:bg-blue-100/80 border-blue-200 hover:border-[#2340A7] hover:shadow-md'
+                            : 'bg-indigo-50/80 hover:bg-indigo-100/80 border-indigo-200 hover:border-[#2340A7] hover:shadow-md')
+                    }`}
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <div className="p-3 rounded-xl !text-white shadow-md bg-gradient-to-r from-[#2340A7] to-[#2563EB]">
+                        {isUser ? <User className="w-5 h-5 text-white" /> : <Shield className="w-5 h-5 text-white" />}
+                      </div>
+                      <div>
+                        <div 
+                          className="text-base font-black tracking-tight"
+                          style={{ color: isDark ? '#ffffff' : '#0F172A' }}
+                        >
+                          {isUser ? 'รายการของผู้ใช้บริการ (User Trip)' : 'รายการของสถานบันเทิง (Venue Order)'}
+                        </div>
+                        <div 
+                          className="text-xs mt-1 font-bold"
+                          style={{ color: isDark ? '#cbd5e1' : '#334155' }}
+                        >
+                          ผู้ใช้บริการ: <span style={{ color: isDark ? '#ffffff' : '#0F172A', fontWeight: 900 }}>{item.custname || '—'}</span> • สถานะ: <span style={{ color: isDark ? '#60a5fa' : '#1D358F', fontWeight: 900 }}>{item.requeststatus}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <ArrowRight 
+                      className="w-5 h-5 shrink-0" 
+                      style={{ color: isDark ? '#60a5fa' : '#1D358F' }} 
+                    />
+                  </div>
+                )
+              })}
+            </div>
+
+            <button
+              onClick={() => setMultipleMatches(null)}
+              className={`w-full py-3.5 font-black text-xs rounded-full transition-colors cursor-pointer border ${
+                isDark 
+                  ? 'bg-slate-800/80 border-slate-700 text-slate-200 hover:bg-slate-700 hover:text-white' 
+                  : 'bg-slate-100 border-slate-300 text-[#0F172A] hover:bg-slate-200'
+              }`}
+            >
+              ปิดหน้าต่าง
+            </button>
+          </div>
+        </div>
+      )}
+
+      {}
       <Footer />
 
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Prompt', sans-serif; }
-        
-        .arrow-btn {
-          transition: all 0.2s ease;
-        }
-        .arrow-btn:hover {
-          background-color: rgba(255, 255, 255, 0.25) !important;
-          transform: scale(1.05) translateY(-50%);
-        }
-        
-        .tab-btn {
-          border-bottom: 2px solid transparent !important;
-          transition: all 0.2s ease !important;
-        }
-        .tab-btn:hover {
-          color: #4f46e5 !important;
-          border-color: #cbd5e1 !important;
-        }
-        
-        .info-pic-box {
-          transition: all 0.3s ease;
-        }
-        .info-pic-box:hover {
-          transform: translateY(-4px);
-          border-color: #cbd5e1 !important;
-          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04) !important;
-        }
-      `}</style>
     </div>
   )
-}
-
-// ─── Styles ─────────────────────────────────────────────────────
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: '100vh',
-    background: '#f8fafc',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  main: {
-    flex: 1,
-    width: '100%',
-    maxWidth: '1280px',
-    margin: '0 auto',
-    padding: '36px 24px 72px',
-    boxSizing: 'border-box',
-  },
-  sliderSection: {
-    width: '100%',
-    marginBottom: '48px',
-    userSelect: 'none',
-  },
-  sliderContainer: {
-    width: '100%',
-    height: '380px',
-    backgroundColor: '#0b0f1a',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    color: '#ffffff',
-    position: 'relative',
-    boxSizing: 'border-box',
-    overflow: 'hidden',
-  },
-  slideGrid: {
-    display: 'flex',
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  slideTextContainer: {
-    width: '52%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    textAlign: 'left',
-    paddingLeft: '64px',
-    zIndex: 3,
-  },
-  slideImageContainer: {
-    width: '48%',
-    height: '100%',
-    position: 'relative',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    zIndex: 1,
-  },
-  imageGradientOverlay: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    width: '100%',
-    height: '100%',
-    background: 'linear-gradient(90deg, #0b0f1a 0%, rgba(11, 15, 26, 0.55) 55%, rgba(11, 15, 26, 0) 100%)',
-    zIndex: 2,
-  },
-  slideImage: {
-    width: '100%',
-    height: '100%',
-    objectFit: 'cover',
-    opacity: 0.8,
-  },
-  slideBadge: {
-    background: 'rgba(99, 102, 241, 0.2)',
-    border: '1px solid rgba(129, 140, 248, 0.35)',
-    padding: '5px 14px',
-    borderRadius: '20px',
-    fontSize: '12px',
-    fontWeight: 600,
-    marginBottom: '18px',
-    color: '#c7d2fe',
-    letterSpacing: '0.2px',
-  },
-  slideTitle: {
-    fontSize: '26px',
-    fontWeight: 700,
-    margin: '0 0 12px',
-    lineHeight: 1.35,
-    letterSpacing: '-0.4px',
-  },
-  slideSubtitle: {
-    fontSize: '15px',
-    fontWeight: 400,
-    margin: 0,
-    lineHeight: 1.65,
-    color: 'rgba(255, 255, 255, 0.75)',
-    maxWidth: '480px',
-  },
-  arrowLeft: {
-    position: 'absolute',
-    left: '20px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'rgba(255, 255, 255, 0.1)',
-    border: '1px solid rgba(255,255,255,0.15)',
-    color: '#ffffff',
-    fontSize: '14px',
-    cursor: 'pointer',
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    outline: 'none',
-    zIndex: 10,
-    transition: 'background 150ms ease, transform 150ms ease',
-  },
-  arrowRight: {
-    position: 'absolute',
-    right: '20px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'rgba(255, 255, 255, 0.1)',
-    border: '1px solid rgba(255,255,255,0.15)',
-    color: '#ffffff',
-    fontSize: '14px',
-    cursor: 'pointer',
-    width: '40px',
-    height: '40px',
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    outline: 'none',
-    zIndex: 10,
-    transition: 'background 150ms ease, transform 150ms ease',
-  },
-  dotsContainer: {
-    position: 'absolute',
-    bottom: '18px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    display: 'flex',
-    gap: '6px',
-    zIndex: 5,
-  },
-  dot: {
-    height: '6px',
-    borderRadius: '3px',
-    cursor: 'pointer',
-    transition: 'all 250ms ease',
-  },
-  sloganSection: {
-    textAlign: 'center',
-    marginBottom: '52px',
-  },
-  logoBadge: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '6px',
-    background: '#eef2ff',
-    color: '#4f46e5',
-    fontSize: '13px',
-    fontWeight: 600,
-    padding: '5px 14px',
-    borderRadius: '20px',
-    marginBottom: '16px',
-    border: '1px solid #c7d2fe',
-  },
-  logoBadgeIcon: {
-    fontSize: '15px',
-  },
-  sloganTitle: {
-    fontSize: '30px',
-    fontWeight: 700,
-    color: '#0f172a',
-    lineHeight: 1.4,
-    marginBottom: '20px',
-    letterSpacing: '-0.5px',
-  },
-  registerCTA: {
-    background: '#4f46e5',
-    color: '#ffffff',
-    border: 'none',
-    padding: '11px 26px',
-    borderRadius: '10px',
-    fontSize: '14px',
-    fontWeight: 600,
-    cursor: 'pointer',
-    boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)',
-    transition: 'background 150ms ease, box-shadow 150ms ease',
-  },
-  sectionTabs: {
-    display: 'flex',
-    justifyContent: 'center',
-    gap: '32px',
-    borderBottom: '1px solid #e2e8f0',
-    paddingBottom: '12px',
-    marginBottom: '36px',
-  },
-  tabItem: {
-    fontSize: '15px',
-    fontWeight: 600,
-    color: '#64748b',
-    cursor: 'pointer',
-    padding: '4px 8px',
-  },
-  twoColumnGrid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '24px',
-    marginBottom: '36px',
-  },
-  card: {
-    background: '#ffffff',
-    borderRadius: '16px',
-    border: '1px solid #e2e8f0',
-    padding: '24px',
-    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.05)',
-  },
-  cardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '18px',
-    borderBottom: '1px solid #f1f5f9',
-    paddingBottom: '10px',
-  },
-  cardTitle: {
-    fontSize: '17px',
-    fontWeight: 700,
-    color: '#0f172a',
-    margin: 0,
-    letterSpacing: '-0.2px',
-  },
-  greenDot: {
-    color: '#10b981',
-    fontSize: '16px',
-  },
-  detailList: {
-    listStyleType: 'none',
-    padding: 0,
-    margin: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-  },
-  listItem: {
-    fontSize: '14px',
-    color: '#475569',
-    lineHeight: 1.65,
-    display: 'flex',
-    alignItems: 'flex-start',
-    gap: '8px',
-  },
-  fullWidthSection: {
-    width: '100%',
-    marginBottom: '36px',
-  },
-  cardSubText: {
-    fontSize: '14px',
-    color: '#64748b',
-    marginBottom: '24px',
-    lineHeight: 1.6,
-  },
-  picGrid3: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr',
-    gap: '20px',
-  },
-  picBoxCustom: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    background: '#ffffff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '14px',
-    padding: '20px',
-    boxSizing: 'border-box',
-    transition: 'box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease',
-    boxShadow: '0 1px 4px rgba(15, 23, 42, 0.04)',
-  },
-  iconWrapper: {
-    width: '52px',
-    height: '52px',
-    borderRadius: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '24px',
-    marginBottom: '4px',
-  },
-  iconWrapperSmall: {
-    width: '42px',
-    height: '42px',
-    borderRadius: '10px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '20px',
-    marginBottom: '2px',
-  },
-  picTitle: {
-    fontSize: '15px',
-    fontWeight: 700,
-    color: '#0f172a',
-    margin: 0,
-    letterSpacing: '-0.1px',
-  },
-  picLabel: {
-    fontSize: '13px',
-    color: '#64748b',
-    lineHeight: 1.6,
-    fontWeight: 400,
-  },
-  infoGrid6: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr',
-    gap: '24px 20px',
-  },
-  cardHeaderImage: {
-    width: '100%',
-    height: '136px',
-    objectFit: 'cover',
-    borderRadius: '10px',
-    marginBottom: '12px',
-  },
-  cardHeaderImageSmall: {
-    width: '100%',
-    height: '126px',
-    objectFit: 'cover',
-    borderRadius: '10px',
-    marginBottom: '10px',
-  },
 }

@@ -1,37 +1,16 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// app/status/page.tsx
-// หน้า View Registration Status
-//
-// การทำงาน:
-//  1. อ่าน username จาก localStorage (pub_user)
-//  2. GET /api/pub/status/:username → ดึงข้อมูลสถานะ
-//  3. แสดง Progress Stepper 3 ขั้น:
-//       ส่งเอกสารแล้ว → รอดำเนินการ → อนุมัติ / ปฏิเสธ
-//  4. แสดงรายละเอียดร้าน + วันที่สมัคร
-//
-// regisstatus ที่ backend ส่งมา:
-//  'รอดำเนินการ'  → รอการพิจารณา
-//  'อนุมัติแล้ว' → อนุมัติแล้ว
-//  'ปฏิเสธ' → ปฏิเสธ
-// ═══════════════════════════════════════════════════════════════
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTheme } from '@/components/ThemeContext'
 
-// ── Shared Components ─────────────────────────────────────────
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
 
-// ── Services ─────────────────────────────────────────────────
 import api from '@/services/api'
 
-// ── Styles ───────────────────────────────────────────────────
 import { statusStyles as styles } from '@/lib/styles/statusStyles'
 
-// ─────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────
 interface StatusData {
   registerstatus: 'รอดำเนินการ' | 'อนุมัติแล้ว' | 'ปฏิเสธ'
   regisdate: string
@@ -41,40 +20,32 @@ interface StatusData {
   phoneno: string
 }
 
-// ─────────────────────────────────────────────────────────────
-// Stepper config — 3 ขั้นตอนการลงทะเบียน
-// ─────────────────────────────────────────────────────────────
 const STEPS = [
   { label: 'ส่งเอกสารเรียบร้อยแล้ว', icon: '📄' },
   { label: 'รอดำเนินการ',             icon: '⏳' },
   { label: 'ผลการพิจารณา',            icon: '✅' },
 ]
 
-// ─────────────────────────────────────────────────────────────
-// Helper: แปลง regisstatus → active step index (0-based)
-// pending  → step 1 (รอดำเนินการ)
-// approved → step 2 (ผ่านแล้ว)
-// rejected → step 2 (ไม่ผ่าน)
-// ─────────────────────────────────────────────────────────────
 function getActiveStep(status: string | undefined): number {
   if (status === 'อนุมัติแล้ว' || status === 'ปฏิเสธ') return 2
   if (status === 'รอดำเนินการ') return 1
   return 0
 }
 
-// ─────────────────────────────────────────────────────────────
-// Helper: config สีและข้อความตาม status
-// ─────────────────────────────────────────────────────────────
-function getStatusConfig(status: string | undefined) {
+function getStatusConfig(status: string | undefined, isDark: boolean = true) {
   switch (status) {
     case 'อนุมัติแล้ว':
       return {
         icon: '🎉',
         title: 'ยินดีด้วย! คุณได้รับการอนุมัติแล้ว',
         desc: 'คุณสามารถเริ่มใช้งานระบบ SafeSeat ได้ที่แอปพลิเคชันบนมือถือ',
-        bannerBg: 'rgba(16,185,129,0.12)',
-        bannerBorder: 'rgba(16,185,129,0.35)',
-        titleColor: '#34d399',
+        bannerBg: isDark
+          ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.20) 0%, rgba(5, 150, 105, 0.12) 100%)'
+          : 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
+        bannerBorder: isDark ? 'rgba(52, 211, 153, 0.5)' : '#10B981',
+        iconBg: isDark ? 'rgba(52, 211, 153, 0.25)' : '#D1FAE5',
+        titleColor: isDark ? '#34D399' : '#065F46',
+        descColor: isDark ? '#A7F3D0' : '#047857',
         dotActive: '#10b981',
         dotDone: '#10b981',
         lineDone: '#10b981',
@@ -84,9 +55,13 @@ function getStatusConfig(status: string | undefined) {
         icon: '❌',
         title: 'ขออภัย — คำขอลงทะเบียนไม่ผ่านการพิจารณา',
         desc: 'กรุณาตรวจสอบเอกสารให้ครบถ้วนและถูกต้อง แล้วสมัครใหม่อีกครั้ง หรือติดต่อทีมงาน',
-        bannerBg: 'rgba(239,68,68,0.12)',
-        bannerBorder: 'rgba(239,68,68,0.35)',
-        titleColor: '#f87171',
+        bannerBg: isDark
+          ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.20) 0%, rgba(185, 28, 28, 0.12) 100%)'
+          : 'linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%)',
+        bannerBorder: isDark ? 'rgba(248, 113, 113, 0.5)' : '#EF4444',
+        iconBg: isDark ? 'rgba(248, 113, 113, 0.25)' : '#FEE2E2',
+        titleColor: isDark ? '#F87171' : '#991B1B',
+        descColor: isDark ? '#FCA5A5' : '#B91C1C',
         dotActive: '#ef4444',
         dotDone: '#ef4444',
         lineDone: '#ef4444',
@@ -97,9 +72,13 @@ function getStatusConfig(status: string | undefined) {
         icon: '⏳',
         title: 'อยู่ระหว่างการพิจารณา',
         desc: 'ทีมงานกำลังตรวจสอบเอกสารของคุณ โดยปกติใช้เวลา 1–3 วันทำการ กรุณารอสักครู่',
-        bannerBg: 'rgba(245,158,11,0.12)',
-        bannerBorder: 'rgba(245,158,11,0.35)',
-        titleColor: '#fbbf24',
+        bannerBg: isDark
+          ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(217, 119, 6, 0.14) 100%)'
+          : 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+        bannerBorder: isDark ? 'rgba(251, 191, 36, 0.5)' : '#F59E0B',
+        iconBg: isDark ? 'rgba(251, 191, 36, 0.25)' : '#FDE68A',
+        titleColor: isDark ? '#FDE047' : '#92400E',
+        descColor: isDark ? '#FEF08A' : '#78350F',
         dotActive: '#f59e0b',
         dotDone: '#6366f1',
         lineDone: '#6366f1',
@@ -107,38 +86,49 @@ function getStatusConfig(status: string | undefined) {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Helper: format วันที่ไทย
-// ─────────────────────────────────────────────────────────────
+function parseThaiDate(dateStr: string): Date {
+  if (!dateStr) return new Date()
+  const s = String(dateStr).trim()
+  const cleanStr = s.replace(/Z$/i, '')
+  const isoWithTz = cleanStr.includes('T')
+    ? `${cleanStr.split('+')[0]}+07:00`
+    : `${cleanStr.replace(' ', 'T').split('+')[0]}+07:00`
+  const d = new Date(isoWithTz)
+  return isNaN(d.getTime()) ? new Date(dateStr) : d
+}
+
 function formatDateThai(dateStr: string): string {
+  if (!dateStr) return '—'
   try {
-    const d = new Date(dateStr)
-    return d.toLocaleDateString('th-TH', {
+    const d = parseThaiDate(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    const datePart = d.toLocaleDateString('th-TH', {
+      timeZone: 'Asia/Bangkok',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+    })
+    const timePart = d.toLocaleTimeString('th-TH', {
+      timeZone: 'Asia/Bangkok',
       hour: '2-digit',
       minute: '2-digit',
+      hour12: false,
     })
+    return `${datePart} เวลา ${timePart} น.`
   } catch {
     return dateStr
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// StatusPage Component
-// ═══════════════════════════════════════════════════════════════
 export default function StatusPage() {
   const router = useRouter()
 
-  // ── State ─────────────────────────────────────────────────
   const [statusData, setStatusData] = useState<StatusData | null>(null)
   const [username, setUsername]     = useState<string>('')
   const [loading, setLoading]       = useState<boolean>(true)
   const [error, setError]           = useState<string>('')
   const [refreshing, setRefreshing] = useState<boolean>(false)
 
-  // ── Fetch status จาก Backend ─────────────────────────────
   const fetchStatus = useCallback(async (user: string, isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
     else setLoading(true)
@@ -148,7 +138,6 @@ export default function StatusPage() {
       const res = await api.get(`/auth/status/${user}`)
       setStatusData(res.data.data)
     } catch (err: unknown) {
-      // ดึง message จาก axios error หรือ Error object
       const msg =
         typeof err === 'object' && err !== null && 'response' in err
           ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
@@ -162,11 +151,9 @@ export default function StatusPage() {
     }
   }, [])
 
-  // ── onMount: อ่าน username จาก localStorage ─────────────
   useEffect(() => {
     const stored = localStorage.getItem('driver_user')
     if (!stored) {
-      // ยังไม่ login → ไปหน้า login
       router.push('/login')
       return
     }
@@ -175,8 +162,6 @@ export default function StatusPage() {
       const user = parsed.username ?? ''
       
       if (user) {
-        // ป้องกัน Error: Calling setState synchronously within an effect...
-        // โดยใช้ Promise เพื่อหน่วงเวลาทั้ง setUsername และ fetchStatus ไปที่ Microtask Queue
         Promise.resolve().then(() => {
           setUsername(user)
           fetchStatus(user)
@@ -189,7 +174,6 @@ export default function StatusPage() {
     }
   }, [router, fetchStatus])
 
-  // ── Logout ───────────────────────────────────────────────
   const handleLogout = () => {
     const isConfirmed = window.confirm('คุณต้องการออกจากระบบใช่หรือไม่?')
     if (isConfirmed) {
@@ -198,86 +182,82 @@ export default function StatusPage() {
     }
   }
 
-  // ── Helpers ──────────────────────────────────────────────
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
   const activeStep  = getActiveStep(statusData?.registerstatus)
-  const statusCfg   = getStatusConfig(statusData?.registerstatus)
+  const statusCfg   = getStatusConfig(statusData?.registerstatus, isDark)
 
-  // ─────────────────────────────────────────────────────────
-  // Render
-  // ─────────────────────────────────────────────────────────
   return (
     <div style={styles.page}>
-      {/* Background glow circles */}
+      {}
       <div style={styles.bgCircle1} />
       <div style={styles.bgCircle2} />
       <div style={styles.bgCircle3} />
 
-      {/* Navbar — ซ่อนปุ่ม login (user login อยู่แล้ว) */}
+      {}
       <Navbar showLoginButton={false} />
 
-      {/* Main Content */}
+      {}
       <main style={styles.main}>
 
-        {/* ── Page Header ─────────────────────────────────── */}
+        {}
         <div style={styles.pageHeader}>
-          <div style={styles.pageBadge}>
-            📋 สถานะการสมัคร
-          </div>
           <h1 style={styles.pageTitle}>ดูสถานะการสมัคร</h1>
           <p style={styles.pageSubtitle}>
             ติดตามสถานะการพิจารณาใบสมัครของคุณ
           </p>
         </div>
 
-        {/* ── Card ────────────────────────────────────────── */}
+        {}
         <div style={styles.card}>
 
-          {/* Greeting */}
+          {}
           <p style={styles.greeting}>
             สวัสดี {loading ? '...' : (statusData?.firstname ? `${statusData.firstname} ${statusData.lastname}` : username)} 👋
           </p>
-          <p style={styles.greetingSub}>
+          <p style={{
+            ...styles.greetingSub,
+            color: isDark ? '#cbd5e1' : '#334155',
+          }}>
             {loading
               ? 'กำลังโหลดข้อมูล...'
               : `@${username} · ตรวจสอบสถานะการสมัครด้านล่าง`}
           </p>
 
-          {/* ── Stepper ──────────────────────────────────── */}
+          {}
           <div style={styles.stepper}>
             {STEPS.map((step, i) => {
               const isDone    = activeStep > i
               const isActive  = activeStep === i
               const isLast    = i === STEPS.length - 1
-              // สี dot
               const dotBg =
                 isDone    ? statusCfg.dotDone
                 : isActive ? statusCfg.dotActive
-                : 'rgba(51,65,85,0.8)'
-              const dotColor  = isDone || isActive ? '#fff' : '#475569'
+                : isDark ? 'rgba(51,65,85,0.8)' : '#E2E8F0'
+              const dotColor  = isDone || isActive ? '#fff' : (isDark ? '#cbd5e1' : '#64748B')
               const dotBorder = isActive
                 ? `2px solid ${statusCfg.dotActive}`
                 : isDone
                 ? 'none'
-                : '2px solid rgba(71,85,105,0.6)'
+                : `2px solid ${isDark ? 'rgba(71,85,105,0.6)' : '#CBD5E1'}`
 
-              // สี line ถัดไป
-              const nextLineBg = activeStep > i ? statusCfg.lineDone : 'rgba(51,65,85,0.6)'
+              const nextLineBg = activeStep > i ? statusCfg.lineDone : (isDark ? 'rgba(51,65,85,0.6)' : '#E2E8F0')
 
               return (
                 <div key={i} style={styles.stepItem}>
-                  {/* Dot row (dot + line) */}
+                  {}
                   <div style={styles.stepDotWrapper}>
-                    {/* Connector line ก่อน dot (ยกเว้น step แรก) */}
+                    {}
                     {i > 0 && (
                       <div
                         style={{
                           ...styles.stepLine,
-                          backgroundColor: activeStep >= i ? statusCfg.lineDone : 'rgba(51,65,85,0.6)',
+                          backgroundColor: activeStep >= i ? statusCfg.lineDone : (isDark ? 'rgba(51,65,85,0.6)' : '#E2E8F0'),
                         }}
                       />
                     )}
 
-                    {/* Dot */}
+                    {}
                     <div
                       style={{
                         ...styles.stepDot,
@@ -294,7 +274,7 @@ export default function StatusPage() {
                       {isDone ? '✓' : step.icon}
                     </div>
 
-                    {/* Connector line หลัง dot (ยกเว้น step สุดท้าย) */}
+                    {}
                     {!isLast && (
                       <div
                         style={{
@@ -305,16 +285,16 @@ export default function StatusPage() {
                     )}
                   </div>
 
-                  {/* Label */}
+                  {}
                   <span
                     style={{
                       ...styles.stepLabel,
                       color: isActive
-                        ? '#0f172a'
+                        ? (isDark ? '#ffffff' : '#0F172A')
                         : isDone
-                        ? '#475569'
-                        : '#94a3b8',
-                      fontWeight: isActive ? 600 : 500,
+                        ? (isDark ? '#a7f3d0' : '#047857')
+                        : (isDark ? '#cbd5e1' : '#475569'),
+                      fontWeight: isActive ? 700 : 500,
                       whiteSpace: 'nowrap',
                     }}
                   >
@@ -325,12 +305,12 @@ export default function StatusPage() {
             })}
           </div>
 
-          {/* ── Error ────────────────────────────────────── */}
+          {}
           {error && !loading && (
             <div style={styles.errorBox}>⚠️ {error}</div>
           )}
 
-          {/* ── Loading skeleton ─────────────────────────── */}
+          {}
           {loading && (
             <div>
               <div style={{
@@ -356,56 +336,117 @@ export default function StatusPage() {
             </div>
           )}
 
-          {/* ── Status banner ────────────────────────────── */}
+          {}
           {!loading && statusData && (
             <>
               <div style={{
                 ...styles.statusBanner,
-                backgroundColor: statusCfg.bannerBg,
-                borderColor: statusCfg.bannerBorder,
+                background: statusCfg.bannerBg,
+                border: `1px solid ${statusCfg.bannerBorder}`,
+                boxShadow: isDark
+                  ? '0 8px 24px rgba(245, 158, 11, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
+                  : '0 4px 16px rgba(0, 0, 0, 0.05)',
+                borderRadius: 16,
+                padding: '22px 26px',
+                backdropFilter: 'blur(12px)',
+                display: 'flex',
+                gap: 18,
+                alignItems: 'center',
+                marginBottom: '32px', 
               }}>
-                <span style={styles.statusIcon}>{statusCfg.icon}</span>
+                <div style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 14,
+                  backgroundColor: statusCfg.iconBg,
+                  border: `1px solid ${statusCfg.bannerBorder}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 26,
+                  flexShrink: 0,
+                  boxShadow: isDark ? '0 0 16px rgba(245, 158, 11, 0.3)' : 'none',
+                }}>
+                  {statusCfg.icon}
+                </div>
                 <div style={styles.statusTextWrap}>
-                  <div style={{ ...styles.statusTitle, color: statusCfg.titleColor }}>
+                  <div style={{ ...styles.statusTitle, color: statusCfg.titleColor, fontSize: 17, fontWeight: 700, marginBottom: 4 }}>
                     {statusCfg.title}
                   </div>
-                  <div style={{ ...styles.statusDesc, color: statusCfg.titleColor }}>
+                  <div style={{ ...styles.statusDesc, color: statusCfg.descColor, fontSize: 13.5, lineHeight: 1.6, opacity: 1, fontWeight: 500 }}>
                     {statusCfg.desc}
                   </div>
                 </div>
               </div>
 
-              {/* ── Info grid ─────────────────────────────── */}
+              {}
               <div style={styles.infoGrid}>
-                <div style={styles.infoItem}>
-                  <div style={styles.infoLabel}>ชื่อ - นามสกุล</div>
-                  <div style={styles.infoValue}>{statusData.firstname ? `${statusData.firstname} ${statusData.lastname}` : '—'}</div>
+                <div style={{
+                  ...styles.infoItem,
+                  backgroundColor: isDark ? 'var(--color-surface)' : '#F8FAFC',
+                  border: `1px solid ${isDark ? 'var(--color-border)' : '#E2E8F0'}`,
+                }}>
+                  <div style={{ ...styles.infoLabel, color: isDark ? '#94a3b8' : '#475569' }}>
+                    ชื่อ - นามสกุล
+                  </div>
+                  <div style={{ ...styles.infoValue, color: isDark ? '#ffffff' : '#0F172A' }}>
+                    {statusData.firstname ? `${statusData.firstname} ${statusData.lastname}` : '—'}
+                  </div>
                 </div>
-                <div style={styles.infoItem}>
-                  <div style={styles.infoLabel}>อีเมล</div>
-                  <div style={styles.infoValue}>{statusData.email || '—'}</div>
+                <div style={{
+                  ...styles.infoItem,
+                  backgroundColor: isDark ? 'var(--color-surface)' : '#F8FAFC',
+                  border: `1px solid ${isDark ? 'var(--color-border)' : '#E2E8F0'}`,
+                }}>
+                  <div style={{ ...styles.infoLabel, color: isDark ? '#94a3b8' : '#475569' }}>
+                    อีเมล
+                  </div>
+                  <div style={{ ...styles.infoValue, color: isDark ? '#ffffff' : '#0F172A' }}>
+                    {statusData.email || '—'}
+                  </div>
                 </div>
-                <div style={styles.infoItem}>
-                  <div style={styles.infoLabel}>เบอร์โทรศัพท์</div>
-                  <div style={styles.infoValue}>{statusData.phoneno || '—'}</div>
+                <div style={{
+                  ...styles.infoItem,
+                  backgroundColor: isDark ? 'var(--color-surface)' : '#F8FAFC',
+                  border: `1px solid ${isDark ? 'var(--color-border)' : '#E2E8F0'}`,
+                }}>
+                  <div style={{ ...styles.infoLabel, color: isDark ? '#94a3b8' : '#475569' }}>
+                    เบอร์โทรศัพท์
+                  </div>
+                  <div style={{ ...styles.infoValue, color: isDark ? '#ffffff' : '#0F172A' }}>
+                    {statusData.phoneno || '—'}
+                  </div>
                 </div>
-                <div style={styles.infoItem}>
-                  <div style={styles.infoLabel}>วันที่สมัคร</div>
-                  <div style={styles.infoValue}>
+                <div style={{
+                  ...styles.infoItem,
+                  backgroundColor: isDark ? 'var(--color-surface)' : '#F8FAFC',
+                  border: `1px solid ${isDark ? 'var(--color-border)' : '#E2E8F0'}`,
+                }}>
+                  <div style={{ ...styles.infoLabel, color: isDark ? '#94a3b8' : '#475569' }}>
+                    วันที่สมัคร
+                  </div>
+                  <div style={{ ...styles.infoValue, color: isDark ? '#ffffff' : '#0F172A' }}>
                     {statusData.regisdate ? formatDateThai(statusData.regisdate) : '—'}
                   </div>
                 </div>
-                <div style={{ ...styles.infoItem, gridColumn: '1 / -1' }}>
-                  <div style={styles.infoLabel}>สถานะปัจจุบัน</div>
+                <div style={{
+                  ...styles.infoItem,
+                  gridColumn: '1 / -1',
+                  backgroundColor: isDark ? 'var(--color-surface)' : '#F8FAFC',
+                  border: `1px solid ${isDark ? 'var(--color-border)' : '#E2E8F0'}`,
+                }}>
+                  <div style={{ ...styles.infoLabel, color: isDark ? '#94a3b8' : '#475569' }}>
+                    สถานะปัจจุบัน
+                  </div>
                   <div style={{
                     ...styles.infoValue,
                     color: statusCfg.titleColor,
                     fontWeight: 700,
                     fontSize: 16,
                   }}>
-                    {statusData.registerstatus === 'รอดำเนินการ'  && '⏳ รอการพิจารณา'}
-                    {statusData.registerstatus === 'อนุมัติแล้ว' && '✅ อนุมัติแล้ว'}
-                    {statusData.registerstatus === 'ปฏิเสธ' && '❌ ไม่ผ่านการพิจารณา'}
+                    {((statusData as any)?.registerstatus === 'pending' || (statusData as any)?.registerstatus === 'รอดำเนินการ' || (statusData as any)?.registerstatus === 'รอการพิจารณา' || !(statusData as any)?.registerstatus) && '⏳ รอการพิจารณา'}
+                    {((statusData as any)?.registerstatus === 'approved' || (statusData as any)?.registerstatus === 'อนุมัติแล้ว') && '✅ อนุมัติแล้ว'}
+                    {((statusData as any)?.registerstatus === 'rejected' || (statusData as any)?.registerstatus === 'ปฏิเสธ') && '❌ ไม่ผ่านการพิจารณา'}
                   </div>
                 </div>
               </div>
@@ -414,36 +455,42 @@ export default function StatusPage() {
             </>
           )}
 
-          {/* ── Action Buttons ───────────────────────────── */}
-          {!loading && (
-            <div style={styles.btnRow}>
+          {}
+          {!loading && (statusData?.registerstatus === 'ปฏิเสธ' || (statusData as any)?.registerstatus === 'rejected') && (
+            <div style={{ ...styles.btnRow, justifyContent: 'center', flexWrap: 'wrap', gap: 16 }}>
               <button
-                id="btn-logout"
-                onClick={handleLogout}
-                style={styles.logoutBtn}
-              >
-                ออกจากระบบ
-              </button>
-              <button
-                id="btn-refresh"
-                onClick={() => fetchStatus(username, true)}
-                disabled={refreshing}
+                onClick={() => {
+                  if (statusData) {
+                    const draft = {
+                      firstName: statusData.firstname || '',
+                      lastName: statusData.lastname || '',
+                      email: statusData.email || '',
+                      phoneNo: statusData.phoneno || '',
+                      username: username,
+                    }
+                    localStorage.setItem('driver_draft_form', JSON.stringify(draft))
+                  }
+                  router.push('/register/driver')
+                }}
                 style={{
                   ...styles.refreshBtn,
-                  opacity: refreshing ? 0.75 : 1,
-                  cursor: refreshing ? 'not-allowed' : 'pointer',
+                  background: 'linear-gradient(135deg, #2340A7, #2563EB)',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                  padding: '12px 24px',
                 }}
               >
-                {refreshing && <span style={styles.spinner} />}
-                {refreshing ? 'กำลังโหลด...' : '🔄 รีเฟรช'}
+                ✏️ แก้ไขข้อมูลและยื่นสมัครใหม่
               </button>
             </div>
           )}
 
         </div>
-        {/* /card */}
+        {}
 
-        {/* Help note */}
+        {}
         {!loading && (
           <p style={{
             fontSize: 13,
@@ -462,33 +509,17 @@ export default function StatusPage() {
 
       <Footer />
 
-      {/* Inline CSS: Font + Animations */}
+      <link
+        rel="stylesheet"
+        href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@700,500,400&display=swap"
+      />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Prompt', sans-serif; box-sizing: border-box; }
-
-        @keyframes spin {
-          to { transform: rotate(360deg); }
+        .btn-invert-hover {
+          transition: all 0.2s cubic-bezier(0.77, 0, 0.175, 1);
         }
-
-        @keyframes shimmer {
-          0%   { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(14px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Hover effects สำหรับ button */
-        #btn-logout:hover {
-          background: rgba(79, 70, 229, 0.05) !important;
-          color: #4f46e5 !important;
-          border-color: rgba(79, 70, 229, 0.4) !important;
-        }
-        #btn-refresh:hover {
-          filter: brightness(1.08);
+        .btn-invert-hover:hover {
+          background-color: #111111 !important;
+          color: #ffffff !important;
         }
       `}</style>
     </div>

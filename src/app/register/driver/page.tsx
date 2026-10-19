@@ -1,18 +1,11 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// app/register/driver/page.tsx
-// หน้าสมัครสมาชิกสำหรับคนขับรถสำรอง (Driver - Unified Light Theme)
-// รูปแบบเดียวกับหน้าสมัครพาร์ทเนอร์ร้านค้า (Pub) โดยใช้ธีมสีสว่าง
-// ═══════════════════════════════════════════════════════════════
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-// ── Shared Components ─────────────────────────────────────────
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
 
-// ── Register Step Components ──────────────────────────────────
 import {
   StepDriverPersonalInfo,
   StepDriverVehicleInfo,
@@ -20,18 +13,17 @@ import {
   StepDriverTraining,
 } from '@/components/register'
 
-// ── Services ──────────────────────────────────────────────────
 import api from '@/services/api'
 
-// ── Styles & Validation ───────────────────────────────────────
 import { registerStyles as styles } from '@/lib/styles/registerStyles'
 import {
   validateDriverStep1,
   validateDriverStep2,
+  validateDriverStep3,
+  validateDriverStep4,
   validateDriverFile,
 } from '@/lib/validation/driverRegisterValidation'
 
-// ── Types ─────────────────────────────────────────────────────
 import { DriverRegisterForm, StepConfig } from '@/types'
 
 const STEPS: StepConfig[] = [
@@ -132,17 +124,57 @@ export default function RegisterDriverPage() {
     }
   }, [files.driverLicensePath])
 
+  useEffect(() => {
+    // Clear saved draft from localStorage on reload or fresh mount so form is always reset
+    localStorage.removeItem('driver_draft_form')
+
+    const handleBeforeUnload = () => {
+      localStorage.removeItem('driver_draft_form')
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void => {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    const numericFields = ['idCard', 'phoneNo', 'bankAccountNo']
+    const finalValue = numericFields.includes(name) ? value.replace(/\D/g, '') : value
+    const updated = { ...form, [name]: finalValue }
+    setForm(updated)
     setError('')
+  }
+
+  const parseApiError = (err: unknown, defaultMsg: string): string => {
+    if (typeof err === 'object' && err !== null) {
+      if ('response' in err && (err as { response?: { data?: { error?: string; message?: string } } }).response?.data) {
+        const resData = (err as { response: { data: { error?: string; message?: string } } }).response.data
+        return resData.error || resData.message || defaultMsg
+      }
+      if ('message' in err && (err as { message?: string }).message === 'Network Error') {
+        return 'ไม่สามารถเชื่อมต่อเครื่องเซิร์ฟเวอร์ได้ (Network Error) กรุณาตรวจสอบว่า Backend ทำงานอยู่หรือไม่'
+      }
+      if ('message' in err && typeof (err as { message?: string }).message === 'string') {
+        return (err as { message: string }).message
+      }
+    }
+    return defaultMsg
   }
 
   const handleToggleSkill = (skill: string): void => {
     const currentSkills = [...form.driverSkills]
-    if (currentSkills.includes(skill)) {
+    const hasSkill = currentSkills.some(s => 
+      s.toLowerCase() === skill.toLowerCase() || 
+      (skill === 'Auto' && s.toLowerCase() === 'autometric') ||
+      (skill === 'Electric' && s.toLowerCase() === 'ev')
+    )
+    if (hasSkill) {
       setForm({
         ...form,
-        driverSkills: currentSkills.filter((s) => s !== skill),
+        driverSkills: currentSkills.filter((s) => 
+          s.toLowerCase() !== skill.toLowerCase() && 
+          !(skill === 'Auto' && s.toLowerCase() === 'autometric') &&
+          !(skill === 'Electric' && s.toLowerCase() === 'ev')
+        ),
       })
     } else {
       setForm({
@@ -183,57 +215,80 @@ export default function RegisterDriverPage() {
     setError('')
   }
 
-  const handleNext = (): void => {
+  const handleNext = async (): Promise<void> => {
     setError('')
 
     if (step === 1) {
-      if (!validateDriverStep1(form, setError)) return
-      if (!form.password) {
-        setError('กรุณากรอกรหัสผ่าน')
+      if (!validateDriverStep1(form, files.regisImagePath, setError)) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
-      if (!/^[a-zA-Z0-9!#_.]{6,50}$/.test(form.password)) {
-        setError('รหัสผ่านต้องเป็นภาษาอังกฤษ ตัวเลข และอักขระพิเศษ [!#_.] เท่านั้น ความยาว 6 - 50 ตัวอักษร และต้องไม่มีช่องว่าง')
+
+      setLoading(true)
+      try {
+        const res = await api.post('/auth/check-credentials', {
+          email: form.email,
+          phoneNo: form.phoneNo,
+          idCard: form.idCard,
+          bankAccountNo: form.bankAccountNo,
+        })
+        if (res.status >= 400 || res.data?.success === false || res.data?.error) {
+          setError(res.data?.error || res.data?.message || 'ข้อมูลนี้มีในระบบแล้ว กรุณาตรวจสอบข้อมูลอีกครั้ง')
+          setLoading(false)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          return
+        }
+      } catch (err: unknown) {
+        setError(parseApiError(err, 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูลซ้ำ'))
+        setLoading(false)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
-      if (!files.regisImagePath) {
-        setError('กรุณาแนบรูปภาพใบหน้าตนเอง')
-        return
-      }
-      if (form.driverSkills.length === 0) {
-        setError('กรุณาเลือกความสามารถในการขับรถอย่างน้อย 1 ประเภท')
-        return
-      }
+      setLoading(false)
     }
 
     if (step === 2) {
-      if (!validateDriverStep2(form, setError)) return
-      if (!files.carImagePath) {
-        setError('กรุณาแนบรูปภาพรถยนต์ของคุณ')
+      if (!validateDriverStep2(form, files.carImagePath, termsAccepted, setError)) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
-      if (!termsAccepted) {
-        setError('กรุณายอมรับนโยบายข้อมูลส่วนตัวก่อนดำเนินการต่อ')
+
+      setLoading(true)
+      try {
+        const res = await api.post('/auth/check-credentials', {
+          carPlate: form.carPlate,
+        })
+        if (res.status >= 400 || res.data?.success === false || res.data?.error) {
+          setError(res.data?.error || res.data?.message || 'ทะเบียนยานพาหนะนี้ถูกใช้งานแล้วในระบบ กรุณาใช้ทะเบียนอื่น')
+          setLoading(false)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          return
+        }
+      } catch (err: unknown) {
+        setError(parseApiError(err, 'เกิดข้อผิดพลาดในการตรวจสอบทะเบียนรถยนต์'))
+        setLoading(false)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+      setLoading(false)
+    }
+
+    if (step === 3) {
+      if (!validateDriverStep3(files, setError)) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
     }
 
-    if (step === 3) {
-      if (!files.driverLicensePath) {
-        setError('กรุณาแนบรูปภาพใบขับขี่')
-        return
-      }
-      if (!files.criminalRecordPath) {
-        setError('กรุณาแนบประวัติอาชญากรรม')
-        return
-      }
-      if (!files.medicalCertificatePath) {
-        setError('กรุณาแนบใบรับรองแพทย์ตรวจสุขภาพ')
+    if (step === 4) {
+      if (!validateDriverStep4(files, setError)) {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
     }
 
     setStep(step + 1)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleBack = (): void => {
@@ -244,32 +299,23 @@ export default function RegisterDriverPage() {
   const handleSubmit = async (): Promise<void> => {
     setError('')
 
-    if (!files.driverLicensePath) {
-      setError('กรุณาแนบรูปภาพใบขับขี่')
+    if (!validateDriverStep1(form, files.regisImagePath, setError)) {
+      setStep(1)
       return
     }
-    if (!files.criminalRecordPath) {
-      setError('กรุณาแนบประวัติอาชญากรรม')
+
+    if (!validateDriverStep2(form, files.carImagePath, termsAccepted, setError)) {
+      setStep(2)
       return
     }
-    if (!files.medicalCertificatePath) {
-      setError('กรุณาแนบใบรับรองแพทย์ตรวจสุขภาพ')
+
+    if (!validateDriverStep3(files, setError)) {
+      setStep(3)
       return
     }
-    if (!files.trainingCert1) {
-      setError('กรุณาแนบเกียรติบัตรการอบรม คอร์สที่ 1')
-      return
-    }
-    if (!files.trainingCert2) {
-      setError('กรุณาแนบเกียรติบัตรการอบรม คอร์สที่ 2')
-      return
-    }
-    if (!files.trainingCert3) {
-      setError('กรุณาแนบเกียรติบัตรการอบรม คอร์สที่ 3')
-      return
-    }
-    if (!files.trainingCert4) {
-      setError('กรุณาแนบเกียรติบัตรการอบรม คอร์สที่ 4')
+
+    if (!validateDriverStep4(files, setError)) {
+      setStep(4)
       return
     }
 
@@ -303,28 +349,28 @@ export default function RegisterDriverPage() {
       fd.append('medicalCertificatePath', files.medicalCertificatePath!)
       fd.append('trainingCert1Path', files.trainingCert1!)
       fd.append('trainingCert2Path', files.trainingCert2!)
-      fd.append('trainingCert3Path', files.trainingCert3!)
-      fd.append('trainingCert4Path', files.trainingCert4!)
+      if (files.trainingCert3) fd.append('trainingCert3Path', files.trainingCert3!)
+      if (files.trainingCert4) fd.append('trainingCert4Path', files.trainingCert4!)
 
       const response = await api.post('/auth/register', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
 
+      if (response.status >= 400 || response.data?.success === false || response.data?.error) {
+        setError(response.data?.error || response.data?.message || 'เกิดข้อผิดพลาดในการลงทะเบียน')
+        setLoading(false)
+        return
+      }
+
       if (response.data && response.data.success) {
+        localStorage.removeItem('driver_draft_form')
         setIsRegistered(true)
       } else {
-        setError(response.data?.message || 'เกิดข้อผิดพลาดในการลงทะเบียน')
+        const errDetail = response.data?.error || response.data?.message || (typeof response.data === 'string' ? response.data : '')
+        setError(errDetail || 'เกิดข้อผิดพลาดในการลงทะเบียน กรุณาตรวจสอบข้อมูลให้ถูกต้องแล้วลองใหม่อีกครั้ง')
       }
     } catch (err: unknown) {
-      const errorMessage =
-        typeof err === 'object' && err !== null && 'response' in err
-          ? (err as { response: { data?: { error?: string; message?: string } } }).response?.data?.error || 
-            (err as { response: { data?: { error?: string; message?: string } } }).response?.data?.message
-          : err instanceof Error
-          ? err.message
-          : undefined
-
-      setError(errorMessage || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์')
+      setError(parseApiError(err, 'เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง'))
     } finally {
       setLoading(false)
     }
@@ -364,7 +410,7 @@ export default function RegisterDriverPage() {
             alignItems: 'center',
             animation: 'fadeUp 0.5s ease both',
           }}>
-            {/* success tick animated wrapper */}
+            {}
             <div style={{
               width: '90px',
               height: '90px',
@@ -387,7 +433,7 @@ export default function RegisterDriverPage() {
               color: '#0f172a',
               marginBottom: '16px',
             }}>
-              ส่งใบสมัครพาร์ทเนอร์คนขับสำเร็จ! 🎉
+              ส่งใบสมัครพาร์ทเนอร์ผู้ให้บริการขับรถสำเร็จ! 🎉
             </h1>
             
             <p style={{
@@ -397,10 +443,10 @@ export default function RegisterDriverPage() {
               marginBottom: '32px',
               maxWidth: '520px',
             }}>
-              ข้อมูลสมัครสมาชิกพนักงานขับรถของคุณได้รับการส่งเข้าสู่ระบบแล้ว คุณสามารถติดตามสถานะการพิจารณาใบสมัครของคุณได้โดยการเข้าสู่ระบบผ่านหน้าเว็บไซต์
+              ข้อมูลสมัครสมาชิกผู้ให้บริการขับรถของคุณได้รับการส่งเข้าสู่ระบบแล้ว คุณสามารถติดตามสถานะการพิจารณาใบสมัครของคุณได้โดยการเข้าสู่ระบบผ่านหน้าเว็บไซต์
             </p>
 
-            {/* Crucial Driver Login Notice Banner */}
+            {}
             <div style={{
               background: '#f8fafc',
               border: '1px solid #e2e8f0',
@@ -420,7 +466,7 @@ export default function RegisterDriverPage() {
                 gap: 8,
                 marginBottom: '12px',
               }}>
-                📱 ขั้นตอนการเข้าสู่ระบบสำหรับคนขับ
+                📱 ขั้นตอนการเข้าสู่ระบบสำหรับผู้ให้บริการขับรถ
               </h3>
               <p style={{
                 fontSize: '14.5px',
@@ -428,7 +474,7 @@ export default function RegisterDriverPage() {
                 lineHeight: 1.6,
                 margin: 0,
               }}>
-                การรับงาน การเปิดระบบ และการทำงานทั้งหมดของคนขับจะใช้งานผ่าน{' '}
+                การรับงาน การเปิดระบบ และการทำงานทั้งหมดของผู้ให้บริการขับรถจะใช้งานผ่าน{' '}
                 <strong style={{ color: '#4f46e5' }}>แอปพลิเคชัน SafeSeat บนมือถือ (Mobile App)</strong>{' '}
                 เท่านั้น (บนเว็บไซต์จะใช้สำหรับการเช็คสถานะการสมัครเท่านั้น)
               </p>
@@ -439,7 +485,7 @@ export default function RegisterDriverPage() {
                 marginTop: '20px',
                 flexWrap: 'wrap',
               }}>
-                {/* Mock Download Badges */}
+                {}
                 <div style={{
                   background: '#000000',
                   color: '#ffffff',
@@ -482,7 +528,7 @@ export default function RegisterDriverPage() {
               </div>
             </div>
 
-            {/* CTAs */}
+            {}
             <div style={{
               display: 'flex',
               gap: 16,
@@ -492,7 +538,7 @@ export default function RegisterDriverPage() {
               <button
                 onClick={() => router.push('/')}
                 style={{
-                  background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                  background: 'linear-gradient(135deg, #2340A7, #2563EB)',
                   border: 'none',
                   color: '#ffffff',
                   padding: '14px 28px',
@@ -501,7 +547,7 @@ export default function RegisterDriverPage() {
                   fontSize: '14.5px',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
-                  boxShadow: '0 4px 12px rgba(79, 70, 229, 0.2)',
+                  boxShadow: '0 4px 12px rgba(35, 64, 167, 0.2)',
                 }}
               >
                 🏠 กลับสู่หน้าหลัก
@@ -524,32 +570,31 @@ export default function RegisterDriverPage() {
 
       <Navbar />
 
-      {/* Main Layout: หน้าสมัครคนขับ มีรูปแบบเดียวกันกับหน้าสมัครผับ */}
+      {/* Main Container Form & Preview Split */}
       <div style={styles.main}>
 
-        {/* ─── Hero Panel (Left 40% - Driver Bright Vibe) ─── */}
+        {/* Left Side: Futuristic Hero Banner */}
         <div style={styles.heroPanel}>
           <img
-            src="https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=700&q=80"
-            alt="บริการขับรถยนต์ส่วนบุคคล"
-            style={styles.heroImage}
+            src="/images/safeseat_futuristic_dashboard_preview.png"
+            alt="Futuristic SafeSeat Dispatch System"
+            style={{ ...styles.heroImage, opacity: 0.65 }}
           />
-          {/* Overlay อ่อนโยนเพื่อให้เข้ากับภาพขับรถ */}
           <div style={{
             ...styles.heroOverlay,
-            background: 'linear-gradient(160deg, rgba(16,185,129,0.15) 0%, rgba(79,70,229,0.3) 100%)',
+            background: 'linear-gradient(160deg, rgba(5,7,20,0.85) 0%, rgba(35,64,167,0.4) 100%)',
           }} />
           <div style={styles.heroContent}>
-            <div style={styles.heroBadge}>🚗 สมัครเป็นคนขับ SafeSeat</div>
+            <div style={styles.heroBadge}>🚗 สมัครเป็นผู้ให้บริการขับรถ SafeSeat</div>
             <h1 style={styles.heroTitle}>
               สร้างรายได้เสริม<br />จากการบริการขับรถ
             </h1>
             <p style={styles.heroDesc}>
-              ให้บริการขับขี่แทนลูกค้าด้วยรถของลูกค้าเอง<br />
+              ให้บริการขับขี่แทนผู้ใช้บริการด้วยรถของผู้ใช้บริการเอง<br />
               ร่วมงานกันอย่างเป็นมืออาชีพและปลอดภัย
             </p>
 
-            {/* Progress Steps ใน Hero */}
+            {}
             <div style={styles.heroSteps}>
               {STEPS.map((s, i) => (
                 <div key={i} style={styles.heroStep}>
@@ -558,9 +603,9 @@ export default function RegisterDriverPage() {
                     style={{
                       ...styles.heroStepDot,
                       backgroundColor:
-                        step > i + 1  ? '#10b981' // ผ่านแล้ว → สีเขียวมรกต
-                        : step === i + 1 ? '#ffffff' // ปัจจุบัน → ขาว
-                        : 'rgba(255,255,255,0.25)', // ยังไม่ถึง
+                        step > i + 1  ? '#10b981' 
+                        : step === i + 1 ? '#ffffff' 
+                        : 'rgba(255,255,255,0.25)', 
                       border:
                         step === i + 1
                           ? '2px solid #10b981'
@@ -602,11 +647,11 @@ export default function RegisterDriverPage() {
           </div>
         </div>
 
-        {/* ─── Form Panel (Right) ─── */}
+        {}
         <div style={styles.formPanel}>
           <div style={styles.formInner}>
 
-            {/* Header ฟอร์ม */}
+            {}
             <div style={styles.formHeader}>
               <div style={styles.formIconWrap}>
                 <span style={{ fontSize: 24 }}>{STEPS[step - 1].icon}</span>
@@ -617,7 +662,7 @@ export default function RegisterDriverPage() {
               </p>
             </div>
 
-            {/* Progress Bar */}
+            {}
             <div style={styles.progressTrack}>
               <div
                 style={{
@@ -628,7 +673,13 @@ export default function RegisterDriverPage() {
               />
             </div>
 
-            {/* Step Content */}
+            {error && (
+              <div style={{ ...styles.errorBox, marginBottom: '20px' }}>
+                ⚠️ {error}
+              </div>
+            )}
+
+            {}
             {step === 1 && (
               <StepDriverPersonalInfo
                 form={form}
@@ -637,6 +688,7 @@ export default function RegisterDriverPage() {
                 profileFile={files.regisImagePath}
                 profileRef={profileRef}
                 onProfileChange={(e) => handleFileSelect('regisImagePath', e.target.files?.[0] || null)}
+                errorMessage={error}
               />
             )}
 
@@ -671,9 +723,7 @@ export default function RegisterDriverPage() {
               />
             )}
 
-            {error && <div style={styles.errorBox}>⚠️ {error}</div>}
-
-            {/* Navigation Row */}
+            {}
             <div style={styles.btnRow}>
               {step > 1 ? (
                 <button onClick={handleBack} style={styles.backBtn}>
@@ -686,14 +736,15 @@ export default function RegisterDriverPage() {
               )}
 
               {step < STEPS.length ? (
-                <button onClick={handleNext} style={{ ...styles.nextBtn, backgroundColor: '#10b981' }}>
+                <button onClick={handleNext} style={styles.nextBtn} className="btn-invert-hover">
                   ถัดไป →
                 </button>
               ) : (
                 <button
                   onClick={handleSubmit}
                   disabled={loading}
-                  style={{ ...styles.nextBtn, backgroundColor: '#10b981', opacity: loading ? 0.75 : 1 }}
+                  className="btn-invert-hover"
+                  style={{ ...styles.nextBtn, opacity: loading ? 0.75 : 1 }}
                 >
                   {loading ? 'กำลังบันทึก...' : 'สมัครสมาชิก ✓'}
                 </button>
@@ -707,13 +758,21 @@ export default function RegisterDriverPage() {
 
       <Footer />
 
+      <link
+        rel="stylesheet"
+        href="https://api.fontshare.com/v2/css?f[]=clash-display@700,600,500&f[]=satoshi@700,500,400&display=swap"
+      />
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        * { font-family: 'Prompt', sans-serif; }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(14px); }
-          to   { opacity: 1; transform: translateY(0); }
+        input:focus {
+          border-color: #111111 !important;
+          box-shadow: 0 0 0 2px rgba(17, 17, 17, 0.1) !important;
+        }
+        .btn-invert-hover {
+          transition: all 0.2s cubic-bezier(0.77, 0, 0.175, 1);
+        }
+        .btn-invert-hover:hover {
+          background-color: #111111 !important;
+          color: #ffffff !important;
         }
       `}</style>
     </div>

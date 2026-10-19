@@ -1,8 +1,4 @@
 'use client'
-// ═══════════════════════════════════════════════════════════════
-// components/register/StepDriverVehicleInfo.tsx
-// หน้าที่สองของการลงทะเบียนคนขับ (ข้อมูลยานพาหนะ + รูปถ่ายรถ + Checkbox นโยบาย) - Light Theme
-// ═══════════════════════════════════════════════════════════════
 
 import React from 'react'
 import PaperclipIcon from '@/components/ui/PaperclipIcon'
@@ -34,7 +30,7 @@ export default function StepDriverVehicleInfo({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
-      {/* ข้อมูลยานพาหนะ */}
+      {}
       <div>
         <h3 style={styles.sectionHeader}>ข้อมูลยานพาหนะผู้ให้บริการขับรถ</h3>
         
@@ -77,15 +73,20 @@ export default function StepDriverVehicleInfo({
             <input
               name="carPlate"
               value={form.carPlate}
-              onChange={onChange}
+              onChange={(e) => {
+                const val = e.target.value
+                if (/^[ก-๙0-9\s.-]*$/.test(val)) {
+                  onChange(e)
+                }
+              }}
               style={styles.input}
-              placeholder="เช่น 1กข-1234"
+              placeholder="เช่น 1กข 1234 หรือ กข 1234 เชียงใหม่"
             />
           </div>
         </div>
       </div>
 
-      {/* แนบรูปภาพรถยนต์ */}
+      {}
       <div>
         <label style={styles.label}>แนบรูปภาพรถยนต์ *</label>
         <div style={styles.uploadRow}>
@@ -110,7 +111,7 @@ export default function StepDriverVehicleInfo({
         />
       </div>
 
-      {/* ยอมรับนโยบายข้อมูลส่วนตัว */}
+      {}
       <div style={{ marginTop: '10px' }}>
         <label style={styles.checkboxRow}>
           <input
@@ -131,12 +132,12 @@ export default function StepDriverVehicleInfo({
 
 const styles: Record<string, React.CSSProperties> = {
   sectionHeader: {
-    fontSize: '13px',
-    fontWeight: 600,
-    color: '#4f46e5',
-    borderBottom: '1px solid #e2e8f0',
-    paddingBottom: '6px',
-    marginBottom: '12px',
+    fontSize: '15.5px',
+    fontWeight: 700,
+    color: '#2340A7',
+    borderBottom: '1px solid var(--color-border)',
+    paddingBottom: '8px',
+    marginBottom: '14px',
   },
   inputGroup: {
     display: 'flex',
@@ -146,20 +147,20 @@ const styles: Record<string, React.CSSProperties> = {
   },
   label: {
     display: 'block',
-    fontSize: '13px',
-    color: '#475569',
-    marginBottom: '6px',
-    fontWeight: 500,
+    fontSize: '15px',
+    color: 'var(--color-text)',
+    marginBottom: '7px',
+    fontWeight: 600,
     whiteSpace: 'nowrap',
   },
   input: {
     width: '100%',
-    padding: '12px 14px',
-    borderRadius: '10px',
-    border: '1px solid #cbd5e1',
-    backgroundColor: '#ffffff',
-    color: '#0f172a',
-    fontSize: '14px',
+    padding: '13px 16px',
+    borderRadius: '12px',
+    border: '1px solid var(--color-border)',
+    backgroundColor: 'var(--color-surface)',
+    color: 'var(--color-text)',
+    fontSize: '16px',
     outline: 'none',
     boxSizing: 'border-box',
     transition: 'border-color 0.2s',
@@ -168,33 +169,35 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    backgroundColor: '#ffffff',
-    border: '1px solid #cbd5e1',
-    padding: '6px 10px',
-    borderRadius: '10px',
-    height: '44px',
+    backgroundColor: 'var(--color-surface)',
+    border: '1px solid var(--color-border)',
+    padding: '6px 12px',
+    borderRadius: '12px',
+    height: '48px',
     boxSizing: 'border-box',
     width: '100%',
   },
   attachBtn: {
-    backgroundColor: '#e2e8f0',
-    border: '1px solid #cbd5e1',
-    borderRadius: '6px',
+    backgroundColor: 'var(--color-card)',
+    border: '1px solid var(--color-border)',
+    borderRadius: '8px',
     padding: '0 16px',
     cursor: 'pointer',
-    fontSize: '14px',
-    color: '#475569',
-    height: '32px',
+    fontSize: '14.5px',
+    fontWeight: 600,
+    color: 'var(--color-text-muted)',
+    height: '36px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
   fileName: {
-    fontSize: '11px',
-    color: '#64748b',
+    fontSize: '13px',
+    color: 'var(--color-text-muted)',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+    fontWeight: 500,
   },
   checkboxRow: {
     display: 'flex',
@@ -203,14 +206,14 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
   },
   checkboxText: {
-    fontSize: '13px',
-    color: '#0f172a',
-    fontWeight: 500,
+    fontSize: '15px',
+    color: 'var(--color-text)',
+    fontWeight: 600,
   },
   checkbox: {
     width: '18px',
     height: '18px',
-    accentColor: '#4f46e5',
+    accentColor: '#2340A7',
     cursor: 'pointer',
   },
 }

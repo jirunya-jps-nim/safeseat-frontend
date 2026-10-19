@@ -1,8 +1,13 @@
 'use client'
+
 import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import api from '@/services/api'
+import Navbar from '@/components/ui/Navbar'
+import Footer from '@/components/ui/Footer'
+import FloatingNav from '@/components/ui/FloatingNav'
+import { Car, MapPin, Shield, CreditCard, ArrowRight, CheckCircle2, QrCode, RefreshCw } from 'lucide-react'
 
 const MapPicker = dynamic(() => import('@/components/ui/MapPicker'), { ssr: false })
 const RouteMap = dynamic(() => import('@/components/ui/RouteMap'), { ssr: false })
@@ -11,12 +16,10 @@ type Step = 1 | 2 | 3 | 4
 
 const encodeId = (id: number | string | undefined) => {
   if (!id) return '';
-  const offset = 100000000;
-  const num = Number(id);
-  if (isNaN(num)) return String(id);
-  return (offset + num).toString(36).toUpperCase();
+  return 'P' + id;
 };
 
+// หน้าเรียกรถให้ลูกค้าสำหรับสถานบันเทิงพาร์ทเนอร์ (กระบวนการ 4 ขั้นตอน)
 function RequestDriverContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -33,30 +36,46 @@ function RequestDriverContent() {
     }
   }, [searchParams])
 
-
-  // Form state
   const [custName, setCustName] = useState('')
   const [phoneNo, setPhoneNo] = useState('')
   const [phoneEmer, setPhoneEmer] = useState('')
   const [carType, setCarType] = useState('Autometric')
+  const [carBrand, setCarBrand] = useState('')
+  const [carModel, setCarModel] = useState('')
+  const [licensePlate, setLicensePlate] = useState('')
   const [note, setNote] = useState('')
   const [isLadyMode, setIsLadyMode] = useState(false)
   const [verifyingPayment, setVerifyingPayment] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<1 | 2>(2) // 1=cash, 2=transfer
+  const [paymentMethod, setPaymentMethod] = useState<1 | 2>(2) 
   const [destination, setDestination] = useState<{ lat: number; lng: number; label?: string } | null>(null)
   const [showMap, setShowMap] = useState(false)
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
-  const [createdRequestId, setCreatedRequestId] = useState<string | number>('')
+  const [rejectNotice, setRejectNotice] = useState('')
   const [distance, setDistance] = useState<number>(0)
   const [loadingRoute, setLoadingRoute] = useState<boolean>(false)
+  const [isFormLoaded, setIsFormLoaded] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const notice = sessionStorage.getItem('safeseat_reject_notice')
+      if (notice) {
+        setRejectNotice(notice)
+        sessionStorage.removeItem('safeseat_reject_notice')
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const userStr = localStorage.getItem('pub_user')
     if (!userStr) { router.push('/login'); return }
-    setPubUser(JSON.parse(userStr))
+    const parsed = JSON.parse(userStr)
+    if (parsed.regisstatus !== 'approved' && parsed.regisstatus !== 'อนุมัติแล้ว') {
+      router.push('/status')
+      return
+    }
+    setPubUser(parsed)
   }, [router])
 
   useEffect(() => {
@@ -69,24 +88,38 @@ function RequestDriverContent() {
           if (parsed.phoneNo) setPhoneNo(parsed.phoneNo)
           if (parsed.phoneEmer) setPhoneEmer(parsed.phoneEmer)
           if (parsed.carType) setCarType(parsed.carType)
-          if (parsed.note) setNote(parsed.note)
-          if (parsed.isLadyMode !== undefined) setIsLadyMode(parsed.isLadyMode)
+          if (parsed.carBrand) setCarBrand(parsed.carBrand)
+          if (parsed.carModel) setCarModel(parsed.carModel)
+          if (parsed.licensePlate) setLicensePlate(parsed.licensePlate)
+          if (parsed.note) {
+            // Strip internal metadata tags before restoring user-visible note
+            const cleanNote = parsed.note
+              .replace(/\[รุ่นรถ:\s*.*?\|\s*ทะเบียน:\s*.*?\]/g, '')
+              .replace(/\[DEST:.*?\]/g, '')
+              .trim()
+            if (cleanNote) setNote(cleanNote)
+          }
+          if (parsed.isLadyMode !== undefined) setIsLadyMode(Boolean(parsed.isLadyMode))
           if (parsed.paymentMethod) setPaymentMethod(parsed.paymentMethod)
           if (parsed.destination) setDestination(parsed.destination)
         } catch (e) {
           console.error('Error parsing saved request form:', e)
         }
       }
+      setIsFormLoaded(true)
     }
   }, [])
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && isFormLoaded) {
       const formData = {
         custName,
         phoneNo,
         phoneEmer,
         carType,
+        carBrand,
+        carModel,
+        licensePlate,
         note,
         isLadyMode,
         paymentMethod,
@@ -94,7 +127,7 @@ function RequestDriverContent() {
       }
       localStorage.setItem('safeseat_request_form', JSON.stringify(formData))
     }
-  }, [custName, phoneNo, phoneEmer, carType, note, isLadyMode, paymentMethod, destination])
+  }, [isFormLoaded, custName, phoneNo, phoneEmer, carType, carBrand, carModel, licensePlate, note, isLadyMode, paymentMethod, destination])
 
   const pubName = pubUser?.pubname || pubUser?.username || 'PUB'
   const pickupLat = parseFloat(pubUser?.pubaddresslat || '18.7883')
@@ -107,7 +140,7 @@ function RequestDriverContent() {
     }
 
     const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-      const R = 6371; // Earth's radius in km
+      const R = 6371; 
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = 
@@ -128,7 +161,7 @@ function RequestDriverContent() {
         if (response.ok) {
           const data = await response.json()
           if (active && data.code === 'Ok' && data.routes && data.routes.length > 0) {
-            setDistance(data.routes[0].distance / 1000) // convert meters to km
+            setDistance(data.routes[0].distance / 1000) 
             setError('')
             return
           }
@@ -138,7 +171,7 @@ function RequestDriverContent() {
         console.warn('[RequestDriver Warning] OSRM distance fetch failed, using straight-line fallback:', err)
         if (active) {
           const straightDist = getHaversineDistance(pickupLat, pickupLng, destination.lat, destination.lng)
-          const estimatedDrivingDist = straightDist * 1.3 // circuity factor
+          const estimatedDrivingDist = straightDist * 1.3
           setDistance(estimatedDrivingDist)
           setError('')
         }
@@ -157,52 +190,140 @@ function RequestDriverContent() {
 
   const estimatedPrice = distance > 0 ? Math.round(150 + distance * 25) : 0
 
+  const isCustNameError = error.includes('ชื่อ - นามสกุล') || (error.includes('ชื่อ') && !error.includes('ยี่ห้อ') && !error.includes('จุดหมาย'))
+  const isPhoneError = (error.includes('เบอร์โทรศัพท์') || error.includes('เบอร์โทรติดต่อ')) && !error.includes('ฉุกเฉิน')
+  const isPhoneEmerError = error.includes('ฉุกเฉิน') || error.includes('ซ้ำกัน')
+  const isCarBrandError = error.includes('ยี่ห้อ')
+  const isCarModelError = error.includes('รุ่นรถ')
+  const isLicensePlateError = error.includes('ทะเบียน')
+  const isCarTypeError = error.includes('เกียร์')
+  const isDestError = error.includes('จุดหมาย') || error.includes('ระยะทาง')
+
   const validateStep1 = () => {
-    if (!custName.trim()) return 'กรุณากรอกชื่อ - นามสกุล'
-    if (!phoneNo.trim() || phoneNo.length !== 10) return 'กรุณากรอกเบอร์โทรศัพท์ 10 หลัก'
-    if (!phoneEmer.trim() || phoneEmer.length !== 10) return 'กรุณากรอกเบอร์โทรฉุกเฉิน 10 หลัก'
+    if (!custName.trim()) return 'กรุณากรอกชื่อ - นามสกุลผู้ใช้บริการ'
+    if (custName.trim().length < 2) return 'ชื่อ - นามสกุลผู้ใช้บริการต้องมีความยาวอย่างน้อย 2 ตัวอักษร'
+    if (!/^[ก-๙a-zA-Z\s.-]+$/.test(custName.trim())) return 'ชื่อ - นามสกุลผู้ใช้บริการ ต้องเป็นอักษรภาษาไทยหรือภาษาอังกฤษเท่านั้น'
+    
+    // เบอร์โทรศัพท์ติดต่อของผู้ใช้บริการ (10 หลัก ขึ้นต้นด้วย 06, 08, 09 เท่านั้น)
+    if (!phoneNo.trim()) return 'กรุณากรอกเบอร์โทรศัพท์ติดต่อของผู้ใช้บริการ'
+    if (!/^0[689]\d{8}$/.test(phoneNo.trim()) || /^(\d)\1+$/.test(phoneNo.trim())) {
+      return 'เบอร์โทรศัพท์ติดต่อไม่ถูกต้อง (ต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 06, 08 หรือ 09 เท่านั้น)'
+    }
+    
+    // เบอร์โทรติดต่อฉุกเฉิน (10 หลัก ขึ้นต้นด้วย 06, 08, 09 เท่านั้น)
+    if (!phoneEmer.trim()) return 'กรุณากรอกเบอร์โทรติดต่อฉุกเฉิน'
+    if (!/^0[689]\d{8}$/.test(phoneEmer.trim()) || /^(\d)\1+$/.test(phoneEmer.trim())) {
+      return 'เบอร์โทรติดต่อฉุกเฉินไม่ถูกต้อง (ต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 06, 08 หรือ 09 เท่านั้น)'
+    }
+    
+    if (phoneNo.trim() === phoneEmer.trim()) return 'เบอร์โทรศัพท์ของผู้ใช้บริการและเบอร์โทรฉุกเฉินต้องห้ามซ้ำกัน'
+    
+    if (!carBrand.trim()) return 'กรุณากรอกยี่ห้อรถยนต์ของผู้ใช้บริการ'
+    if (!/^[ก-๙a-zA-Z\s.-]+$/.test(carBrand.trim())) {
+      return 'ยี่ห้อรถยนต์ต้องเป็นตัวอักษรภาษาไทยหรือภาษาอังกฤษเท่านั้น'
+    }
+    if (!carModel.trim()) return 'กรุณากรอกรุ่นรถยนต์ของผู้ใช้บริการ'
+    if (!licensePlate.trim()) return 'กรุณากรอกทะเบียนรถยนต์ของผู้ใช้บริการ'
+    if (!/^[ก-๙0-9\s.-]+$/.test(licensePlate.trim())) return 'ทะเบียนรถยนต์ต้องเป็นตัวเลขและภาษาไทยเท่านั้น (เช่น 1กข-1234 หรือ กข 1234)'
+    if (!carType) return 'กรุณาเลือกชนิดระบบเกียร์รถยนต์'
     return ''
   }
 
   const handleStep1Next = () => {
     const err = validateStep1()
-    if (err) { setError(err); return }
+    if (err) {
+      setError(err)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
     setError('')
     setStep(2)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleStep2Next = () => {
-    if (!destination) { setError('กรุณาเลือกจุดหมายปลายทาง'); return }
-    if (distance <= 0) { setError('ไม่พบข้อมูลระยะทางจากจุดเริ่มต้นไปยังปลายทาง กรุณาเลือกจุดหมายใหม่อีกครั้งเพื่อคำนวณระยะทางจริง'); return }
+    const s1Err = validateStep1()
+    if (s1Err) {
+      setError(s1Err)
+      setStep(1)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    if (!destination) {
+      setError('กรุณาเลือกจุดหมายปลายทางของผู้ใช้บริการ')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    if (distance <= 0) {
+      setError('ไม่พบข้อมูลระยะทางจากจุดเริ่มต้นไปยังปลายทาง กรุณาเลือกจุดหมายใหม่อีกครั้งเพื่อคำนวณระยะทางจริง')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
     setError('')
     setStep(3)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+
+  const handleStep3Next = () => {
+    const s1Err = validateStep1()
+    if (s1Err) {
+      setError(s1Err)
+      setStep(1)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    if (!destination || distance <= 0) {
+      setError('กรุณาเลือกจุดหมายปลายทางของผู้ใช้บริการ')
+      setStep(2)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    setError('')
+    setStep(4)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const handleSubmit = async (simulatedPaymentStatus?: 'paid' | 'unpaid') => {
     setLoading(true); setError('')
+    const fullCarModel = `${carBrand.trim()} ${carModel.trim()}`.trim()
     try {
-      let finalNote = note;
-      if (paymentMethod === 2 && simulatedPaymentStatus) {
-        const statusText = simulatedPaymentStatus === 'paid' ? 'ชำระเงินแล้ว' : 'ยังไม่ได้ชำระเงิน';
-        finalNote = note ? `${note} [${statusText}]` : `[${statusText}]`;
-      }
       const res = await api.post('/pub/request-driver', {
         pubUsername: pubUser.username,
         custName, phoneNo, phoneEmer,
         carType,
+        carModel: fullCarModel,
+        licensePlate,
         isLadyMode,
-        note: finalNote,
+        note,
         paymentMethod,
+        reqdatetime: (() => {
+          const now = new Date()
+          const pad = (n: number) => String(n).padStart(2, '0')
+          return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.${String(now.getMilliseconds()).padStart(3, '0')}`
+        })(),
         dropoffLatitude: destination?.lat,
         dropoffLongitude: destination?.lng,
+        dropoffName: destination?.label || ''
       })
       if (res.data.success) {
         const requestId = res.data.data?.requestid || res.data.data?.id
+        if (requestId && destination?.label) {
+          try {
+            localStorage.setItem(`safeseat_dest_name_${requestId}`, destination.label)
+          } catch (e) {}
+        }
+        if (requestId) {
+          try {
+            if (fullCarModel) localStorage.setItem(`safeseat_carmodel_${requestId}`, fullCarModel)
+            if (licensePlate) localStorage.setItem(`safeseat_carplate_${requestId}`, licensePlate)
+          } catch (e) {}
+        }
         router.push(`/pub/waiting?id=${requestId}`)
       } else {
-        setError(res.data.message || 'เกิดข้อผิดพลาด')
+        setError(res.data.message || 'เกิดข้อผิดพลาดในการเรียกรถ')
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'ไม่สามารถบันทึกข้อมูลได้')
+      setError(err.response?.data?.message || 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง')
     } finally {
       setLoading(false)
     }
@@ -210,32 +331,36 @@ function RequestDriverContent() {
 
   const renderStepper = () => {
     const steps = [
-      { num: 1, label: 'ข้อมูลลูกค้า' },
+      { num: 1, label: 'ข้อมูลผู้ใช้บริการ' },
       { num: 2, label: 'เลือกจุดหมาย' },
       { num: 3, label: 'ตรวจสอบความปลอดภัย' },
       { num: 4, label: 'เลือกช่องทางชำระเงิน' }
     ]
     return (
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 36, position: 'relative' }}>
-        <div style={{ position: 'absolute', top: 19, left: '6%', right: '6%', height: 2, backgroundColor: '#e2e8f0', zIndex: 0 }} />
-        <div style={{ position: 'absolute', top: 19, left: '6%', width: `${((step - 1) / 3) * 88}%`, height: 2, backgroundColor: '#4f46e5', zIndex: 0, transition: 'all 0.3s' }} />
+      <div className="flex justify-between items-center mb-10 relative">
+        <div className="absolute top-5 left-[6%] right-[6%] h-[2px] bg-[var(--color-border)] z-0" />
+        <div className="absolute top-5 left-[6%] h-[2px] bg-gradient-to-r from-[#2340A7] to-[#2563EB] z-0 transition-all duration-300" style={{ width: `${((step - 1) / 3) * 88}%` }} />
         {steps.map(s => {
           const isCurrent = step === s.num
           const isCompleted = step > s.num
           return (
-            <div key={s.num} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 1, flex: 1, cursor: s.num < step ? 'pointer' : 'default' }} onClick={() => { if (s.num < step) setStep(s.num as Step) }}>
-              <div style={{
-                width: 38, height: 38, borderRadius: '50%',
-                backgroundColor: isCompleted ? '#4f46e5' : '#ffffff',
-                border: isCompleted ? '2px solid #4f46e5' : (isCurrent ? '2px solid #4f46e5' : '2px solid #cbd5e1'),
-                color: isCompleted ? '#ffffff' : (isCurrent ? '#4f46e5' : '#64748b'),
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 700, fontSize: 14, transition: 'all 0.2s',
-                boxShadow: isCurrent ? '0 0 0 4px rgba(79, 70, 229, 0.15)' : 'none',
-              }}>
+            <div 
+              key={s.num} 
+              onClick={() => { if (s.num < step) setStep(s.num as Step) }}
+              className={`flex flex-col items-center z-10 flex-1 ${s.num < step ? 'cursor-pointer' : 'cursor-default'}`}
+            >
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center font-bold text-base transition-all shadow-md ${
+                isCompleted 
+                  ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white border-none' 
+                  : isCurrent 
+                  ? 'bg-[var(--color-card)] border-2 border-[#2340A7] text-[#2340A7] ring-4 ring-[#2340A7]/20' 
+                  : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text-muted)]'
+              }`}>
                 {isCompleted ? '✓' : s.num}
               </div>
-              <span style={{ fontSize: 13, fontWeight: isCurrent || isCompleted ? 600 : 400, color: isCurrent || isCompleted ? '#4f46e5' : '#64748b', marginTop: 8, textAlign: 'center' }}>
+              <span className={`text-sm sm:text-base font-bold mt-2.5 text-center font-manrope ${
+                isCurrent || isCompleted ? 'text-[#2340A7]' : 'text-[var(--color-text-muted)]'
+              }`}>
                 {s.label}
               </span>
             </div>
@@ -246,475 +371,543 @@ function RequestDriverContent() {
   }
 
   if (!pubUser) return null
-  if (success) {
-    const trackingCode = createdRequestId
-    const trackingUrl = typeof window !== 'undefined' 
-      ? `${window.location.origin}/tracking?id=${trackingCode}`
-      : `http://localhost:3000/tracking?id=${trackingCode}`
-
-    return (
-      <div style={s.page}>
-        <nav style={s.navbar}><NavContent pubName={pubName} router={router} /></nav>
-        <div style={s.heroBar}>
-          <span style={s.heroLeft}>เรียก Safe Seat</span>
-          <span style={s.heroRight}>Hello {pubName}</span>
-        </div>
-        <main style={s.main}>
-          <div style={s.card}>
-            <div style={{ textAlign: 'center', padding: '24px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-              <div style={{ fontSize: 64, margin: '0 auto 8px' }}>✅</div>
-              <h2 style={{ color: '#4f46e5', fontSize: 24, fontWeight: 700, margin: 0 }}>เรียกรถสำเร็จ!</h2>
-              <p style={{ color: '#64748b', fontSize: 15, margin: 0, maxWidth: '500px', lineHeight: 1.6 }}>
-                บันทึกการเดินทางเรียบร้อยแล้ว แนะนำให้ลูกค้าหรือคนรู้จักสแกน QR Code ด้านล่างนี้เพื่อติดตามสถานะการเดินทางแบบเรียลไทม์
-              </p>
-
-              {/* QR Code Container */}
-              <div style={{
-                backgroundColor: '#f8fafc',
-                border: '1.5px dashed #cbd5e1',
-                borderRadius: 24,
-                padding: '32px 24px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 16,
-                marginTop: 8,
-                width: '100%',
-                maxWidth: '360px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
-              }}>
-                <div style={{ backgroundColor: '#ffffff', padding: 16, borderRadius: 16, boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
-                  <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(trackingUrl)}`}
-                    alt="Trip Tracking QR Code"
-                    style={{ width: 200, height: 200, display: 'block' }}
-                  />
-                </div>
-                
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>รหัสติดตามการเดินทาง (Tracking Code)</div>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: '#4f46e5', marginTop: 4, letterSpacing: '1px' }}>{trackingCode}</div>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 12, width: '100%', maxWidth: '360px' }}>
-                <button 
-                  onClick={() => router.push(`/pub/tracking?id=${trackingCode}`)}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#4f46e5',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: 12,
-                    padding: '13px 16px',
-                    fontSize: 15,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    fontFamily: "'Kanit', sans-serif"
-                  }}
-                >
-                  ติดตามการเดินทาง →
-                </button>
-              </div>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    )
-  }
 
   return (
-    <div style={s.page}>
-      {/* Navbar */}
-      <nav style={s.navbar}>
-        <NavContent pubName={pubName} router={router} />
-      </nav>
-
-      {/* Hero Bar */}
-      <div style={s.heroBar}>
-        <span style={s.heroLeft}>เรียก Safe Seat</span>
-        <span style={s.heroRight}>Hello {pubName}</span>
+    <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
+      
+      {}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#2340A7]/10 rounded-full blur-[140px]"></div>
       </div>
 
-      <main style={s.main}>
-        <div style={s.card}>
+      <div className="gradient-blur"></div>
+      <Navbar />
+      <FloatingNav />
+
+      <main className="relative z-10 max-w-4xl mx-auto px-6 pt-48 pb-24 flex flex-col gap-8">
+        
+        {}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[var(--color-card)] border border-[var(--color-border)] p-6 rounded-2xl shadow-xl">
+          <div>
+            <span className="text-xs font-bold text-[#2340A7] tracking-wider uppercase font-manrope">REQUEST SERVICE</span>
+            <h1 className="text-2xl sm:text-3xl font-bold font-manrope text-[var(--color-text)] mt-1">เรียกรถให้ผู้ใช้บริการ (Create Driver Request)</h1>
+          </div>
+          <div className="text-xs font-semibold px-4 py-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-muted)]">
+            🏪 สถานบันเทิง: <span className="text-[var(--color-text)] font-bold">{pubName}</span>
+          </div>
+        </div>
+
+        {rejectNotice && (
+          <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center gap-3 text-amber-500 font-bold text-xs shadow-md">
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-amber-500" />
+            <span>{rejectNotice}</span>
+          </div>
+        )}
+
+        {}
+        <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-8 shadow-xl flex flex-col gap-8">
           {renderStepper()}
 
-          {/* ─── STEP 1: กรอกข้อมูลส่วนตัว ─── */}
-          {step === 1 && (
-            <div style={s.stepContainer}>
-              <h2 style={s.cardTitle}>กรุณากรอกข้อมูลส่วนตัวของลูกค้า</h2>
-              {error && <div style={s.errorBox}>{error}</div>}
-
-              <div style={s.fieldFull}>
-                <label style={s.label}>ชื่อ - นามสกุล *</label>
-                <input value={custName} onChange={e => setCustName(e.target.value)}
-                  style={s.input} placeholder="กรอกชื่อ - นามสกุล" />
-              </div>
-
-              <div style={s.fieldRow}>
-                <div style={s.field}>
-                  <label style={s.label}>เบอร์โทรติดต่อ *</label>
-                  <input value={phoneNo} onChange={e => setPhoneNo(e.target.value)}
-                    maxLength={10} style={s.input} placeholder="เช่น 083xxxxxxx" />
-                </div>
-                <div style={s.field}>
-                  <label style={s.label}>เบอร์โทรติดต่อฉุกเฉิน *</label>
-                  <input value={phoneEmer} onChange={e => setPhoneEmer(e.target.value)}
-                    maxLength={10} style={s.input} placeholder="เช่น 083xxxxxxx" />
-                </div>
-              </div>
-
-              <div style={s.fieldFull}>
-                <label style={s.label}>ชนิดรถยนต์ของลูกค้า *</label>
-                <div style={{ display: 'flex', gap: 12, width: '100%' }}>
-                  {['Autometric', 'Manual', 'Electric'].map(type => {
-                    const active = carType === type
-                    return (
-                      <div
-                        key={type}
-                        onClick={() => setCarType(type)}
-                        style={{
-                          flex: 1,
-                          textAlign: 'center',
-                          padding: '14px 10px',
-                          borderRadius: 12,
-                          border: active ? '2px solid #4f46e5' : '1.5px solid #e2e8f0',
-                          backgroundColor: active ? '#f5f3ff' : '#ffffff',
-                          color: active ? '#4f46e5' : '#475569',
-                          fontWeight: active ? 600 : 400,
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          fontSize: 14,
-                        }}
-                      >
-                        {type === 'Autometric' ? '🚗 Auto' : type === 'Manual' ? '⚙️ Manual' : '⚡ Electric'}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div style={s.fieldFull}>
-                <label style={s.label}>หมายเหตุเพิ่มเติม (ถ้ามี)</label>
-                <textarea value={note} onChange={e => setNote(e.target.value)}
-                  maxLength={100} rows={3}
-                  style={{ ...s.input, resize: 'none' } as React.CSSProperties}
-                  placeholder="เช่น ผู้ใช้บริการต้องการระบุข้อมูลที่อยู่เพิ่มเติม หรือข้อมูลที่ต้องการแจ้งให้ทราบ" />
-              </div>
-
-              <div style={s.btnCenter}>
-                <button style={s.greenBtn} onClick={handleStep1Next}>ดำเนินการต่อ</button>
-              </div>
+          {error && (
+            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-500 text-sm sm:text-base font-bold flex items-center gap-2.5 animate-fade-in shadow-sm">
+              <span className="text-lg">⚠️</span>
+              <span>{error}</span>
             </div>
           )}
 
-          {/* ─── STEP 2: เลือกจุดหมาย ─── */}
-          {step === 2 && (
-            <div style={s.stepContainer}>
-              <h2 style={s.cardTitle}>เลือกจุดหมายปลายทาง</h2>
-              
-              {/* Location bar */}
-              <div style={s.locationBar}>
-                <div style={s.locBubbleBlue}>
-                  <span style={{ fontSize: 16 }}>📍</span>
-                  <span>จุดรับ: {pubName}</span>
-                </div>
-                <span style={{ color: '#94a3b8', fontWeight: 700 }}>→</span>
-                <div
-                  style={s.locBubbleRed}
-                  onClick={() => setShowMap(true)}
-                >
-                  <span style={{ fontSize: 16 }}>📍</span>
-                  <span style={{ color: destination ? '#dc2626' : '#64748b' }}>
-                    {destination ? (destination.label || `${destination.lat.toFixed(4)}, ${destination.lng.toFixed(4)}`) : 'กรุณาเลือกจุดหมายปลายทาง'}
-                  </span>
-                </div>
-              </div>
+          {}
+          {step === 1 && (
+            <div className="flex flex-col gap-6">
+              <h2 className="text-2xl font-extrabold font-manrope text-[var(--color-text)]">กรุณากรอกข้อมูลส่วนตัวของผู้ใช้บริการ</h2>
 
-              {error && <div style={s.errorBox}>{error}</div>}
+              {rejectNotice && (
+                <div className="p-4 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-500 text-sm font-semibold flex items-center justify-between shadow-md animate-fade-in">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">⚠️</span>
+                    <span>{rejectNotice}</span>
+                  </div>
+                  <button type="button" onClick={() => setRejectNotice('')} className="text-xs text-amber-400 hover:underline ml-2 cursor-pointer font-bold">
+                    ปิด
+                  </button>
+                </div>
+              )}
 
-              {/* Placeholder list or selected */}
-              <div style={s.locationList}>
-                {destination ? (
-                  <div style={s.locationItemSelected}>
-                    <span style={{ fontSize: 18 }}>📍</span>
-                    <div>
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>จุดหมายปลายทางที่เลือก</div>
-                      <div style={{ fontSize: 13, color: '#4f46e5', fontWeight: 600, marginTop: 2 }}>
-                        {destination.label}
-                      </div>
-                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
-                        ละติจูด {destination.lat.toFixed(5)}, ลองจิจูด {destination.lng.toFixed(5)}
-                      </div>
-                    </div>
-                    <button onClick={() => setShowMap(true)} style={s.changeBtn}>เปลี่ยนตำแหน่ง</button>
-                  </div>
-                ) : (
-                  <div style={{ padding: '40px 20px', textAlign: 'center', backgroundColor: '#f8fafc', borderRadius: 16, border: '1px dashed #cbd5e1' }}>
-                    <div style={{ fontSize: 40, marginBottom: 12 }}>📍</div>
-                    <h3 style={{ fontSize: 16, fontWeight: 600, color: '#334155', margin: '0 0 8px' }}>
-                      ยังไม่ได้เลือกจุดหมายปลายทาง
-                    </h3>
-                    <p style={{ color: '#64748b', fontSize: 13, marginBottom: 24, lineHeight: 1.5 }}>
-                      กรุณากดปุ่มด้านล่างเพื่อเปิดแผนที่<br/>และค้นหาหรือปักหมุดตำแหน่งที่ต้องการให้คนขับไปส่ง
-                    </p>
-                    <button style={s.mapBtn} onClick={() => setShowMap(true)}>
-                      🗺️ เปิดแผนที่เพื่อระบุตำแหน่ง
-                    </button>
-                  </div>
+              <div className="flex flex-col gap-2.5">
+                <label className="text-[15.5px] font-bold text-[var(--color-text)]">ชื่อ - นามสกุลผู้ใช้บริการ *</label>
+                <input 
+                  value={custName} 
+                  onChange={e => {
+                    const val = e.target.value
+                    if (/^[ก-๙a-zA-Z\s.-]*$/.test(val)) {
+                      setCustName(val)
+                    }
+                  }}
+                  autoComplete="off"
+                  className={`w-full px-4 py-3.5 bg-[var(--color-surface)] border rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none transition-colors ${
+                    isCustNameError
+                      ? 'border-red-500 bg-red-500/5 focus:border-red-500'
+                      : 'border-[var(--color-border)] focus:border-[#2340A7]'
+                  }`}
+                  placeholder="กรอกชื่อ - นามสกุล" 
+                />
+                {isCustNameError && (
+                  <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
                 )}
               </div>
 
-              <div style={s.btnRow}>
-                <button style={s.outlineBtn} onClick={() => { setError(''); setStep(1) }}>← ย้อนกลับ</button>
-                <button
-                  style={{ ...s.greenBtn, opacity: loadingRoute ? 0.7 : 1, cursor: loadingRoute ? 'not-allowed' : 'pointer' }}
-                  onClick={handleStep2Next}
-                  disabled={loadingRoute}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[15.5px] font-bold text-[var(--color-text)]">เบอร์โทรติดต่อ *</label>
+                  <input 
+                    value={phoneNo} 
+                    onChange={e => setPhoneNo(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (!/[0-9]/.test(e.key) && !['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                        e.preventDefault()
+                      }
+                    }}
+                    maxLength={10} 
+                    inputMode="numeric"
+                    autoComplete="off"
+                    className={`w-full px-4 py-3.5 bg-[var(--color-surface)] border rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none transition-colors ${
+                      isPhoneError
+                        ? 'border-red-500 bg-red-500/5 focus:border-red-500'
+                        : 'border-[var(--color-border)] focus:border-[#2340A7]'
+                    }`}
+                    placeholder="กรุณากรอกเบอร์โทรศัพท์ (10 หลัก)" 
+                  />
+                  {isPhoneError && (
+                    <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[15.5px] font-bold text-[var(--color-text)]">เบอร์โทรติดต่อฉุกเฉิน *</label>
+                  <input 
+                    value={phoneEmer} 
+                    onChange={e => setPhoneEmer(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (!/[0-9]/.test(e.key) && !['Backspace', 'Tab', 'Delete', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter'].includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                        e.preventDefault()
+                      }
+                    }}
+                    maxLength={10} 
+                    inputMode="numeric"
+                    autoComplete="off"
+                    className={`w-full px-4 py-3.5 bg-[var(--color-surface)] border rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none transition-colors ${
+                      isPhoneEmerError
+                        ? 'border-red-500 bg-red-500/5 focus:border-red-500'
+                        : 'border-[var(--color-border)] focus:border-[#2340A7]'
+                    }`}
+                    placeholder="กรุณากรอกเบอร์โทรฉุกเฉิน (10 หลัก)" 
+                  />
+                  {isPhoneEmerError && (
+                    <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[15.5px] font-bold text-[var(--color-text)]">ยี่ห้อรถยนต์ *</label>
+                  <input 
+                    value={carBrand} 
+                    onChange={e => setCarBrand(e.target.value)}
+                    autoComplete="off"
+                    className={`w-full px-4 py-3.5 bg-[var(--color-surface)] border rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none transition-colors ${
+                      isCarBrandError
+                        ? 'border-red-500 bg-red-500/5 focus:border-red-500'
+                        : 'border-[var(--color-border)] focus:border-[#2340A7]'
+                    }`}
+                    placeholder="เช่น Honda, Toyota, BYD" 
+                  />
+                  {isCarBrandError && (
+                    <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[15.5px] font-bold text-[var(--color-text)]">รุ่นรถยนต์ *</label>
+                  <input 
+                    value={carModel} 
+                    onChange={e => setCarModel(e.target.value)}
+                    autoComplete="off"
+                    className={`w-full px-4 py-3.5 bg-[var(--color-surface)] border rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none transition-colors ${
+                      isCarModelError
+                        ? 'border-red-500 bg-red-500/5 focus:border-red-500'
+                        : 'border-[var(--color-border)] focus:border-[#2340A7]'
+                    }`}
+                    placeholder="เช่น Civic, Camry, Atto 3" 
+                  />
+                  {isCarModelError && (
+                    <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2.5">
+                  <label className="text-[15.5px] font-bold text-[var(--color-text)]">ทะเบียนรถยนต์ *</label>
+                  <input 
+                    value={licensePlate} 
+                    onChange={e => {
+                      const val = e.target.value
+                      if (/^[ก-๙0-9\s.-]*$/.test(val)) {
+                        setLicensePlate(val)
+                      }
+                    }}
+                    autoComplete="off"
+                    className={`w-full px-4 py-3.5 bg-[var(--color-surface)] border rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none transition-colors ${
+                      isLicensePlateError
+                        ? 'border-red-500 bg-red-500/5 focus:border-red-500'
+                        : 'border-[var(--color-border)] focus:border-[#2340A7]'
+                    }`}
+                    placeholder="เช่น 1กข 1234 หรือ กข 1234 เชียงใหม่" 
+                  />
+                  {isLicensePlateError && (
+                    <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                <label className="text-[15.5px] font-bold text-[var(--color-text)]">ชนิดระบบเกียร์รถยนต์ *</label>
+                <div className="grid grid-cols-3 gap-3.5">
+                  {['Autometric', 'Manual', 'Electric'].map(type => {
+                    const active = carType === type
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setCarType(type)}
+                        style={active ? { color: '#ffffff' } : {}}
+                        className={`py-4 px-3 rounded-xl text-[15px] font-bold tracking-wider transition-all border cursor-pointer ${
+                          active
+                            ? 'bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white border-transparent shadow-md'
+                            : isCarTypeError
+                            ? 'bg-[var(--color-surface)] border-red-500 text-[var(--color-text-muted)]'
+                            : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text-muted)] hover:border-[#2340A7]'
+                        }`}
+                      >
+                        {type === 'Autometric' ? '🚗 Auto' : type === 'Manual' ? '⚙️ Manual' : '⚡ Electric'}
+                      </button>
+                    )
+                  })}
+                </div>
+                {isCarTypeError && (
+                  <span className="text-xs text-red-500 font-semibold block">⚠️ {error}</span>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2.5">
+                <label className="text-[15.5px] font-bold text-[var(--color-text)]">หมายเหตุเพิ่มเติม (ถ้ามี)</label>
+                <textarea 
+                  value={note} 
+                  onChange={e => setNote(e.target.value)}
+                  maxLength={100} 
+                  rows={3}
+                  autoComplete="off"
+                  className="w-full px-4 py-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl text-[16px] text-[var(--color-text)] focus:outline-none focus:border-[#2340A7] transition-colors resize-none"
+                  placeholder="เช่น ผู้ใช้บริการต้องการระบุข้อมูลที่อยู่เพิ่มเติม หรือข้อมูลที่ต้องการแจ้งให้ทราบ" 
+                />
+              </div>
+
+              <div className="flex justify-between items-center mt-4">
+                <button 
+                  type="button"
+                  onClick={() => router.push('/pub/dashboard')}
+                  className="px-6 py-3 border border-[var(--color-border)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:border-[#2340A7] transition-colors cursor-pointer"
                 >
-                  {loadingRoute ? 'กำลังคำนวณ...' : 'ยืนยันพิกัด'}
+                  ← ย้อนกลับ
+                </button>
+                <button 
+                  onClick={handleStep1Next}
+                  style={{ color: '#ffffff' }}
+                  className="px-8 py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
+                >
+                  <span style={{ color: '#ffffff' }}>ดำเนินการต่อ</span> <ArrowRight className="w-4 h-4 text-white" style={{ color: '#ffffff' }} />
                 </button>
               </div>
             </div>
           )}
 
-          {/* ─── STEP 3: ยืนยันข้อมูล ─── */}
-          {step === 3 && (
-            <div style={s.stepContainer}>
-              <h2 style={s.cardTitle}>ตรวจสอบข้อมูล & บริการความปลอดภัย</h2>
+          {}
+          {step === 2 && (
+            <div className="flex flex-col gap-6">
+              <h2 className="text-2xl font-extrabold font-manrope text-[var(--color-text)]">เลือกจุดหมายปลายทาง</h2>
               
-              {/* Live route map display */}
-              {destination && (
-                <div style={{ height: 260, position: 'relative', borderRadius: 16, overflow: 'hidden', border: '1px solid #e2e8f0' }}>
-                  <RouteMap pickupLat={pickupLat} pickupLng={pickupLng} dropoffLat={destination.lat} dropoffLng={destination.lng} />
-                  <div style={{ position: 'absolute', left: 16, bottom: 16, zIndex: 1000, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 700, color: '#4f46e5', border: '1px solid #c7d2fe' }}>
-                    🛣️ ระยะทางประมาณ: {distance.toFixed(2)} กม.
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div className="flex-1 flex items-center gap-2.5 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-500 text-sm sm:text-base font-bold w-full">
+                  <MapPin className="w-5 h-5 shrink-0" />
+                  <span>จุดรับ: {pubName}</span>
+                </div>
+                <span className="text-[var(--color-text-muted)] font-bold text-lg">→</span>
+                <div
+                  onClick={() => setShowMap(true)}
+                  className={`flex-1 flex items-center gap-2.5 p-4 bg-[var(--color-surface)] border rounded-xl text-sm sm:text-base font-bold cursor-pointer transition-colors w-full ${
+                    isDestError
+                      ? 'border-red-500 bg-red-500/5'
+                      : 'border-[var(--color-border)] hover:border-[#2340A7]'
+                  }`}
+                >
+                  <MapPin className="w-5 h-5 shrink-0 text-[#2340A7]" />
+                  <span className={destination ? 'text-[#2340A7]' : 'text-[var(--color-text-muted)]'}>
+                    {destination ? (destination.label || `${destination.lat.toFixed(4)}, ${destination.lng.toFixed(4)}`) : 'กรุณาคลิกเลือกจุดหมายปลายทาง'}
+                  </span>
+                </div>
+              </div>
+              {isDestError && (
+                <span className="text-xs text-red-500 font-semibold block -mt-2">⚠️ {error}</span>
+              )}
+
+              {destination ? (
+                <div className="p-6 bg-[var(--color-surface)] border-2 border-[#2340A7] rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-3.5 bg-[#2340A7]/15 rounded-xl text-[#2340A7]">
+                      <MapPin className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <div className="text-base font-bold text-[var(--color-text)]">จุดหมายปลายทางที่เลือก</div>
+                      <div className="text-sm sm:text-base font-bold text-[#2340A7] mt-1">{destination.label}</div>
+                      <div className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-0.5">พิกัด: {destination.lat.toFixed(5)}, {destination.lng.toFixed(5)}</div>
+                    </div>
                   </div>
-                  <div style={{ position: 'absolute', right: 16, bottom: 16, zIndex: 1000, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 700, color: '#0f172a', border: '1px solid #cbd5e1' }}>
-                    🛡️ ระบบติดตามความปลอดภัย
-                  </div>
+                  <button 
+                    onClick={() => setShowMap(true)} 
+                    className="px-5 py-2.5 border border-[var(--color-border)] rounded-full text-sm font-bold text-[var(--color-text)] hover:border-[#2340A7] transition-colors cursor-pointer"
+                  >
+                    เปลี่ยนตำแหน่ง
+                  </button>
+                </div>
+              ) : (
+                <div className="p-12 text-center bg-[var(--color-surface)] border-2 border-dashed border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-3">
+                  <MapPin className="w-14 h-14 text-[#2340A7]" />
+                  <h3 className="text-lg font-bold text-[var(--color-text)]">ยังไม่ได้เลือกจุดหมายปลายทาง</h3>
+                  <p className="text-sm text-[var(--color-text-muted)] max-w-sm">กรุณากดปุ่มด้านล่างเพื่อเปิดแผนที่และปักหมุดตำแหน่งจุดหมายปลายทางให้ผู้ให้บริการขับรถไปส่ง</p>
+                  <button 
+                    onClick={() => setShowMap(true)}
+                    className="mt-2 px-7 py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white font-bold text-sm sm:text-base uppercase tracking-wider rounded-full shadow-md cursor-pointer flex items-center gap-2"
+                  >
+                    🗺️ เปิดแผนที่เพื่อระบุตำแหน่ง
+                  </button>
                 </div>
               )}
 
-              {/* Info section */}
-              <div style={{ padding: '16px 8px 0' }}>
-                {error && <div style={s.errorBox}>{error}</div>}
-                <div style={s.infoGrid}>
-                  <div style={s.infoItem}>
-                    <span style={{ fontSize: 20 }}>👤</span>
-                    <div>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>ชื่อลูกค้า</div>
-                      <div style={{ fontWeight: 700, fontSize: 15, color: '#0f172a' }}>{custName}</div>
-                    </div>
-                  </div>
-                  <div style={s.infoItem}>
-                    <span style={{ fontSize: 20 }}>📞</span>
-                    <div>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>เบอร์โทรติดต่อ / ฉุกเฉิน</div>
-                      <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{phoneNo} / {phoneEmer}</div>
-                    </div>
-                  </div>
-                  <div style={s.infoItem}>
-                    <span style={{ fontSize: 20 }}>🚗</span>
-                    <div>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>ประเภทรถ</div>
-                      <div style={{ fontWeight: 600, color: '#0f172a', fontSize: 14 }}>{carType}</div>
-                    </div>
-                  </div>
-                  <div style={s.infoItem}>
-                    <span style={{ fontSize: 20 }}>📍</span>
-                    <div>
-                      <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600 }}>จุดหมายปลายทาง</div>
-                      <div style={{ color: '#0f172a', fontSize: 14, fontWeight: 700, marginTop: 2 }}>
-                        {destination?.label || '-'}
-                      </div>
-                      <div style={{ color: '#64748b', fontSize: 11, marginTop: 2 }}>
-                        {destination?.lat.toFixed(5)}, {destination?.lng.toFixed(5)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Lady Mode */}
-                <div style={s.ladyModeRow}>
-                  <div style={s.ladyLeft}>
-                    <span style={{ fontSize: 22 }}>👩</span>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>Lady Mode (คนขับผู้หญิง)</div>
-                      <div style={{ color: '#64748b', fontSize: 12 }}>เปิดตัวเลือกนี้หากต้องการเฉพาะคนขับผู้หญิง</div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: '#10b981', fontWeight: 600, fontSize: 13 }}>ฟรี</span>
-                    <input type="checkbox" checked={isLadyMode}
-                      onChange={e => setIsLadyMode(e.target.checked)}
-                      style={{ width: 20, height: 20, accentColor: '#4f46e5', cursor: 'pointer' }}
-                    />
-                  </div>
-                </div>
-
-                <div style={s.btnRow}>
-                  <button style={s.outlineBtn} onClick={() => { setError(''); setStep(2) }}>← ย้อนกลับ</button>
-                  <button style={s.greenBtn} onClick={() => { setError(''); setStep(4) }}>ดำเนินการต่อ</button>
-                </div>
+              <div className="flex justify-between items-center mt-6">
+                <button 
+                  onClick={() => { setError(''); setStep(1) }}
+                  className="px-7 py-3.5 border border-[var(--color-border)] rounded-full text-sm sm:text-base font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
+                >
+                  ← ย้อนกลับ
+                </button>
+                <button
+                  onClick={handleStep2Next}
+                  disabled={loadingRoute}
+                  style={{ color: '#ffffff' }}
+                  className="px-9 py-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white font-bold text-sm sm:text-base uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
+                >
+                  <span style={{ color: '#ffffff' }}>{loadingRoute ? 'กำลังคำนวณ...' : 'ยืนยันพิกัด →'}</span>
+                </button>
               </div>
             </div>
           )}
 
-          {/* ─── STEP 4: ชำระเงิน ─── */}
-          {step === 4 && (
-            <div style={s.stepContainer}>
-              <h2 style={s.cardTitle}>เลือกช่องทางการชำระเงิน</h2>
-              {error && <div style={s.errorBox}>{error}</div>}
+          {}
+          {step === 3 && (
+            <div className="flex flex-col gap-6">
+              <h2 className="text-2xl font-extrabold font-manrope text-[var(--color-text)]">ตรวจสอบข้อมูล &amp; บริการความปลอดภัย</h2>
+              
+              {destination && (
+                <div className="h-64 relative rounded-2xl overflow-hidden border border-[var(--color-border)] shadow-md">
+                  <RouteMap pickupLat={pickupLat} pickupLng={pickupLng} dropoffLat={destination.lat} dropoffLng={destination.lng} distance={distance} />
+                </div>
+              )}
 
-              <div style={s.priceBox}>
-                <span style={{ fontSize: 24 }}>💳</span>
-                <div>
-                  <div style={{ fontSize: 13, color: '#64748b' }}>ค่าบริการตามระยะทาง ({distance.toFixed(2)} กม.)</div>
-                  <div style={{ fontSize: 32, fontWeight: 700, color: '#4f46e5' }}>฿{estimatedPrice}</div>
+              {/* ข้อมูลลูกค้าและช่องทางการติดต่อ */}
+              <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col gap-3 shadow-xs">
+                <div className="text-sm font-extrabold text-[#2340A7] flex items-center gap-2 border-b border-[var(--color-border)] pb-2.5">
+                  <span>👤</span> ข้อมูลผู้ใช้บริการ &amp; ช่องทางการติดต่อ
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <div className="p-3 bg-[var(--color-card)] rounded-xl border border-[var(--color-border)]">
+                    <div className="text-xs text-[var(--color-text-muted)] font-medium">ชื่อ - นามสกุลผู้ใช้บริการ</div>
+                    <div className="text-sm font-bold text-[var(--color-text)] mt-0.5">{custName || '—'}</div>
+                  </div>
+                  <div className="p-3 bg-[var(--color-card)] rounded-xl border border-[var(--color-border)]">
+                    <div className="text-xs text-[var(--color-text-muted)] font-medium">เบอร์โทรศัพท์ติดต่อ</div>
+                    <div className="text-sm font-bold text-[var(--color-text)] mt-0.5">{phoneNo || '—'}</div>
+                  </div>
+                  <div className="p-3 bg-[var(--color-card)] rounded-xl border border-[var(--color-border)]">
+                    <div className="text-xs text-[var(--color-text-muted)] font-medium">เบอร์โทรติดต่อฉุกเฉิน</div>
+                    <div className="text-sm font-bold text-[var(--color-text)] mt-0.5">{phoneEmer || '—'}</div>
+                  </div>
                 </div>
               </div>
 
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: '#334155', margin: '20px 0 12px' }}>เลือกช่องทางการชำระเงิน</h3>
-
-              {[
-                { value: 2, icon: '📱', name: 'โอนเงิน / PromptPay', desc: 'สแกน QR Code เพื่อชำระเงินผ่าน Mobile Banking' },
-                { value: 1, icon: '💵', name: 'เงินสด (Cash)', desc: 'ชำระเงินสดโดยตรงกับคนขับรถเมื่อถึงที่หมาย' },
-              ].map(opt => (
-                <div
-                  key={opt.value}
-                  style={{
-                    ...s.payOption,
-                    border: paymentMethod === opt.value ? '2.5px solid #4f46e5' : '1.5px solid #e2e8f0',
-                    backgroundColor: paymentMethod === opt.value ? '#f5f3ff' : '#ffffff',
-                  }}
-                  onClick={() => {
-                    if (!verifyingPayment && !loading) {
-                      setPaymentMethod(opt.value as 1 | 2);
-                    }
-                  }}
-                >
-                  <div style={{
-                    ...s.radioCircle,
-                    borderColor: paymentMethod === opt.value ? '#4f46e5' : '#cbd5e1',
-                  }}>
-                    {paymentMethod === opt.value && <div style={s.radioFill} />}
-                  </div>
-                  <span style={{ fontSize: 28 }}>{opt.icon}</span>
+              {/* ข้อมูลรถยนต์และจุดหมายปลายทาง */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center gap-3">
+                  <div className="p-2.5 bg-indigo-500/15 rounded-lg text-indigo-500 text-xl">🚗</div>
                   <div>
-                    <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 15 }}>{opt.name}</div>
-                    <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{opt.desc}</div>
+                    <div className="text-xs text-[var(--color-text-muted)] font-medium">รถยนต์ / ทะเบียน / ระบบเกียร์</div>
+                    <div className="text-sm font-bold text-[var(--color-text)]">{carBrand} {carModel} ({licensePlate}) · {carType === 'Autometric' ? 'Auto' : carType}</div>
                   </div>
                 </div>
-              ))}
 
-              {/* QR Code Container if PromptPay is selected */}
-              {paymentMethod === 2 && !verifyingPayment && (
-                <div style={{
-                  backgroundColor: '#f8fafc',
-                  border: '1.5px dashed #cbd5e1',
-                  borderRadius: 16,
-                  padding: '24px 16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 16,
-                  marginTop: 16,
-                  transition: 'all 0.3s'
-                }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, color: '#1e3a8a', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ backgroundColor: '#1e3a8a', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 11 }}>Prompt Pay</span>
-                    สแกนเพื่อชำระเงินนอกระบบ
+                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center gap-3">
+                  <div className="p-2.5 bg-indigo-500/15 rounded-lg text-indigo-500 text-xl">📍</div>
+                  <div>
+                    <div className="text-xs text-[var(--color-text-muted)] font-medium">จุดหมายปลายทาง ({distance.toFixed(2)} กม.)</div>
+                    <div className="text-sm font-bold text-[var(--color-text)]">{destination?.label || '-'}</div>
                   </div>
-                  
-                  <div style={{ backgroundColor: '#fff', padding: 12, borderRadius: 12, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                </div>
+              </div>
+
+              {note && (
+                <div className="p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-start gap-3">
+                  <div className="p-2 bg-amber-500/15 rounded-lg text-amber-500 text-lg shrink-0">📝</div>
+                  <div>
+                    <div className="text-xs text-[var(--color-text-muted)] font-medium">หมายเหตุเพิ่มเติม</div>
+                    <div className="text-sm font-semibold text-[var(--color-text)] mt-0.5">{note}</div>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-5 bg-[#2340A7]/10 border border-[#2340A7]/30 rounded-2xl flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">👩</span>
+                  <div>
+                    <div className="text-sm font-bold text-[var(--color-text)]">Lady Mode (ผู้ให้บริการขับรถผู้หญิง)</div>
+                    <div className="text-xs text-[var(--color-text-muted)]">เปิดตัวเลือกนี้หากต้องการผู้ให้บริการขับรถผู้หญิงในการให้บริการ</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-bold text-emerald-500 uppercase">ฟรี</span>
+                  <input 
+                    type="checkbox" 
+                    checked={isLadyMode}
+                    onChange={e => setIsLadyMode(e.target.checked)}
+                    className="w-5 h-5 accent-[#2340A7] cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center mt-6">
+                <button 
+                  onClick={() => { setError(''); setStep(2) }}
+                  className="px-7 py-3.5 border border-[var(--color-border)] rounded-full text-sm sm:text-base font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
+                >
+                  ← ย้อนกลับ
+                </button>
+                <button 
+                  onClick={handleStep3Next}
+                  style={{ color: '#ffffff' }}
+                  className="px-9 py-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white font-bold text-sm sm:text-base uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
+                >
+                  <span style={{ color: '#ffffff' }}>ดำเนินการต่อ →</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="flex flex-col gap-6">
+              <h2 className="text-2xl font-extrabold font-manrope text-[var(--color-text)]">เลือกช่องทางการชำระเงิน</h2>
+
+              <div className="p-6 bg-gradient-to-r from-[#2340A7]/15 to-[#2563EB]/15 border border-[#2340A7]/40 rounded-2xl flex items-center gap-4">
+                <div className="p-4 bg-[#2340A7] text-white rounded-xl shadow-md">
+                  <CreditCard className="w-8 h-8" />
+                </div>
+                <div>
+                  <div className="text-sm text-[var(--color-text-muted)] font-medium">ค่าบริการประมาณการตามระยะทาง ({distance.toFixed(2)} กม.)</div>
+                  <div className="text-4xl sm:text-5xl font-extrabold font-manrope text-[var(--color-text)] mt-1">฿{estimatedPrice}</div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {[
+                  { value: 2, icon: QrCode, name: 'โอนเงิน / PromptPay', desc: 'สแกน QR Code เพื่อชำระเงินผ่าน Mobile Banking' },
+                  { value: 1, icon: CreditCard, name: 'เงินสด (Cash)', desc: 'ชำระเงินสดโดยตรงกับผู้ให้บริการขับรถเมื่อถึงที่หมาย' },
+                ].map(opt => {
+                  const IconComp = opt.icon
+                  const active = paymentMethod === opt.value
+                  return (
+                    <div
+                      key={opt.value}
+                      onClick={() => {
+                        if (!verifyingPayment && !loading) {
+                          setPaymentMethod(opt.value as 1 | 2);
+                        }
+                      }}
+                      className={`p-6 rounded-2xl border cursor-pointer transition-all flex items-center gap-4 ${
+                        active
+                          ? 'border-2 border-[#2340A7] bg-[#2340A7]/10 shadow-md'
+                          : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[#2340A7]'
+                      }`}
+                    >
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${active ? 'border-[#2340A7]' : 'border-[var(--color-border)]'}`}>
+                        {active && <div className="w-3 h-3 rounded-full bg-[#2340A7]" />}
+                      </div>
+                      <div className="p-3 bg-[var(--color-card)] rounded-xl border border-[var(--color-border)] text-[#2340A7]">
+                        <IconComp className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <div className="text-base sm:text-lg font-bold text-[var(--color-text)]">{opt.name}</div>
+                        <div className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-0.5">{opt.desc}</div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {paymentMethod === 2 && !verifyingPayment && (
+                <div className="p-6 bg-[var(--color-surface)] border-2 border-dashed border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-4 text-center">
+                  <div className="text-sm font-bold text-[#2340A7] uppercase tracking-wider font-manrope">PROMPTPAY QR CODE</div>
+                  <div className="p-4 bg-white rounded-2xl shadow-md border overflow-hidden">
                     <img 
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=SafeSeat-Payment-Fee-${estimatedPrice}`}
+                      src="/images/promptpay_qr.png"
                       alt="PromptPay QR Code"
-                      style={{ width: 160, height: 160, display: 'block' }}
+                      className="w-52 h-52 object-contain rounded-lg"
                     />
                   </div>
-                  
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>ยอดชำระเงิน</div>
-                    <div style={{ fontSize: 22, fontWeight: 700, color: '#1e293b' }}>฿{estimatedPrice}</div>
-                  </div>
-
-                  <p style={{ fontSize: 12, color: '#64748b', textAlign: 'center', margin: 0, lineHeight: 1.4 }}>
-                    * สามารถชำระเงินตอนนี้ หรือชำระหลังจากถึงที่หมายกับคนขับโดยตรงก็ได้
-                  </p>
+                  <div className="text-xl font-extrabold text-[var(--color-text)]">ยอดชำระเงิน: ฿{estimatedPrice}</div>
+                  <p className="text-xs text-[var(--color-text-muted)] whitespace-nowrap">* สแกนเพื่อโอนชำระเงินล่วงหน้า หรือชำระเงินสดกับผู้ให้บริการขับรถเมื่อถึงที่หมาย</p>
                 </div>
               )}
 
-              {/* Verification Loading State */}
               {verifyingPayment && (
-                <div style={{
-                  backgroundColor: '#f8fafc',
-                  border: '1.5px solid #e2e8f0',
-                  borderRadius: 16,
-                  padding: '32px 16px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 12,
-                  marginTop: 16,
-                  textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: 32, animation: 'spin 1s linear infinite' }}>🔄</div>
-                  <div style={{ fontWeight: 700, color: '#4f46e5', fontSize: 15 }}>กำลังตรวจสอบการชำระเงินจำลอง...</div>
-                  <div style={{ fontSize: 12, color: '#64748b' }}>ระบบกำลังจำลองการเชื่อมต่อ API ของธนาคาร</div>
-                  <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+                <div className="p-8 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-3 text-center">
+                  <RefreshCw className="w-8 h-8 text-[#2340A7] animate-spin" />
+                  <div className="text-sm font-bold text-[var(--color-text)]">กำลังตรวจสอบข้อมูลการชำระเงิน...</div>
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div style={s.btnRow}>
+              <div className="flex justify-between items-center mt-4">
                 <button 
-                  style={s.outlineBtn} 
                   onClick={() => { setError(''); setStep(3) }}
                   disabled={loading || verifyingPayment}
+                  className="px-6 py-3 border border-[var(--color-border)] rounded-full text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors cursor-pointer"
                 >
                   ← ย้อนกลับ
                 </button>
 
-                {paymentMethod === 2 ? (
-                  // PromptPay buttons
-                  <button
-                    type="button"
-                    style={{ 
-                      ...s.greenBtn, 
-                      opacity: loading || verifyingPayment ? 0.5 : 1,
-                      cursor: loading || verifyingPayment ? 'not-allowed' : 'pointer'
-                    }}
-                    onClick={() => {
-                      if (!loading && !verifyingPayment) {
-                        setVerifyingPayment(true);
-                        setError('');
-                        setTimeout(() => {
-                          setVerifyingPayment(false);
-                          handleSubmit('paid');
-                        }, 1500);
-                      }
-                    }}
-                    disabled={loading || verifyingPayment}
-                  >
-                    ชำระเงินแล้ว
-                  </button>
-                ) : (
-                  // Cash button
-                  <button
-                    style={{ ...s.greenBtn, opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
-                    onClick={() => handleSubmit()}
-                    disabled={loading}
-                  >
-                    {loading ? 'กำลังส่งข้อมูล...' : 'เรียกคนขับรถเลย!'}
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    if (paymentMethod === 2) {
+                      setVerifyingPayment(true);
+                      setTimeout(() => {
+                        setVerifyingPayment(false);
+                        handleSubmit('paid');
+                      }, 1500);
+                    } else {
+                      handleSubmit();
+                    }
+                  }}
+                  disabled={loading || verifyingPayment}
+                  style={{ color: '#ffffff' }}
+                  className="px-8 py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
+                >
+                  <span style={{ color: '#ffffff' }}>{loading ? 'กำลังส่งข้อมูล...' : 'เรียกผู้ให้บริการขับรถเลย! ✓'}</span>
+                </button>
               </div>
             </div>
           )}
+
         </div>
       </main>
 
@@ -731,305 +924,21 @@ function RequestDriverContent() {
           onCancel={() => setShowMap(false)}
         />
       )}
-
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
-        * { box-sizing: border-box; font-family: 'Prompt', sans-serif; }
-        input:focus, select:focus, textarea:focus {
-          outline: none;
-          border-color: #4f46e5 !important;
-          box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
-        }
-      `}</style>
     </div>
   )
-}
-
-function NavContent({ pubName, router }: { pubName: string; router: any }) {
-  const handleLogout = () => {
-    const isConfirmed = window.confirm('คุณต้องการออกจากระบบใช่หรือไม่?')
-    if (isConfirmed) {
-      localStorage.removeItem('pub_user')
-      router.push('/login')
-    }
-  }
-  return (
-    <>
-      <div style={s.navLeft}>
-        <div style={s.logoCircle}>🛡️</div>
-        <span onClick={() => router.push('/pub/dashboard')} style={{ ...s.logoText, cursor: 'pointer' }}>Safe<span style={s.logoAccent}>Seat</span></span>
-      </div>
-      <div style={s.navRight}>
-        <span style={s.navLink} onClick={() => router.push('/pub/dashboard')}>หน้าแรก</span>
-        <span style={s.navLink} onClick={() => router.push('/pub/service-info')}>ประวัติการเรียกรถ</span>
-        <span style={{ ...s.navLink, display: 'flex', alignItems: 'center', gap: 6 }}>
-          👤 {pubName}
-        </span>
-        <button onClick={handleLogout} style={s.logoutBtn}>ออกจากระบบ</button>
-      </div>
-    </>
-  )
-}
-
-function Footer() {
-  return (
-    <footer style={s.footer}>
-      © 2026 Safe Seat Application. All rights reserved.
-    </footer>
-  )
-}
-
-const s: { [k: string]: React.CSSProperties } = {
-  page: {
-    minHeight: '100vh',
-    backgroundColor: '#f8fafc',
-    fontFamily: "'Prompt', sans-serif",
-    display: 'flex', flexDirection: 'column',
-  },
-  navbar: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '0 40px', height: 64,
-    backgroundColor: '#ffffff',
-    borderBottom: '1px solid #e2e8f0',
-  },
-  navLeft: { display: 'flex', alignItems: 'center', gap: 10 },
-  logoCircle: {
-    width: 36, height: 36, borderRadius: '50%',
-    backgroundColor: '#dbeafe',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 16, border: '2px solid #bfdbfe',
-  },
-  logoText: { fontSize: 20, fontWeight: 700, color: '#1e293b' },
-  logoAccent: { color: '#4f46e5' },
-  navRight: { display: 'flex', alignItems: 'center', gap: 20 },
-  navLink: { fontSize: 14, color: '#4f46e5', cursor: 'pointer', fontWeight: 500 },
-  logoutBtn: {
-    background: 'none', border: '1px solid #e2e8f0',
-    borderRadius: 8, padding: '6px 14px',
-    fontSize: 12, color: '#64748b',
-    cursor: 'pointer', fontFamily: "'Prompt', sans-serif",
-    transition: 'all 0.2s',
-  },
-  // Hero banner
-  heroBar: {
-    backgroundColor: '#ffffff',
-    borderBottom: '1px solid #e2e8f0',
-    padding: '16px 40px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundImage: 'linear-gradient(to right, rgba(248,250,252,0.8), rgba(255,255,255,1), rgba(248,250,252,0.8))',
-  },
-  heroLeft: {
-    fontSize: 24, fontWeight: 700, color: '#1e293b',
-    letterSpacing: '-0.5px',
-  },
-  heroRight: {
-    fontSize: 16, fontWeight: 600, color: '#64748b',
-  },
-  main: {
-    flex: 1,
-    display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-    padding: '40px 24px 60px',
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: '40px 48px',
-    width: '100%',
-    maxWidth: 860,
-    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
-    border: '1px solid #e2e8f0',
-    display: 'flex', flexDirection: 'column',
-  },
-  stepContainer: {
-    display: 'flex', flexDirection: 'column', gap: 24,
-  },
-  cardTitle: {
-    fontSize: 20, fontWeight: 700, color: '#1e293b',
-    textAlign: 'left' as const, margin: '0 0 8px 0',
-  },
-  errorBox: {
-    backgroundColor: '#fef2f2', border: '1px solid #fecaca',
-    color: '#dc2626', borderRadius: 12,
-    padding: '12px 18px', fontSize: 14,
-  },
-  // Form elements
-  fieldFull: { display: 'flex', flexDirection: 'column', gap: 8 },
-  fieldRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 },
-  field: { display: 'flex', flexDirection: 'column', gap: 8 },
-  label: { fontSize: 14, fontWeight: 600, color: '#475569' },
-  input: {
-    padding: '13px 16px',
-    border: '1.5px solid #e2e8f0',
-    borderRadius: 12, fontSize: 14,
-    color: '#0f172a', backgroundColor: '#f8fafc',
-    fontFamily: "'Prompt', sans-serif",
-    transition: 'all 0.2s',
-  } as React.CSSProperties,
-  btnCenter: { display: 'flex', justifyContent: 'flex-end', marginTop: 12 },
-  btnRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, gap: 16 },
-  greenBtn: {
-    backgroundColor: '#4f46e5',
-    border: 'none', borderRadius: 12,
-    padding: '14px 40px',
-    fontSize: 15, fontWeight: 600,
-    color: '#ffffff', cursor: 'pointer',
-    fontFamily: "'Prompt', sans-serif",
-    transition: 'all 0.2s',
-    boxShadow: '0 2px 8px rgba(79, 70, 229, 0.2)',
-  },
-  outlineBtn: {
-    backgroundColor: 'transparent',
-    border: '1.5px solid #cbd5e1',
-    borderRadius: 12, padding: '13px 32px',
-    fontSize: 14, color: '#475569',
-    cursor: 'pointer', fontFamily: "'Prompt', sans-serif",
-    transition: 'all 0.2s',
-  },
-  mapBtn: {
-    backgroundColor: '#f1f5f9',
-    border: '1.5px solid #e2e8f0',
-    borderRadius: 12, padding: '12px 24px',
-    fontSize: 14, color: '#475569', fontWeight: 600,
-    cursor: 'pointer', transition: 'all 0.2s',
-  },
-  // Step 2: Location
-  locationBar: {
-    display: 'flex', alignItems: 'center', gap: 16,
-    padding: '8px 0',
-  },
-  locBubbleBlue: {
-    display: 'flex', alignItems: 'center', gap: 8,
-    backgroundColor: '#eff6ff',
-    border: '1.5px solid #dbeafe',
-    borderRadius: 12, padding: '12px 20px',
-    fontSize: 14, color: '#1e40af', fontWeight: 600,
-  },
-  locBubbleRed: {
-    flex: 1, display: 'flex', alignItems: 'center', gap: 8,
-    backgroundColor: '#fff1f2',
-    border: '1.5px solid #ffe4e6',
-    borderRadius: 12, padding: '12px 20px',
-    fontSize: 14, fontWeight: 600,
-    cursor: 'pointer',
-  },
-  locationList: { display: 'flex', flexDirection: 'column', gap: 12 },
-  locationItem: {
-    display: 'flex', alignItems: 'center', gap: 14,
-    backgroundColor: '#f8fafc',
-    border: '1.5px solid #e2e8f0',
-    borderRadius: 12, padding: '16px 20px',
-    cursor: 'pointer', transition: 'all 0.2s',
-  },
-  locationItemSelected: {
-    display: 'flex', alignItems: 'center', gap: 14,
-    backgroundColor: '#f5f3ff',
-    border: '2px solid #c7d2fe',
-    borderRadius: 12, padding: '16px 20px',
-  },
-  changeBtn: {
-    marginLeft: 'auto', background: 'none',
-    border: '1.5px solid #c7d2fe', borderRadius: 8,
-    padding: '8px 16px', fontSize: 13,
-    color: '#4f46e5', cursor: 'pointer',
-    fontWeight: 600,
-    fontFamily: "'Prompt', sans-serif",
-  },
-  // Step 3: Confirmation
-  mapPlaceholder: {
-    height: 240,
-    backgroundColor: '#e8f0fe',
-    backgroundImage: 'url("https://images.unsplash.com/photo-1524661135-423995f22d0b?w=900&auto=format&fit=crop")',
-    backgroundSize: 'cover', backgroundPosition: 'center',
-    position: 'relative',
-    borderRadius: 16,
-    display: 'flex', alignItems: 'flex-end',
-    padding: 20,
-  },
-  mapLabel: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 12, padding: '8px 16px',
-    fontSize: 13, color: '#4f46e5', fontWeight: 600,
-  },
-  safetyBadge: {
-    position: 'absolute', right: 20, bottom: 20,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 12, padding: '8px 16px',
-    fontSize: 13, color: '#0f172a', fontWeight: 600,
-  },
-  infoGrid: {
-    display: 'grid', gridTemplateColumns: '1fr 1fr',
-    gap: 24, marginBottom: 24,
-  },
-  infoItem: {
-    display: 'flex', alignItems: 'center', gap: 14,
-    backgroundColor: '#f8fafc', padding: '16px 20px',
-    borderRadius: 16, border: '1px solid #e2e8f0',
-  },
-  ladyModeRow: {
-    display: 'flex', alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff7ed',
-    border: '1.5px solid #ffedd5',
-    borderRadius: 16, padding: '16px 24px',
-    marginBottom: 16,
-  },
-  ladyLeft: { display: 'flex', alignItems: 'center', gap: 14 },
-  // Step 4: Payment
-  priceBox: {
-    display: 'flex', alignItems: 'center', gap: 20,
-    padding: '20px 24px',
-    backgroundColor: '#f8fafc',
-    borderRadius: 16,
-    border: '1px solid #e2e8f0',
-  },
-  payOption: {
-    display: 'flex', alignItems: 'center', gap: 20,
-    padding: '20px 24px', borderRadius: 16,
-    cursor: 'pointer', transition: 'all 0.2s',
-  },
-  radioCircle: {
-    width: 22, height: 22, borderRadius: '50%',
-    border: '2px solid #cbd5e1',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    flexShrink: 0,
-  },
-  radioFill: {
-    width: 12, height: 12, borderRadius: '50%',
-    backgroundColor: '#4f46e5',
-  },
-  footer: {
-    padding: '24px 40px',
-    textAlign: 'center' as const,
-    fontSize: 13,
-    color: '#94a3b8',
-    backgroundColor: '#ffffff',
-    borderTop: '1px solid #e2e8f0',
-  },
 }
 
 export default function RequestDriverPage() {
   return (
     <Suspense fallback={
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#f8fafc',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 20,
-        fontFamily: "'Prompt', sans-serif",
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 40, animation: 'spin 1s linear infinite' }}>🔄</div>
-          <p style={{ marginTop: 16, color: '#64748b' }}>กำลังโหลดหน้าจอเรียกรถ...</p>
+      <div className="min-h-screen bg-[var(--color-bg)] flex items-center justify-center text-[var(--color-text)] font-inter">
+        <div className="flex flex-col items-center gap-3">
+          <RefreshCw className="w-8 h-8 text-[#2340A7] animate-spin" />
+          <p className="text-sm font-bold">กำลังโหลดหน้าจอเรียกรถ...</p>
         </div>
-        <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
       </div>
     }>
       <RequestDriverContent />
     </Suspense>
   )
 }
-

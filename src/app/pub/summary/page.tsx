@@ -1,12 +1,68 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import api from '@/services/api'
 import Navbar from '@/components/ui/Navbar'
 import Footer from '@/components/ui/Footer'
 import FloatingNav from '@/components/ui/FloatingNav'
 import { BarChart3, TrendingUp, DollarSign, Calendar, CheckCircle2, ArrowRight, Clock, CalendarDays } from 'lucide-react'
+
+// Custom Thai Date Input Component (วัน / เดือน / ปี)
+function ThaiDateInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (val: string) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const formatThaiDisplay = (isoStr: string) => {
+    if (!isoStr) return 'วว/ดด/ปปปป'
+    const parts = isoStr.split('-')
+    if (parts.length !== 3) return isoStr
+    const y = parseInt(parts[0], 10)
+    const m = parts[1]
+    const d = parts[2]
+    const thaiYear = y + 543
+    return `${d}/${m}/${thaiYear}`
+  }
+
+  const short = formatThaiDisplay(value)
+
+  return (
+    <div>
+      <label className="block text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] mb-1">
+        {label}
+      </label>
+      <div 
+        onClick={() => {
+          try {
+            inputRef.current?.showPicker?.()
+          } catch {
+            inputRef.current?.focus()
+          }
+        }}
+        className="relative flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl bg-[var(--color-card)] border border-[var(--color-border)] hover:border-[#2340A7] transition-all cursor-pointer group shadow-xs"
+      >
+        <span className="text-xs sm:text-sm font-bold font-mono text-[var(--color-text)]">
+          {short}
+        </span>
+        <CalendarDays className="w-4 h-4 text-[#2340A7] group-hover:scale-110 transition-transform pointer-events-none" />
+        <input
+          ref={inputRef}
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+        />
+      </div>
+    </div>
+  )
+}
 
 interface RequestRecord {
   requestId?: number
@@ -22,41 +78,60 @@ interface RequestRecord {
   isladymode: boolean
 }
 
-type PeriodType = 'day' | 'week' | 'month' | 'year'
+type PeriodType = 'day' | 'week' | 'month' | 'year' | 'custom'
 
 function parseThaiDate(dateStr: string): Date {
   if (!dateStr) return new Date()
   const s = String(dateStr).trim()
   const cleanStr = s.replace(/Z$/i, '')
-  const isoWithTz = cleanStr.includes('T')
-    ? `${cleanStr.split('+')[0]}+07:00`
-    : `${cleanStr.replace(' ', 'T').split('+')[0]}+07:00`
-  const d = new Date(isoWithTz)
-  return isNaN(d.getTime()) ? new Date(dateStr) : d
+  const d = new Date(cleanStr)
+  if (isNaN(d.getTime())) {
+    return new Date()
+  }
+  return d
 }
 
 function formatServiceDate(dateStr: string) {
+  if (!dateStr) return { relative: 'วันนี้', shortDate: '', time: '', fullThai: '', isToday: false, isYesterday: false, badgeColor: 'bg-blue-500/15 text-blue-500 border-blue-500/30' }
+  
   try {
-    const d = parseThaiDate(dateStr)
+    const targetDate = parseThaiDate(dateStr)
     const now = new Date()
 
-    const isToday = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' }) === now.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
-    const yesterday = new Date(now)
-    yesterday.setDate(now.getDate() - 1)
-    const isYesterday = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' }) === yesterday.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+    const targetBangkok = new Date(targetDate.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }))
+    const nowBangkok = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }))
 
-    const time = d.toLocaleTimeString('th-TH', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit', hour12: false }) + ' น.'
-    const shortDate = d.toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short' })
-    const fullThai = d.toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', year: '2-digit' })
+    const targetDateOnly = new Date(targetBangkok.getFullYear(), targetBangkok.getMonth(), targetBangkok.getDate())
+    const nowDateOnly = new Date(nowBangkok.getFullYear(), nowBangkok.getMonth(), nowBangkok.getDate())
+    
+    const diffDays = Math.round((nowDateOnly.getTime() - targetDateOnly.getTime()) / (1000 * 60 * 60 * 24))
 
-    let relative = fullThai
-    let badgeColor = 'bg-slate-500/15 text-slate-400 border-slate-500/30'
+    const isToday = diffDays === 0
+    const isYesterday = diffDays === 1
+
+    const hours = String(targetBangkok.getHours()).padStart(2, '0')
+    const mins = String(targetBangkok.getMinutes()).padStart(2, '0')
+    const time = `${hours}:${mins} น.`
+
+    const day = targetBangkok.getDate()
+    const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+    const month = monthNames[targetBangkok.getMonth()]
+    const thaiYear = (targetBangkok.getFullYear() + 543).toString().slice(-2)
+
+    const shortDate = `${day} ${month}`
+    const fullThai = `${day} ${month} ${thaiYear}`
+
+    let relative = ''
+    let badgeColor = ''
     if (isToday) {
       relative = 'วันนี้'
-      badgeColor = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+      badgeColor = 'bg-blue-500/15 text-[#2340A7] border-blue-500/30'
     } else if (isYesterday) {
       relative = 'เมื่อวาน'
-      badgeColor = 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+      badgeColor = 'bg-amber-500/15 text-amber-500 border-amber-500/30'
+    } else {
+      relative = shortDate
+      badgeColor = 'bg-purple-500/15 text-purple-400 border-purple-500/30'
     }
 
     return { relative, shortDate, time, fullThai, isToday, isYesterday, badgeColor }
@@ -71,6 +146,19 @@ export default function SummaryPage() {
   const [records, setRecords] = useState<RequestRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState<PeriodType>('week')
+
+  // Custom Calendar Date Range
+  const [customStartDate, setCustomStartDate] = useState<string>(() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 7)
+    return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+  })
+  const [customEndDate, setCustomEndDate] = useState<string>(() => {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+  })
+  const [showCalendarFilter, setShowCalendarFilter] = useState(false)
+  const [customEarnings, setCustomEarnings] = useState(0)
+  const [customCount, setCustomCount] = useState(0)
 
   const [dailyEarnings, setDailyEarnings] = useState(0)
   const [weeklyEarnings, setWeeklyEarnings] = useState(0)
@@ -88,6 +176,7 @@ export default function SummaryPage() {
   const [chartCounts, setChartCounts] = useState<number[]>([])
   const [chartColors, setChartColors] = useState<string[]>([])
   const [periodDescription, setPeriodDescription] = useState<string>('')
+  const [periodSubDescription, setPeriodSubDescription] = useState<string>('')
 
   useEffect(() => {
     const userStr = localStorage.getItem('pub_user')
@@ -111,28 +200,28 @@ export default function SummaryPage() {
       if (res.data.success) {
         const data = res.data.data || []
         setRecords(data)
-        calculateStats(data, period)
+        calculateStats(data, period, customStartDate, customEndDate)
       } else {
         setRecords([])
-        calculateStats([], period)
+        calculateStats([], period, customStartDate, customEndDate)
       }
     } catch (err: any) {
       console.warn('Could not fetch real records.', err)
       setRecords([])
-      calculateStats([], period)
+      calculateStats([], period, customStartDate, customEndDate)
     } finally {
       setLoading(false)
     }
   }
 
-  // Recalculate when period changes
+  // Recalculate when period or custom dates change
   useEffect(() => {
     if (records.length >= 0) {
-      calculateStats(records, period)
+      calculateStats(records, period, customStartDate, customEndDate)
     }
-  }, [period])
+  }, [period, customStartDate, customEndDate])
 
-  const calculateStats = (allRecords: RequestRecord[], selectedPeriod: PeriodType) => {
+  const calculateStats = (allRecords: RequestRecord[], selectedPeriod: PeriodType, sDateStr: string, eDateStr: string) => {
     const completed = allRecords.filter(
       (r) =>
         r.requeststatus?.toLowerCase() === 'completed' ||
@@ -162,28 +251,31 @@ export default function SummaryPage() {
 
     completed.forEach((r) => {
       const date = parseThaiDate(r.reqdatetime)
-      const recordThaiDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }))
+      const fee = 30 // ส่วนแบ่งคงที่ 30 บาทเข้าสถานบันเทิง
       const recordKey = toThaiDateKey(date)
-      const commission = 30 // ส่วนแบ่งรายได้เข้าสถานบันเทิง 30 บาทต่อครั้ง
+      const recordThaiDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }))
 
-      // 1. วันนี้ (Today)
+      // Daily
       if (recordKey === todayThaiKey) {
-        dailySum += commission
+        dailySum += fee
         dailyC += 1
       }
-      // 2. สัปดาห์นี้ (This Week)
+
+      // Weekly (This Week Sunday to Saturday)
       if (recordThaiDate >= startOfWeek && recordThaiDate <= endOfWeek) {
-        weeklySum += commission
+        weeklySum += fee
         weeklyC += 1
       }
-      // 3. เดือนนี้ (This Month)
+
+      // Monthly
       if (recordThaiDate.getMonth() === currentMonth && recordThaiDate.getFullYear() === currentYear) {
-        monthlySum += commission
+        monthlySum += fee
         monthlyC += 1
       }
-      // 4. ปีนี้ (This Year)
+
+      // Yearly
       if (recordThaiDate.getFullYear() === currentYear) {
-        yearlySum += commission
+        yearlySum += fee
         yearlyC += 1
       }
     })
@@ -203,6 +295,7 @@ export default function SummaryPage() {
     let counts: number[] = []
     let colors: string[] = []
     let desc = ''
+    let subDesc = ''
 
     if (selectedPeriod === 'day') {
       // 6 time slots today
@@ -212,6 +305,7 @@ export default function SummaryPage() {
       
       const todayDateThai = now.toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'long', year: 'numeric' })
       desc = `สถิติรายช่วงเวลา ประจำวันนี้ (${todayDateThai})`
+      subDesc = `• รวม ${dailyC} รายการ (฿${dailySum.toLocaleString()})`
 
       completed.forEach((r) => {
         const date = parseThaiDate(r.reqdatetime)
@@ -233,6 +327,7 @@ export default function SummaryPage() {
 
       const weekRangeStr = `${startOfWeek.toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short' })} - ${endOfWeek.toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', year: 'numeric' })}`
       desc = `สถิติรายวัน ประจำสัปดาห์นี้ (${weekRangeStr})`
+      subDesc = `• รวม ${weeklyC} รายการ (฿${weeklySum.toLocaleString()})`
 
       completed.forEach((r) => {
         const date = parseThaiDate(r.reqdatetime)
@@ -250,6 +345,7 @@ export default function SummaryPage() {
 
       const monthNameThai = now.toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', month: 'long', year: 'numeric' })
       desc = `สถิติแบ่งตามสัปดาห์ ประจำเดือนนี้ (${monthNameThai})`
+      subDesc = `• รวม ${monthlyC} รายการ (฿${monthlySum.toLocaleString()})`
 
       completed.forEach((r) => {
         const date = parseThaiDate(r.reqdatetime)
@@ -267,6 +363,7 @@ export default function SummaryPage() {
       colors = ['#818cf8', '#a78bfa', '#f472b6', '#fb7185', '#fb923c', '#fbbf24', '#a3e635', '#34d399', '#2dd4bf', '#38bdf8', '#60a5fa', '#c084fc']
 
       desc = `สถิติรายเดือน ประจำปีนี้ (${currentYear + 543})`
+      subDesc = `• รวม ${yearlyC} รายการ (฿${yearlySum.toLocaleString()})`
 
       completed.forEach((r) => {
         const date = parseThaiDate(r.reqdatetime)
@@ -276,6 +373,87 @@ export default function SummaryPage() {
           counts[mIdx] += 1
         }
       })
+    } else if (selectedPeriod === 'custom') {
+      // Custom Calendar Date Range
+      const sDate = new Date(`${sDateStr || customStartDate}T00:00:00+07:00`)
+      const eDate = new Date(`${eDateStr || customEndDate}T23:59:59.999+07:00`)
+
+      const validStart = sDate <= eDate ? sDate : eDate
+      const validEnd = sDate <= eDate ? eDate : sDate
+
+      const diffTime = Math.abs(validEnd.getTime() - validStart.getTime())
+      const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
+
+      const customCompleted = completed.filter((r) => {
+        const d = parseThaiDate(r.reqdatetime)
+        return d >= validStart && d <= validEnd
+      })
+
+      const cEarnings = customCompleted.length * 30
+      setCustomEarnings(cEarnings)
+      setCustomCount(customCompleted.length)
+
+      const startThaiStr = validStart.toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', year: '2-digit' })
+      const endThaiStr = validEnd.toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short', year: '2-digit' })
+      desc = `สถิติตามช่วงวันที่เลือก (${startThaiStr} - ${endThaiStr})`
+      subDesc = `• รวม ${customCompleted.length} รายการ (฿${cEarnings.toLocaleString()})`
+
+      const palette = ['#2563EB', '#38bdf8', '#34d399', '#fbbf24', '#fb923c', '#f472b6', '#a855f7', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#6366f1']
+
+      if (diffDays <= 1) {
+        labels = ['00.00 - 03.59', '04.00 - 07.59', '08.00 - 11.59', '12.00 - 15.59', '16.00 - 19.59', '20.00 - 23.59']
+        counts = [0, 0, 0, 0, 0, 0]
+        colors = ['#818cf8', '#38bdf8', '#34d399', '#fbbf24', '#fb923c', '#c084fc']
+
+        customCompleted.forEach((r) => {
+          const date = parseThaiDate(r.reqdatetime)
+          const hour = date.getHours()
+          const slot = Math.min(Math.floor(hour / 4), 5)
+          counts[slot] += 1
+        })
+      } else if (diffDays <= 14) {
+        labels = []
+        counts = []
+        colors = []
+        const cur = new Date(validStart)
+        let i = 0
+        while (cur <= validEnd && labels.length < 14) {
+          const dayLabel = cur.toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'short' })
+          labels.push(dayLabel)
+
+          const dayKey = cur.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+          const matchCount = customCompleted.filter((r) => {
+            const rd = parseThaiDate(r.reqdatetime)
+            return rd.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' }) === dayKey
+          }).length
+          counts.push(matchCount)
+          colors.push(palette[i % palette.length])
+
+          cur.setDate(cur.getDate() + 1)
+          i++
+        }
+      } else {
+        const intervalCount = Math.min(diffDays, 7)
+        labels = []
+        counts = new Array(intervalCount).fill(0)
+        colors = []
+        const intervalDuration = diffTime / intervalCount
+
+        for (let i = 0; i < intervalCount; i++) {
+          const segStart = new Date(validStart.getTime() + i * intervalDuration)
+          const segEnd = new Date(validStart.getTime() + (i + 1) * intervalDuration)
+          const segLabel = `${segStart.toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'numeric' })}-${segEnd.toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok', day: 'numeric', month: 'numeric' })}`
+          labels.push(segLabel)
+          colors.push(palette[i % palette.length])
+
+          customCompleted.forEach((r) => {
+            const rd = parseThaiDate(r.reqdatetime)
+            if (rd >= segStart && (i === intervalCount - 1 ? rd <= segEnd : rd < segEnd)) {
+              counts[i] += 1
+            }
+          })
+        }
+      }
     }
 
     const maxCount = Math.max(...counts, 1)
@@ -286,19 +464,52 @@ export default function SummaryPage() {
     setChartHeights(normalized)
     setChartColors(colors)
     setPeriodDescription(desc)
+    setPeriodSubDescription(subDesc)
   }
 
   if (!pubUser) return null
   const pubName = pubUser.pubname || pubUser.username || 'PUB'
 
+  // Filter completed jobs according to active period accurately
   const completedJobs = [...records]
-    .filter(
-      (r) =>
-        r.requeststatus?.toLowerCase() === 'completed' ||
-        r.requeststatus === 'เสร็จสิ้น'
-    )
+    .filter((r) => {
+      const isComp = r.requeststatus?.toLowerCase() === 'completed' || r.requeststatus === 'เสร็จสิ้น'
+      if (!isComp) return false
+
+      const d = parseThaiDate(r.reqdatetime)
+      const now = new Date()
+      const todayThaiKey = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+      const toThaiDateKey = (date: Date) => date.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+      const recordThaiDate = new Date(d.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }))
+      const thaiNow = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }))
+      const currentMonth = thaiNow.getMonth()
+      const currentYear = thaiNow.getFullYear()
+
+      const startOfWeek = new Date(thaiNow)
+      startOfWeek.setDate(thaiNow.getDate() - thaiNow.getDay())
+      startOfWeek.setHours(0, 0, 0, 0)
+      const endOfWeek = new Date(startOfWeek)
+      endOfWeek.setDate(startOfWeek.getDate() + 6)
+      endOfWeek.setHours(23, 59, 59, 999)
+
+      if (period === 'day') {
+        return toThaiDateKey(d) === todayThaiKey
+      } else if (period === 'week') {
+        return recordThaiDate >= startOfWeek && recordThaiDate <= endOfWeek
+      } else if (period === 'month') {
+        return recordThaiDate.getMonth() === currentMonth && recordThaiDate.getFullYear() === currentYear
+      } else if (period === 'year') {
+        return recordThaiDate.getFullYear() === currentYear
+      } else if (period === 'custom') {
+        const sDate = new Date(`${customStartDate}T00:00:00+07:00`)
+        const eDate = new Date(`${customEndDate}T23:59:59.999+07:00`)
+        const validStart = sDate <= eDate ? sDate : eDate
+        const validEnd = sDate <= eDate ? eDate : sDate
+        return d >= validStart && d <= validEnd
+      }
+      return true
+    })
     .sort((a, b) => parseThaiDate(b.reqdatetime).getTime() - parseThaiDate(a.reqdatetime).getTime())
-    .slice(0, 10)
 
   return (
     <div className="selection-purple min-h-screen bg-[var(--color-bg)] text-[var(--color-text)] font-inter relative overflow-x-hidden transition-colors duration-300">
@@ -327,7 +538,7 @@ export default function SummaryPage() {
               ผลสรุปบริการและส่วนแบ่งรายได้ ({pubName})
             </h1>
             <p className="text-xs text-[var(--color-text-muted)] mt-1">
-              สรุปข้อมูลการใช้บริการจริง แบ่งตามวัน สัปดาห์ เดือน และปี
+              สรุปข้อมูลการใช้บริการจริง แบ่งตามวัน สัปดาห์ เดือน ปี และเลือกช่วงวันที่ตามต้องการจากปฏิทิน
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -346,115 +557,143 @@ export default function SummaryPage() {
             { 
               periodKey: 'day' as PeriodType,
               label: 'รายได้รายวัน', 
-              timeTag: 'วันนี้ (Today)', 
               value: `฿${dailyEarnings.toLocaleString()}`, 
               sub: `${dailyCount} รายการวันนี้`, 
               icon: Clock, 
-              color: 'text-pink-500', 
-              badgeBg: 'bg-pink-500/10 text-pink-500 border-pink-500/20' 
+              color: 'text-pink-500'
             },
             { 
               periodKey: 'week' as PeriodType,
               label: 'รายได้รายสัปดาห์', 
-              timeTag: 'สัปดาห์นี้ (This Week)', 
               value: `฿${weeklyEarnings.toLocaleString()}`, 
               sub: `${weeklyCount} รายการในสัปดาห์นี้`, 
               icon: Calendar, 
-              color: 'text-blue-500', 
-              badgeBg: 'bg-blue-500/10 text-blue-500 border-blue-500/20' 
+              color: 'text-blue-500'
             },
             { 
               periodKey: 'month' as PeriodType,
               label: 'รายได้รายเดือน', 
-              timeTag: 'เดือนนี้ (This Month)', 
               value: `฿${monthlyEarnings.toLocaleString()}`, 
               sub: `${monthlyCount} รายการในเดือนนี้`, 
               icon: TrendingUp, 
-              color: 'text-[#2340A7]', 
-              badgeBg: 'bg-[#2340A7]/10 text-[#2340A7] border-[#2340A7]/20' 
+              color: 'text-[#2340A7]'
             },
             { 
-              periodKey: 'year' as PeriodType,
-              label: 'รายได้รายปี', 
-              timeTag: 'ปีนี้ (This Year)', 
-              value: `฿${yearlyEarnings.toLocaleString()}`, 
-              sub: `${yearlyCount} รายการในปีนี้`, 
+              periodKey: (period === 'custom' ? 'custom' : 'year') as PeriodType,
+              label: period === 'custom' ? 'รายได้ตามช่วงวันที่เลือก' : 'รายได้รายปี', 
+              value: period === 'custom' ? `฿${customEarnings.toLocaleString()}` : `฿${yearlyEarnings.toLocaleString()}`, 
+              sub: period === 'custom' ? `${customCount} รายการตามช่วงวันที่เลือก` : `${yearlyCount} รายการในปีนี้`, 
               icon: BarChart3, 
-              color: 'text-emerald-500', 
-              badgeBg: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' 
+              color: 'text-emerald-500'
             },
-          ].map((stat, i) => {
-            const IconComp = stat.icon
-            const isSelected = period === stat.periodKey
+          ].map((card, idx) => {
+            const Icon = card.icon
+            const isSelected = period === card.periodKey || (card.periodKey === 'custom' && period === 'custom')
             return (
               <div 
-                key={i} 
-                onClick={() => setPeriod(stat.periodKey)}
-                className={`p-6 bg-[var(--color-card)] border rounded-2xl shadow-md flex flex-col justify-between cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
-                  isSelected ? 'border-[#2340A7] ring-2 ring-[#2340A7]/30' : 'border-[var(--color-border)] hover:border-[#2340A7]/50'
+                key={idx}
+                onClick={() => setPeriod(card.periodKey)}
+                className={`p-5 rounded-2xl bg-[var(--color-card)] border transition-all duration-300 shadow-xl flex flex-col justify-between cursor-pointer group hover:scale-[1.02] ${
+                  isSelected 
+                    ? 'border-[#2340A7] ring-2 ring-[#2340A7]/20 bg-[var(--color-card)]' 
+                    : 'border-[var(--color-border)] hover:border-[#2340A7]/50'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <div className={`p-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl ${stat.color}`}>
-                    <IconComp className="w-5 h-5" />
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`p-2.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] group-hover:border-[#2340A7]/30 transition-colors ${card.color} shrink-0`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                    <span className="text-sm sm:text-base font-bold text-[var(--color-text)]">
+                      {card.label}
+                    </span>
                   </div>
-                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${stat.badgeBg}`}>
-                    {stat.timeTag}
-                  </span>
+                  <div className="text-2xl sm:text-3xl font-black font-manrope text-[var(--color-text)] tracking-tight">
+                    {card.value}
+                  </div>
                 </div>
-                <div className="mt-4">
-                  <div className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--color-text-muted)]">{stat.label}</div>
-                  <div className="text-2xl font-extrabold font-manrope text-[var(--color-text)] mt-1">{stat.value}</div>
-                  <div className="text-[11px] font-medium text-[var(--color-text-muted)] mt-1">{stat.sub}</div>
+                <div className="text-[11px] text-[var(--color-text-muted)] mt-4 flex items-center justify-between pt-3 border-t border-[var(--color-border)]">
+                  <span>{card.sub}</span>
+                  <span className={`text-[10px] font-bold ${isSelected ? 'text-[#2340A7]' : 'text-[var(--color-text-muted)]'}`}>
+                    {isSelected ? '● กำลังดู' : 'คลิกเพื่อดู'}
+                  </span>
                 </div>
               </div>
             )
           })}
         </div>
 
-        {/* Middle Analytics Section */}
+        {/* Main Analytics Section: Chart + Completed List */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Left: Interactive Chart with Day/Week/Month/Year switcher */}
+          {/* Left: Interactive Chart with Day/Week/Month/Year/Calendar switcher */}
           <div className="lg:col-span-7 p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col justify-between">
             <div>
               {/* Chart Header & Controls */}
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">
-                      สถิติการใช้บริการ
-                    </h3>
-                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#2340A7]/15 text-[#2340A7] border border-[#2340A7]/30">
-                      {period === 'day' ? 'รายวัน' : period === 'week' ? 'รายสัปดาห์' : period === 'month' ? 'รายเดือน' : 'รายปี'}
-                    </span>
-                  </div>
+                  <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">
+                    สถิติการใช้บริการ
+                  </h3>
                   <p className="text-xs text-[var(--color-text-muted)] mt-1">{periodDescription}</p>
+                  {periodSubDescription && (
+                    <p className="text-xs text-[var(--color-text-muted)] font-medium mt-0.5">{periodSubDescription}</p>
+                  )}
                 </div>
 
                 {/* Period Switcher Tabs */}
-                <div className="flex items-center p-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl gap-1">
+                <div className="inline-flex items-center p-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl gap-1 shrink-0">
                   {[
-                    { key: 'day' as PeriodType, label: 'วัน (วันนี้)' },
-                    { key: 'week' as PeriodType, label: 'สัปดาห์ (สัปดาห์นี้)' },
-                    { key: 'month' as PeriodType, label: 'เดือน (เดือนนี้)' },
-                    { key: 'year' as PeriodType, label: 'ปี (ปีนี้)' },
+                    { key: 'day' as PeriodType, label: 'วัน' },
+                    { key: 'week' as PeriodType, label: 'สัปดาห์' },
+                    { key: 'month' as PeriodType, label: 'เดือน' },
+                    { key: 'year' as PeriodType, label: 'ปี' },
+                    { key: 'custom' as PeriodType, label: '📅 ปฏิทิน' },
                   ].map((tab) => (
                     <button
                       key={tab.key}
                       onClick={() => setPeriod(tab.key)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer text-center whitespace-nowrap ${
                         period === tab.key
-                          ? 'bg-[#2340A7] !text-white shadow-md'
-                          : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
+                          ? 'bg-[#2340A7] text-white shadow-sm'
+                          : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-card)]'
                       }`}
-                      style={period === tab.key ? { color: '#ffffff' } : undefined}
+                      style={period === tab.key ? { color: '#ffffff', backgroundColor: '#2340A7' } : undefined}
                     >
                       {tab.label}
                     </button>
                   ))}
                 </div>
               </div>
+
+              {/* Expandable Calendar Date Range Bar */}
+              {period === 'custom' && (
+                <div className="mb-6 p-4 rounded-xl bg-[var(--color-surface)] border border-[#2340A7]/30 flex flex-col gap-3.5 animate-fade-in shadow-inner">
+                  <div className="flex items-center gap-2 text-xs font-bold text-[#2340A7]">
+                    <CalendarDays className="w-4 h-4 text-[#2340A7]" />
+                    <span>เลือกช่วงวันที่ต้องการกรองข้อมูลจากปฏิทิน</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <ThaiDateInput
+                      label="วันที่เริ่มต้น (วัน / เดือน / ปี)"
+                      value={customStartDate}
+                      onChange={(val) => {
+                        setCustomStartDate(val)
+                        setPeriod('custom')
+                      }}
+                    />
+                    <ThaiDateInput
+                      label="วันที่สิ้นสุด (วัน / เดือน / ปี)"
+                      value={customEndDate}
+                      onChange={(val) => {
+                        setCustomEndDate(val)
+                        setPeriod('custom')
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Dynamic Bar Chart */}
               <div className="h-60 flex items-end justify-between gap-2 border-b border-[var(--color-border)] pb-2 px-4 relative">
@@ -487,21 +726,27 @@ export default function SummaryPage() {
           </div>
 
           {/* Right: Recent Completed Services with Clear Date Tags */}
-          <div className="lg:col-span-5 p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col justify-between">
-            <div>
-              <div className="flex justify-between items-center mb-6">
+          <div className="lg:col-span-5 p-6 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col h-full justify-between">
+            <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">การบริการที่เสร็จสิ้นล่าสุด</h3>
-                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">ระบุวันที่และเวลาที่นำส่งผู้โดยสารเรียบร้อย</p>
+                  <h3 className="text-lg font-bold font-manrope text-[var(--color-text)]">
+                    {period === 'custom' ? 'การบริการในช่วงวันที่เลือก' : 'การบริการที่เสร็จสิ้น'}
+                  </h3>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
+                    แสดงรายการบริการที่เสร็จสิ้น ({completedJobs.length} รายการ)
+                  </p>
                 </div>
                 <div className="p-2.5 bg-emerald-500/15 rounded-xl text-emerald-500">
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 overflow-y-auto max-h-64 pr-1">
+              <div className="flex-1 flex flex-col gap-3 overflow-y-auto min-h-[320px] max-h-[480px] pr-1.5 custom-scrollbar">
                 {completedJobs.length === 0 ? (
-                  <div className="p-8 text-center text-xs text-[var(--color-text-muted)]">ยังไม่มีประวัติการบริการที่เสร็จสิ้น</div>
+                  <div className="flex-1 flex items-center justify-center p-8 text-center text-xs text-[var(--color-text-muted)] border border-dashed border-[var(--color-border)] rounded-xl">
+                    {period === 'custom' ? 'ไม่พบรายการบริการที่เสร็จสิ้นในช่วงวันที่เลือก' : 'ยังไม่มีประวัติการบริการที่เสร็จสิ้น'}
+                  </div>
                 ) : (
                   completedJobs.map((job: any, index) => {
                     const distance = job.reqdistance || 0
@@ -509,7 +754,7 @@ export default function SummaryPage() {
                     const dateInfo = formatServiceDate(job.reqdatetime)
 
                     return (
-                      <div key={index} className="p-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center justify-between gap-3 hover:border-[#2340A7]/40 transition-colors">
+                      <div key={index} className="p-3.5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex items-center justify-between gap-3 hover:border-[#2340A7]/40 transition-colors shrink-0">
                         <div className="flex items-center gap-3">
                           {/* Date & Time Capsule */}
                           <div className="p-2 bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg text-center min-w-[72px]">
@@ -540,9 +785,10 @@ export default function SummaryPage() {
 
             <button 
               onClick={() => router.push('/pub/service-info')}
-              className="mt-6 w-full py-3 bg-[var(--color-surface)] hover:bg-[#2340A7]/20 border border-[var(--color-border)] rounded-xl text-xs font-bold text-[var(--color-text)] transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+              className="mt-4 w-full py-3.5 px-4 bg-[#2340A7] hover:bg-[#1D358F] active:scale-[0.99] rounded-xl text-xs font-bold text-white transition-all cursor-pointer flex items-center justify-center gap-2 shadow-md hover:shadow-lg shadow-[#2340A7]/25 shrink-0"
             >
-              ดูประวัติย้อนหลังทั้งหมด <ArrowRight className="w-4 h-4 text-[#2340A7]" />
+              <span>ดูประวัติย้อนหลังทั้งหมด</span>
+              <ArrowRight className="w-4 h-4 text-white" />
             </button>
           </div>
 

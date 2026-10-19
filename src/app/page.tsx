@@ -130,24 +130,24 @@ export default function HomePage() {
             {/* LEFT COLUMN: HERO HEADLINE & SEARCH */}
             <div className="lg:col-span-7 flex flex-col items-start text-left">
 
-              {/* Main Headline (3-Line Layout from screenshot) */}
-              <h1 className={`text-4xl sm:text-5xl md:text-6xl lg:text-[58px] font-black tracking-tight font-manrope leading-[1.18] mb-6 animate-fade-up ${
+              {/* Main Headline */}
+              <h1 className={`text-3xl sm:text-4xl md:text-5xl lg:text-[50px] xl:text-[54px] font-black tracking-tight font-manrope leading-[1.22] mb-6 animate-fade-up ${
                 isDark 
                   ? 'text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]' 
                   : 'text-[#0F172A]'
               }`} style={{ animationDelay: '0.1s' }}>
                 <span className="block font-black">
-                  ทุกค่ำคืน
+                  ทุกค่ำคืนมีผู้ให้บริการขับรถ
                 </span>
-                <span className="block font-black mt-1">
-                  มีคนขับพากลับบ้านอย่าง
-                </span>
-                <span className={`block mt-1 font-black text-transparent bg-clip-text ${
-                  isDark 
-                    ? 'bg-gradient-to-r from-blue-400 via-sky-300 to-cyan-300' 
-                    : 'bg-gradient-to-r from-[#1D358F] via-[#2563EB] to-[#0044C9]'
-                }`}>
-                  ปลอดภัย
+                <span className="block font-black mt-1.5 whitespace-nowrap">
+                  พากลับบ้านอย่าง{' '}
+                  <span className={`font-black text-transparent bg-clip-text ${
+                    isDark 
+                      ? 'bg-gradient-to-r from-blue-400 via-sky-300 to-cyan-300' 
+                      : 'bg-gradient-to-r from-[#1D358F] via-[#2563EB] to-[#0044C9]'
+                  }`}>
+                    ปลอดภัย
+                  </span>
                 </span>
               </h1>
 
@@ -269,7 +269,7 @@ export default function HomePage() {
                     <CheckCircle2 className="w-3.5 h-3.5" /> ส่งมอบรถยนต์ถึงบ้านอย่างปลอดภัย
                   </div>
                   <h4 className="text-xl sm:text-2xl font-black font-manrope">อุ่นใจทุกเส้นทาง ไร้กังวลเรื่องอุบัติเหตุและด่านตรวจ</h4>
-                  <p className="text-xs sm:text-sm text-slate-200 mt-1 font-medium">คนขับผ่านการคัดกรองประวัติอาชญากรรม 100% พร้อมประกันภัยคุ้มครองยานพาหนะ</p>
+                  <p className="text-xs sm:text-sm text-slate-200 mt-1 font-medium">ผู้ให้บริการขับรถผ่านการคัดกรองประวัติอาชญากรรม 100% พร้อมประกันภัยคุ้มครองยานพาหนะ</p>
                 </div>
               </div>
 
@@ -283,10 +283,10 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-[var(--color-text)] font-manrope flex items-center gap-2">
-                      แจ้งสถานบันเทิงหรือกรอกรหัสเรียกคนขับ
+                      แจ้งสถานบันเทิงหรือกรอกรหัสเรียกผู้ให้บริการขับรถ
                     </h3>
                     <p className="text-sm text-[var(--color-text-muted)] mt-1 font-medium leading-relaxed">
-                      เพียงแจ้งพนักงานร้าน หรือสแกน QR หน้าร้านเพื่อส่งคำขอพนักงานขับรถแทน โดยไม่ต้องดาวน์โหลดแอปพลิเคชันให้ยุ่งยาก
+                      เพียงแจ้งพนักงานสถานบันเทิง หรือสแกน QR หน้าร้านเพื่อส่งคำขอผู้ให้บริการขับรถ โดยไม่ต้องดาวน์โหลดแอปพลิเคชันให้ยุ่งยาก
                     </p>
                   </div>
                 </div>
@@ -298,10 +298,10 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-[var(--color-text)] font-manrope flex items-center gap-2">
-                      ติดตามคนขับและแชร์รหัสการเดินทางแบบเรียลไทม์
+                      ติดตามผู้ให้บริการขับรถและแชร์รหัสการเดินทางแบบเรียลไทม์
                     </h3>
                     <p className="text-sm text-[var(--color-text-muted)] mt-1 font-medium leading-relaxed">
-                      ดูพิกัดคนขับที่กำลังเดินทางมาถึงร้าน ตรวจสอบรูปถ่าย ทะเบียนรถ และแชร์ลิงก์ติดตามสถานะให้คนใกล้ชิดได้ทันที
+                      ดูพิกัดผู้ให้บริการขับรถที่กำลังเดินทางมาถึงสถานบันเทิง ตรวจสอบรูปถ่าย ทะเบียนรถ และแชร์ลิงก์ติดตามสถานะให้คนใกล้ชิดได้ทันที
                     </p>
                   </div>
                 </div>
@@ -313,10 +313,10 @@ export default function HomePage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-[var(--color-text)] font-manrope flex items-center gap-2">
-                      คนขับพาส่งถึงบ้านพร้อมส่งมอบกุญแจรถยนต์
+                      ผู้ให้บริการขับรถพาส่งถึงบ้านพร้อมส่งมอบกุญแจรถยนต์
                     </h3>
                     <p className="text-sm text-[var(--color-text-muted)] mt-1 font-medium leading-relaxed">
-                      พักผ่อนบนรถส่วนตัวของคุณอย่างสบายใจ คนขับมืออาชีพจะขับรถยนต์ไปจอดที่บ้านคุณอย่างเรียบร้อยและปลอดภัย 100%
+                      พักผ่อนบนรถส่วนตัวของคุณอย่างสบายใจ ผู้ให้บริการขับรถมืออาชีพจะขับรถยนต์ไปจอดที่บ้านคุณอย่างเรียบร้อยและปลอดภัย 100%
                     </p>
                   </div>
                 </div>
@@ -341,7 +341,7 @@ export default function HomePage() {
                 </span>
               </h2>
               <p className="text-sm sm:text-base text-[var(--color-text-muted)] font-medium">
-                ยุติความเสี่ยงการขับขี่ขณะมึนเมา ด้วยแพลตฟอร์มคนขับรถแทนที่ผ่านการตรวจสอบประวัติ พร้อมระบบติดตาม GPS เรียลไทม์
+                ยุติความเสี่ยงการขับขี่ขณะมึนเมา ด้วยแพลตฟอร์มผู้ให้บริการขับรถแทนที่ผ่านการตรวจสอบประวัติ พร้อมระบบติดตาม GPS เรียลไทม์
               </p>
             </div>
 
@@ -354,9 +354,9 @@ export default function HomePage() {
                     <div className="mb-6 inline-flex p-3.5 rounded-2xl bg-[#2340A7]/15 border border-[#2340A7]/40 text-[#2340A7]">
                       <Bot className="w-6 h-6" />
                     </div>
-                    <h3 className="text-2xl sm:text-3xl font-black text-[var(--color-text)] font-manrope mb-4 tracking-tight">การจัดส่งงานคนขับอัตโนมัติ</h3>
+                    <h3 className="text-2xl sm:text-3xl font-black text-[var(--color-text)] font-manrope mb-4 tracking-tight">การจัดส่งงานผู้ให้บริการขับรถอัตโนมัติ</h3>
                     <p className="text-[var(--color-text-muted)] text-base sm:text-lg leading-relaxed font-normal">
-                      เชื่อมต่อสถานบันเทิงพาร์ทเนอร์กับคนขับรถมืออาชีพใกล้เคียงในทันที ผ่านการตรวจสอบประวัติอาชญากรรม คำนวณเส้นทางอัตโนมัติ และมีประกันภัยคุ้มครองทุกการเดินทาง
+                      เชื่อมต่อสถานบันเทิงพาร์ทเนอร์กับผู้ให้บริการขับรถมืออาชีพใกล้เคียงในทันที ผ่านการตรวจสอบประวัติอาชญากรรม คำนวณเส้นทางอัตโนมัติ และมีประกันภัยคุ้มครองทุกการเดินทาง
                     </p>
                   </div>
                 </div>
@@ -400,7 +400,7 @@ export default function HomePage() {
                       <div className="mb-4 inline-flex p-3 rounded-2xl bg-indigo-500/15 border border-indigo-500/40 text-indigo-500 w-fit">
                         <Layers className="w-6 h-6" />
                       </div>
-                      <h3 className="text-lg sm:text-xl font-black text-[var(--color-text)] font-manrope mb-2 leading-snug">เครือข่ายคนขับคัดกรองเข้มงวด</h3>
+                      <h3 className="text-lg sm:text-xl font-black text-[var(--color-text)] font-manrope mb-2 leading-snug">เครือข่ายผู้ให้บริการขับรถคัดกรองเข้มงวด</h3>
                       <p className="text-xs sm:text-sm text-[var(--color-text-muted)] font-normal leading-relaxed">
                         ตรวจสอบประวัติอาชญากรรม ใบอนุญาตขับขี่ และมีมาตรฐานบริการสุภาพ มารยาทดีเยี่ยม
                       </p>
@@ -455,7 +455,7 @@ export default function HomePage() {
                   </div>
                   <ul className="space-y-4 mb-8">
                     <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-medium">
-                      <Check className="w-4 h-4 text-[#2340A7]" /> 1 คนขับประจำเที่ยวรถ
+                      <Check className="w-4 h-4 text-[#2340A7]" /> 1 ผู้ให้บริการขับรถประจำเที่ยวรถ
                     </li>
                     <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-medium">
                       <Check className="w-4 h-4 text-[#2340A7]" /> รหัสติดตามสถานะ GPS เรียลไทม์
@@ -488,10 +488,10 @@ export default function HomePage() {
                   </div>
                   <ul className="space-y-4 mb-8">
                     <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-semibold">
-                      <Check className="w-4 h-4 text-[#2340A7]" /> ระบบเรียกคนขับผ่านแท็บเล็ต/QR
+                      <Check className="w-4 h-4 text-[#2340A7]" /> ระบบเรียกผู้ให้บริการขับรถผ่านแท็บเล็ต/QR
                     </li>
                     <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-semibold">
-                      <Check className="w-4 h-4 text-[#2340A7]" /> จัดส่งคนขับถึงสถานบันเทิงเป็นลำดับแรก
+                      <Check className="w-4 h-4 text-[#2340A7]" /> จัดส่งผู้ให้บริการขับรถถึงสถานบันเทิงเป็นลำดับแรก
                     </li>
                     <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-semibold">
                       <Check className="w-4 h-4 text-[#2340A7]" /> แดชบอร์ดตรวจสอบสถิติเรียลไทม์
@@ -513,8 +513,8 @@ export default function HomePage() {
               {/* Option 3: Driver Partner */}
               <div className="p-8 border border-[var(--color-border)] bg-[var(--color-card)] hover:border-[#2340A7]/60 transition-all rounded-2xl flex flex-col justify-between shadow-lg">
                 <div>
-                  <h3 className="text-xl font-bold font-manrope mb-2 text-[var(--color-text)]">พนักงานขับรถแทน</h3>
-                  <p className="text-[var(--color-text-muted)] text-sm mb-8 h-10 font-normal">สำหรับพนักงานขับรถมืออาชีพที่ต้องการสร้างรายได้เสริมที่มั่นคง</p>
+                  <h3 className="text-xl font-bold font-manrope mb-2 text-[var(--color-text)]">ผู้ให้บริการขับรถ</h3>
+                  <p className="text-[var(--color-text-muted)] text-sm mb-8 h-10 font-normal">สำหรับผู้ให้บริการขับรถมืออาชีพที่ต้องการสร้างรายได้เสริมที่มั่นคง</p>
                   <div className="mb-8 flex items-baseline gap-1">
                     <span className="text-[var(--color-text-muted)]">รายได้</span>
                     <span className="text-4xl font-extrabold text-[var(--color-text)]">ยืดหยุ่น</span>
@@ -525,7 +525,7 @@ export default function HomePage() {
                       <Check className="w-4 h-4 text-[#2340A7]" /> เลือกรอบและเวลาทำงานอิสระ
                     </li>
                     <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-medium">
-                      <Check className="w-4 h-4 text-[#2340A7]" /> ปุ่มแจ้งเหตุฉุกเฉินคุ้มครองคนขับ
+                      <Check className="w-4 h-4 text-[#2340A7]" /> ปุ่มแจ้งเหตุฉุกเฉินคุ้มครองผู้ให้บริการขับรถ
                     </li>
                     <li className="flex items-center gap-3 text-sm text-[var(--color-text)] font-medium">
                       <Check className="w-4 h-4 text-[#2340A7]" /> โอนเงินรายได้เข้าบัญชีทุกวัน
@@ -536,7 +536,7 @@ export default function HomePage() {
                   onClick={() => router.push('/register/driver')}
                   className="w-full py-3.5 px-4 bg-[var(--color-surface)] hover:bg-[#2340A7]/15 text-[var(--color-text)] border border-[var(--color-border)] rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-sm"
                 >
-                  สมัครเป็นพนักงานขับรถ
+                  สมัครเป็นผู้ให้บริการขับรถ
                 </button>
               </div>
 

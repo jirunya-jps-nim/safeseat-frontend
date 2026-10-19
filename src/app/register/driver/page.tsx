@@ -433,7 +433,7 @@ export default function RegisterDriverPage() {
               color: '#0f172a',
               marginBottom: '16px',
             }}>
-              ส่งใบสมัครพาร์ทเนอร์คนขับสำเร็จ! 🎉
+              ส่งใบสมัครพาร์ทเนอร์ผู้ให้บริการขับรถสำเร็จ! 🎉
             </h1>
             
             <p style={{
@@ -443,7 +443,7 @@ export default function RegisterDriverPage() {
               marginBottom: '32px',
               maxWidth: '520px',
             }}>
-              ข้อมูลสมัครสมาชิกพนักงานขับรถของคุณได้รับการส่งเข้าสู่ระบบแล้ว คุณสามารถติดตามสถานะการพิจารณาใบสมัครของคุณได้โดยการเข้าสู่ระบบผ่านหน้าเว็บไซต์
+              ข้อมูลสมัครสมาชิกผู้ให้บริการขับรถของคุณได้รับการส่งเข้าสู่ระบบแล้ว คุณสามารถติดตามสถานะการพิจารณาใบสมัครของคุณได้โดยการเข้าสู่ระบบผ่านหน้าเว็บไซต์
             </p>
 
             {}
@@ -466,7 +466,7 @@ export default function RegisterDriverPage() {
                 gap: 8,
                 marginBottom: '12px',
               }}>
-                📱 ขั้นตอนการเข้าสู่ระบบสำหรับคนขับ
+                📱 ขั้นตอนการเข้าสู่ระบบสำหรับผู้ให้บริการขับรถ
               </h3>
               <p style={{
                 fontSize: '14.5px',
@@ -474,7 +474,7 @@ export default function RegisterDriverPage() {
                 lineHeight: 1.6,
                 margin: 0,
               }}>
-                การรับงาน การเปิดระบบ และการทำงานทั้งหมดของคนขับจะใช้งานผ่าน{' '}
+                การรับงาน การเปิดระบบ และการทำงานทั้งหมดของผู้ให้บริการขับรถจะใช้งานผ่าน{' '}
                 <strong style={{ color: '#4f46e5' }}>แอปพลิเคชัน SafeSeat บนมือถือ (Mobile App)</strong>{' '}
                 เท่านั้น (บนเว็บไซต์จะใช้สำหรับการเช็คสถานะการสมัครเท่านั้น)
               </p>
@@ -585,7 +585,7 @@ export default function RegisterDriverPage() {
             background: 'linear-gradient(160deg, rgba(5,7,20,0.85) 0%, rgba(35,64,167,0.4) 100%)',
           }} />
           <div style={styles.heroContent}>
-            <div style={styles.heroBadge}>🚗 สมัครเป็นคนขับ SafeSeat</div>
+            <div style={styles.heroBadge}>🚗 สมัครเป็นผู้ให้บริการขับรถ SafeSeat</div>
             <h1 style={styles.heroTitle}>
               สร้างรายได้เสริม<br />จากการบริการขับรถ
             </h1>

@@ -81,7 +81,7 @@ export default function ServiceInfoPage() {
   const getStep = (s?: string) => {
     if (!s) return 0
     const str = s.toLowerCase().trim()
-    if (['accepted', 'คนขับรับงาน', 'กำลังไปรับ', 'รับงานแล้ว'].includes(str) || str.includes('กำลังไปรับ') || str.includes('accepted') || str.includes('คนขับรับงาน')) return 1
+    if (['accepted', 'ผู้ให้บริการขับรถรับงาน', 'กำลังไปรับ', 'รับงานแล้ว'].includes(str) || str.includes('กำลังไปรับ') || str.includes('accepted') || str.includes('ผู้ให้บริการขับรถรับงาน')) return 1
     if (['ถึงจุดรับแล้ว', 'ถึงจุดรับ', 'ถึงจุดนัดหมาย', 'arrived'].includes(str) || str.includes('ถึงจุดรับ') || str.includes('ถึงจุดนัดหมาย')) return 2
     if (['ระหว่างเดินทาง', 'กำลังเดินทาง', 'in_transit', 'driving'].includes(str) || str.includes('ระหว่างเดินทาง') || str.includes('กำลังเดินทาง')) return 3
     if (['เสร็จสิ้น', 'completed', 'ถึงจุดหมายปลายทาง', 'finished', 'done', 'success'].includes(str) || str.includes('เสร็จสิ้น') || str.includes('completed') || str.includes('ถึงจุดหมาย')) return 4
@@ -91,7 +91,7 @@ export default function ServiceInfoPage() {
 
   const getStatus = (status?: string) => {
     const step = getStep(status)
-    if (step === 1) return { label: 'คนขับรับงาน', color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/30', step: 1 }
+    if (step === 1) return { label: 'ผู้ให้บริการขับรถรับงาน', color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/30', step: 1 }
     if (step === 2) return { label: 'ถึงจุดรับ', color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/30', step: 2 }
     if (step === 3) return { label: 'กำลังเดินทาง', color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/30', step: 3 }
     if (step === 4) return { label: 'ถึงจุดหมายปลายทาง', color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/30', step: 4 }
@@ -340,7 +340,7 @@ export default function ServiceInfoPage() {
                         </span>
                         {st.step > 0 && (
                           <div className="mt-1.5 text-[11px] font-semibold text-[var(--color-text-muted)] flex items-center gap-1">
-                            {st.step === 1 && '🚘 คนขับรับงานแล้ว'}
+                            {st.step === 1 && '🚘 ผู้ให้บริการขับรถรับงานแล้ว'}
                             {st.step === 2 && '📍 ถึงจุดรับแล้ว'}
                             {st.step === 3 && '🚗 กำลังเดินทาง'}
                             {st.step === 4 && '✅ ถึงจุดหมายปลายทาง'}
@@ -405,7 +405,7 @@ export default function ServiceInfoPage() {
                 QR Code ติดตามการเดินทาง {selectedQrRecord.id}
               </h3>
               <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-2 font-medium leading-relaxed break-words">
-                ให้ผู้ใช้บริการใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางของคนขับได้ทันทีเรียลไทม์ (ผู้ใช้บริการ: {selectedQrRecord.custName})
+                ให้ผู้ใช้บริการใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางของผู้ให้บริการขับรถได้ทันทีเรียลไทม์ (ผู้ใช้บริการ: {selectedQrRecord.custName})
               </p>
             </div>
 

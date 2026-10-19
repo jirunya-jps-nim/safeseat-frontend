@@ -20,7 +20,7 @@ function WaitingContent() {
   const requestId = searchParams.get('id')
   
   const [timeLeft, setTimeLeft] = useState(300)
-  const [status, setStatus] = useState('กำลังกระจายงานไปยังทีมคนขับในพื้นที่...')
+  const [status, setStatus] = useState('กำลังกระจายงานไปยังทีมผู้ให้บริการขับรถในพื้นที่...')
   const [isTimeout, setIsTimeout] = useState(false)
   const [reqData, setReqData] = useState<any>(null)
   const [copied, setCopied] = useState(false)
@@ -69,10 +69,10 @@ function WaitingContent() {
       setTimeLeft(prev => prev - 1)
     }, 1000)
 
-    if (timeLeft > 240) setStatus('กำลังกระจายงานไปยังทีมคนขับในพื้นที่...')
-    else if (timeLeft > 180) setStatus('กำลังแจ้งเตือนคนขับในรัศมีใกล้เคียง...')
-    else if (timeLeft > 120) setStatus('กำลังรอการตอบรับจากทีมคนขับคู่หู SafeSeat...')
-    else if (timeLeft > 60) setStatus('ขยายรัศมีเพื่อจับคู่คนขับมืออาชีพเพิ่มเติม...')
+    if (timeLeft > 240) setStatus('กำลังกระจายงานไปยังทีมผู้ให้บริการขับรถในพื้นที่...')
+    else if (timeLeft > 180) setStatus('กำลังแจ้งเตือนผู้ให้บริการขับรถในรัศมีใกล้เคียง...')
+    else if (timeLeft > 120) setStatus('กำลังรอการตอบรับจากทีมผู้ให้บริการขับรถ SafeSeat...')
+    else if (timeLeft > 60) setStatus('ขยายรัศมีเพื่อจับคู่ผู้ให้บริการขับรถมืออาชีพเพิ่มเติม...')
     else setStatus('นาทีสุดท้าย: กำลังเร่งติดตามการตอบรับงาน...')
 
     return () => clearInterval(timer)
@@ -94,7 +94,7 @@ function WaitingContent() {
             req.requeststatus === 'cancelled' ||
             req.requeststatus === 'ยกเลิก'
           ) {
-            handleCancelSearch(req, 'คนขับได้ปฏิเสธรายการเรียกรถ กรุณาให้ผู้ใช้เรียกใช้บริการใหม่อีกครั้ง')
+            handleCancelSearch(req, 'ผู้ให้บริการขับรถได้ปฏิเสธรายการเรียกรถ กรุณาให้ผู้ใช้เรียกใช้บริการใหม่อีกครั้ง')
           }
         }
       } catch (err) {
@@ -190,9 +190,9 @@ function WaitingContent() {
         <main className="relative z-10 max-w-xl mx-auto px-6 pt-48 pb-24 flex items-center justify-center">
           <div className="p-8 bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl shadow-xl flex flex-col items-center text-center gap-6 w-full">
             <AlertTriangle className="w-16 h-16 text-red-500" />
-            <h2 className="text-2xl font-bold font-manrope text-red-500">ไม่มีคนขับรับงานภายใน 5 นาที</h2>
+            <h2 className="text-2xl font-bold font-manrope text-red-500">ไม่มีผู้ให้บริการขับรถรับงานภายใน 5 นาที</h2>
             <p className="text-sm text-[var(--color-text-muted)] leading-relaxed font-light">
-              ขณะนี้ยังไม่มีคนขับอยู่ในพื้นที่หรือสะดวกรับงานภายในเวลา 5 นาทีที่กำหนด <br/>กรุณากดปุ่มย้อนกลับเพื่อกลับไปยังหน้าแดชบอร์ด
+              ขณะนี้ยังไม่มีผู้ให้บริการขับรถอยู่ในพื้นที่หรือสะดวกรับงานภายในเวลา 5 นาทีที่กำหนด <br/>กรุณากดปุ่มย้อนกลับเพื่อกลับไปยังหน้าแดชบอร์ด
             </p>
             <button 
               onClick={() => handleCancelSearch()}
@@ -236,7 +236,7 @@ function WaitingContent() {
                 </div>
               </div>
 
-              <h2 className="text-2xl font-bold font-manrope text-[var(--color-text)]">กำลังค้นหาคนขับรถ</h2>
+              <h2 className="text-2xl font-bold font-manrope text-[var(--color-text)]">กำลังค้นหาผู้ให้บริการขับรถ</h2>
               <p className="text-xs font-bold text-[#2340A7] mt-1 tracking-wider">{status}</p>
 
               <div className="w-full mt-6 p-4 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl flex flex-col items-center">
@@ -347,7 +347,7 @@ function WaitingContent() {
             <div>
               <h3 className="text-xl font-bold font-manrope text-[var(--color-text)]">ยืนยันการยกเลิกการค้นหา</h3>
               <p className="text-xs text-[var(--color-text-muted)] mt-2 leading-relaxed font-light">
-                คุณต้องการยกเลิกการค้นหาคนขับใช่หรือไม่? ระบบจะยกเลิกการค้นหาและลบข้อมูลการเรียกรถนี้ออกจากระบบทันที
+                คุณต้องการยกเลิกการค้นหาผู้ให้บริการขับรถใช่หรือไม่? ระบบจะยกเลิกการค้นหาและลบข้อมูลการเรียกรถนี้ออกจากระบบทันที
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3 w-full mt-2">

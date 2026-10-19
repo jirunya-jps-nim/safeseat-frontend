@@ -89,15 +89,15 @@ export default function Navbar({ showLoginButton = true }: NavbarProps) {
             onClick={() => { closeMobile(); router.push(pubUser ? '/pub/dashboard' : (driverUser ? '/driver-status' : '/')) }}
             className="flex items-center gap-3 cursor-pointer group"
           >
-            {/* Original Rotated Gradient Diamond with Safety Shield Icon */}
-            <div className="relative w-6 h-6 flex items-center justify-center shrink-0">
-              <div className="w-5 h-5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] rounded-[4px] rotate-45 group-hover:rotate-180 transition-transform duration-500 shadow-[0_0_15px_rgba(35,64,167,0.7)] flex items-center justify-center">
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <ShieldCheck className="w-3.5 h-3.5 text-white" />
-              </div>
+            {/* SafeSeat Logo */}
+            <div className="relative w-11 h-11 flex items-center justify-center shrink-0">
+              <img 
+                src="/images/safeseat_logo.png" 
+                alt="SafeSeat Logo" 
+                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-sm" 
+              />
             </div>
-            <span className="text-lg font-bold font-manrope tracking-tight text-[var(--color-text)]">
+            <span className="text-xl font-black font-manrope tracking-tight text-[var(--color-text)]">
               Safe<span className="text-[#2340A7]">Seat</span>
             </span>
             {(pubUser || driverUser) && (

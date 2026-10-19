@@ -678,7 +678,7 @@ function RequestDriverContent() {
                 <div className="p-12 text-center bg-[var(--color-surface)] border-2 border-dashed border-[var(--color-border)] rounded-2xl flex flex-col items-center gap-3">
                   <MapPin className="w-14 h-14 text-[#2340A7]" />
                   <h3 className="text-lg font-bold text-[var(--color-text)]">ยังไม่ได้เลือกจุดหมายปลายทาง</h3>
-                  <p className="text-sm text-[var(--color-text-muted)] max-w-sm">กรุณากดปุ่มด้านล่างเพื่อเปิดแผนที่และปักหมุดตำแหน่งจุดหมายปลายทางให้คนขับไปส่ง</p>
+                  <p className="text-sm text-[var(--color-text-muted)] max-w-sm">กรุณากดปุ่มด้านล่างเพื่อเปิดแผนที่และปักหมุดตำแหน่งจุดหมายปลายทางให้ผู้ให้บริการขับรถไปส่ง</p>
                   <button 
                     onClick={() => setShowMap(true)}
                     className="mt-2 px-7 py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] text-white font-bold text-sm sm:text-base uppercase tracking-wider rounded-full shadow-md cursor-pointer flex items-center gap-2"
@@ -772,8 +772,8 @@ function RequestDriverContent() {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">👩</span>
                   <div>
-                    <div className="text-sm font-bold text-[var(--color-text)]">Lady Mode (คนขับผู้หญิง)</div>
-                    <div className="text-xs text-[var(--color-text-muted)]">เปิดตัวเลือกนี้หากต้องการคนขับผู้หญิงในการให้บริการ</div>
+                    <div className="text-sm font-bold text-[var(--color-text)]">Lady Mode (ผู้ให้บริการขับรถผู้หญิง)</div>
+                    <div className="text-xs text-[var(--color-text-muted)]">เปิดตัวเลือกนี้หากต้องการผู้ให้บริการขับรถผู้หญิงในการให้บริการ</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -822,7 +822,7 @@ function RequestDriverContent() {
               <div className="flex flex-col gap-4">
                 {[
                   { value: 2, icon: QrCode, name: 'โอนเงิน / PromptPay', desc: 'สแกน QR Code เพื่อชำระเงินผ่าน Mobile Banking' },
-                  { value: 1, icon: CreditCard, name: 'เงินสด (Cash)', desc: 'ชำระเงินสดโดยตรงกับคนขับรถเมื่อถึงที่หมาย' },
+                  { value: 1, icon: CreditCard, name: 'เงินสด (Cash)', desc: 'ชำระเงินสดโดยตรงกับผู้ให้บริการขับรถเมื่อถึงที่หมาย' },
                 ].map(opt => {
                   const IconComp = opt.icon
                   const active = paymentMethod === opt.value
@@ -866,7 +866,7 @@ function RequestDriverContent() {
                     />
                   </div>
                   <div className="text-xl font-extrabold text-[var(--color-text)]">ยอดชำระเงิน: ฿{estimatedPrice}</div>
-                  <p className="text-xs text-[var(--color-text-muted)] max-w-sm">* สแกนเพื่อโอนชำระเงินล่วงหน้า หรือชำระเงินสดกับคนขับเมื่อถึงที่หมาย</p>
+                  <p className="text-xs text-[var(--color-text-muted)] whitespace-nowrap">* สแกนเพื่อโอนชำระเงินล่วงหน้า หรือชำระเงินสดกับผู้ให้บริการขับรถเมื่อถึงที่หมาย</p>
                 </div>
               )}
 
@@ -902,7 +902,7 @@ function RequestDriverContent() {
                   style={{ color: '#ffffff' }}
                   className="px-8 py-3.5 bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:from-[#1D358F] hover:to-[#1E40AF] transition-all cursor-pointer flex items-center gap-2"
                 >
-                  <span style={{ color: '#ffffff' }}>{loading ? 'กำลังส่งข้อมูล...' : 'เรียกคนขับรถเลย! ✓'}</span>
+                  <span style={{ color: '#ffffff' }}>{loading ? 'กำลังส่งข้อมูล...' : 'เรียกผู้ให้บริการขับรถเลย! ✓'}</span>
                 </button>
               </div>
             </div>

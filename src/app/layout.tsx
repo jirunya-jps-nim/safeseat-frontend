@@ -11,6 +11,7 @@ export default function RootLayout({
   return (
     <html lang="th" className="light" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/images/safeseat_logo.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

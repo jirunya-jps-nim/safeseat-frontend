@@ -254,7 +254,7 @@ export default function ChiangMaiHeroMap() {
               <Popup autoPan={false}>
                 <div className="p-1 min-w-[170px] text-slate-900">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <span className="text-xs font-black text-[#2340A7]">🚗 คนขับ SafeSeat</span>
+                    <span className="text-xs font-black text-[#2340A7]">🚗 ผู้ให้บริการขับรถ SafeSeat</span>
                   </div>
                   <p className="text-[11px] text-slate-600 font-semibold">หน้ามหาวิทยาลัยแม่โจ้</p>
                   <p className="text-[10px] text-blue-600 font-bold mt-1">⭐️ กำลังมุ่งหน้าไปรับคุณ</p>

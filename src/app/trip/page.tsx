@@ -116,7 +116,7 @@ function TripTrackingContent() {
   const getStep = (s: string) => {
     if (!s) return 0
     const str = s.toLowerCase().trim()
-    if (['accepted', 'คนขับรับงาน', 'กำลังไปรับ', 'รับงานแล้ว'].includes(str) || str.includes('กำลังไปรับ') || str.includes('accepted') || str.includes('คนขับรับงาน')) return 1
+    if (['accepted', 'ผู้ให้บริการขับรถรับงาน', 'คนขับรับงาน', 'กำลังไปรับ', 'รับงานแล้ว'].includes(str) || str.includes('กำลังไปรับ') || str.includes('accepted') || str.includes('ผู้ให้บริการขับรถรับงาน') || str.includes('คนขับรับงาน')) return 1
     if (['ถึงจุดรับแล้ว', 'ถึงจุดรับ', 'ถึงจุดนัดหมาย', 'arrived'].includes(str) || str.includes('ถึงจุดรับ') || str.includes('ถึงจุดนัดหมาย')) return 2
     if (['ระหว่างเดินทาง', 'กำลังเดินทาง', 'in_transit', 'driving'].includes(str) || str.includes('ระหว่างเดินทาง') || str.includes('กำลังเดินทาง')) return 3
     if (['เสร็จสิ้น', 'completed', 'ถึงจุดหมายปลายทาง', 'finished'].includes(str) || str.includes('เสร็จสิ้น') || str.includes('completed') || str.includes('ถึงจุดหมาย')) return 4
@@ -154,10 +154,10 @@ function TripTrackingContent() {
   let statusBadgeBg = 'bg-[#2340A7]/15 text-[#2340A7] border-[#2340A7]/30'
 
   if (currentStep === 1) {
-    statusText = 'คนขับรับงานแล้ว (กำลังเดินทางไปรับ)'
+    statusText = 'ผู้ให้บริการขับรถรับงานแล้ว (กำลังเดินทางไปรับ)'
     statusBadgeBg = 'bg-blue-500/15 text-blue-500 border-blue-500/30'
   } else if (currentStep === 2) {
-    statusText = 'คนขับเดินทางมาถึงตำแหน่งของคุณแล้ว'
+    statusText = 'ผู้ให้บริการขับรถเดินทางมาถึงตำแหน่งของคุณแล้ว'
     statusBadgeBg = 'bg-blue-600/15 text-blue-400 border-blue-500/30'
   } else if (currentStep === 3) {
     statusText = 'อยู่ระหว่างเดินทางไปยังจุดหมายปลายทาง'
@@ -169,7 +169,7 @@ function TripTrackingContent() {
     statusText = 'การเดินทางนี้ถูกยกเลิกแล้ว'
     statusBadgeBg = 'bg-red-500/15 text-red-500 border-red-500/30'
   } else {
-    statusText = 'กำลังจับคู่ทีมคนขับ SafeSeat'
+    statusText = 'กำลังจับคู่ทีมผู้ให้บริการขับรถ SafeSeat'
     statusBadgeBg = 'bg-amber-500/15 text-amber-500 border-amber-500/30'
   }
 
@@ -183,18 +183,18 @@ function TripTrackingContent() {
 
   const driver2Name = followerObj && (followerObj.firstname || followerObj.name)
     ? `คุณ${followerObj.firstname || followerObj.name} ${followerObj.lastname || ''}`.trim()
-    : 'ผู้ช่วยคนขับ SafeSeat (บัดดี้)'
+    : 'ผู้ช่วยขับรถ SafeSeat (บัดดี้)'
   const rawDriver2Phone = followerObj?.phone_no || followerObj?.phoneno || followerObj?.phone || reqData.follower_phone || ''
 
   const getPhoneDisplay = (phone: string) => {
     if (phone) return phone
-    if (normalizedStatus === 'กำลังค้นหาคนขับ' || normalizedStatus === 'รอคนขับ' || normalizedStatus === 'pending') {
-      return 'กำลังจับคู่คนขับ...'
+    if (normalizedStatus === 'กำลังค้นหาผู้ให้บริการขับรถ' || normalizedStatus === 'กำลังค้นหาคนขับ' || normalizedStatus === 'รอผู้ให้บริการขับรถ' || normalizedStatus === 'รอคนขับ' || normalizedStatus === 'pending') {
+      return 'กำลังจับคู่ผู้ให้บริการขับรถ...'
     }
     if (normalizedStatus === 'ยกเลิก' || normalizedStatus === 'cancelled') {
       return 'คำขอถูกยกเลิกแล้ว'
     }
-    return 'กำลังจัดทีมคนขับ'
+    return 'กำลังจัดทีมผู้ให้บริการขับรถ'
   }
   const driver1PhoneDisplay = getPhoneDisplay(rawDriver1Phone)
   const driver2PhoneDisplay = getPhoneDisplay(rawDriver2Phone)
@@ -311,7 +311,7 @@ function TripTrackingContent() {
           {/* Contact Details */}
           <div className="flex flex-col gap-6">
             <h3 className="text-xl font-bold font-manrope text-[var(--color-text)] flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-[#2340A7]" /> ข้อมูลการติดต่อทีมงานคนขับ
+              <UserCheck className="w-5 h-5 text-[#2340A7]" /> ข้อมูลการติดต่อทีมงานผู้ให้บริการขับรถ
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -321,7 +321,7 @@ function TripTrackingContent() {
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-[#2340A7]/15 rounded-xl text-[#2340A7] text-xl">👨‍✈️</div>
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">คนขับหลัก (Driver 1)</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ผู้ให้บริการขับรถหลัก (Driver 1)</span>
                     <div className="text-sm font-bold text-[var(--color-text)]">{driver1Name}</div>
                   </div>
                 </div>
@@ -337,7 +337,7 @@ function TripTrackingContent() {
                       className="px-4 py-2 bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:opacity-90 transition-opacity"
                       style={{ color: '#ffffff' }}
                     >
-                      <PhoneCall className="w-3.5 h-3.5 !text-white" style={{ color: '#ffffff' }} /> <span style={{ color: '#ffffff' }}>โทรหาคนขับ</span>
+                      <PhoneCall className="w-3.5 h-3.5 !text-white" style={{ color: '#ffffff' }} /> <span style={{ color: '#ffffff' }}>โทรหาผู้ให้บริการขับรถ</span>
                     </a>
                   )}
                 </div>
@@ -348,7 +348,7 @@ function TripTrackingContent() {
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-blue-500/15 rounded-xl text-blue-500 text-xl">👩‍✈️</div>
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ผู้ช่วยคนขับ (Driver 2)</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ผู้ช่วยขับรถ (Driver 2)</span>
                     <div className="text-sm font-bold text-[var(--color-text)]">{driver2Name}</div>
                   </div>
                 </div>

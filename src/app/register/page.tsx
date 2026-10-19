@@ -67,7 +67,7 @@ export default function RegisterSelectorPage() {
             </div>
 
             <p className="text-xs sm:text-sm text-[var(--color-text-muted)] leading-relaxed font-normal flex-1">
-              สำหรับสถานบันเทิง บาร์ คาราโอเกะ ยามค่ำคืน ที่ต้องการเชื่อมต่อระบบเรียกคนขับแทน เพื่อดูแลสวัสดิภาพผู้ใช้บริการหน้าสถานบันเทิง
+              สำหรับสถานบันเทิง บาร์ คาราโอเกะ ยามค่ำคืน ที่ต้องการเชื่อมต่อระบบเรียกผู้ให้บริการขับรถ เพื่อดูแลสวัสดิภาพผู้ใช้บริการหน้าสถานบันเทิง
             </p>
 
             <button 
@@ -92,19 +92,19 @@ export default function RegisterSelectorPage() {
                 PORTAL 02 // DRIVER
               </span>
               <h2 className="text-2xl sm:text-3xl lg:text-3xl font-black font-manrope text-[var(--color-text)] tracking-tight">
-                พนักงานขับรถมืออาชีพ
+                ผู้ให้บริการขับรถมืออาชีพ
               </h2>
             </div>
 
             <p className="text-xs sm:text-sm text-[var(--color-text-muted)] leading-relaxed font-normal flex-1">
-              สำหรับพนักงานขับรถมืออาชีพที่ต้องการสร้างรายได้เสริมที่มั่นคง ปลอดภัย พร้อมเลือกเวลาและพื้นที่ในการรับงานได้อย่างอิสระ
+              สำหรับผู้ให้บริการขับรถมืออาชีพที่ต้องการสร้างรายได้เสริมที่มั่นคง ปลอดภัย พร้อมเลือกเวลาและพื้นที่ในการรับงานได้อย่างอิสระ
             </p>
 
             <button 
               className="w-full py-4 bg-gradient-to-r from-[#2340A7] to-[#2563EB] hover:from-[#1D358F] hover:to-[#1D4ED8] !text-white font-black text-sm sm:text-base rounded-2xl sm:rounded-full transition-all shadow-md hover:shadow-lg hover:scale-[1.01] flex items-center justify-center gap-2.5 cursor-pointer"
               style={{ color: '#ffffff' }}
             >
-              <span style={{ color: '#ffffff' }}>สมัครเป็นพนักงานขับรถ</span> <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 !text-white" style={{ color: '#ffffff' }} />
+              <span style={{ color: '#ffffff' }}>สมัครเป็นผู้ให้บริการขับรถ</span> <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 !text-white" style={{ color: '#ffffff' }} />
             </button>
           </div>
 

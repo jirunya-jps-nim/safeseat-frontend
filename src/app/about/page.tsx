@@ -88,9 +88,9 @@ export default function AboutPage() {
                 <Car className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-lg font-bold font-manrope text-[var(--color-text)] mb-2">พนักงานขับรถผ่านการคัดกรอง</h3>
+                <h3 className="text-lg font-bold font-manrope text-[var(--color-text)] mb-2">ผู้ให้บริการขับรถผ่านการคัดกรอง</h3>
                 <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-                  พนักงานขับรถแทนทุกคนผ่านการตรวจสอบประวัติอาชญากรรม ประวัติการขับขี่ และมีใบอนุญาตขับขี่ถูกต้องตามกฎหมาย
+                  ผู้ให้บริการขับรถทุกคนผ่านการตรวจสอบประวัติอาชญากรรม ประวัติการขับขี่ และมีใบอนุญาตขับขี่ถูกต้องตามกฎหมาย
                 </p>
               </div>
             </div>
@@ -102,7 +102,7 @@ export default function AboutPage() {
               <div>
                 <h3 className="text-lg font-bold font-manrope text-[var(--color-text)] mb-2">เครือข่ายพาร์ทเนอร์สถานบันเทิง</h3>
                 <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-                  สถานบันเทิง และร้านอาหาร สามารถเรียกรถ ส่งงาน และตรวจสอบสถิติเรียลไทม์เพื่อดูแลสวัสดิภาพผู้ใช้บริการหน้าสถานบันเทิงได้อย่างไร้รอยต่อ
+                  สถานบันเทิง สามารถเรียกรถ ส่งงาน และตรวจสอบสถิติเรียลไทม์เพื่อดูแลสวัสดิภาพผู้ใช้บริการหน้าสถานบันเทิงได้อย่างไร้รอยต่อ
                 </p>
               </div>
             </div>
@@ -114,7 +114,7 @@ export default function AboutPage() {
               <div>
                 <h3 className="text-lg font-bold font-manrope text-[var(--color-text)] mb-2">ระบบติดตาม GPS เรียลไทม์</h3>
                 <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
-                  ระบบติดตามสถานะการเดินทางอย่างแม่นยำ พร้อมระบบแจ้งเตือนฉุกเฉินเพื่อให้ญาติหรือเจ้าของร้านอุ่นใจตลอดเส้นทาง
+                  ระบบติดตามสถานะการเดินทางอย่างแม่นยำ พร้อมระบบแจ้งเตือนฉุกเฉินเพื่อให้ญาติหรือเจ้าของสถานบันเทิงอุ่นใจตลอดเส้นทาง
                 </p>
               </div>
             </div>

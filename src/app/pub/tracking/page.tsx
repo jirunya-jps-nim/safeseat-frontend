@@ -280,7 +280,7 @@ function TrackingContent() {
   const getStep = (s: string) => {
     if (!s) return 0
     const str = s.toLowerCase().trim()
-    if (['accepted', 'คนขับรับงาน', 'กำลังไปรับ', 'รับงานแล้ว'].includes(str) || str.includes('กำลังไปรับ') || str.includes('accepted') || str.includes('คนขับรับงาน')) return 1
+    if (['accepted', 'ผู้ให้บริการขับรถรับงาน', 'กำลังไปรับ', 'รับงานแล้ว'].includes(str) || str.includes('กำลังไปรับ') || str.includes('accepted') || str.includes('ผู้ให้บริการขับรถรับงาน')) return 1
     if (['ถึงจุดรับแล้ว', 'ถึงจุดรับ', 'ถึงจุดนัดหมาย', 'arrived'].includes(str) || str.includes('ถึงจุดรับ') || str.includes('ถึงจุดนัดหมาย')) return 2
     if (['ระหว่างเดินทาง', 'กำลังเดินทาง', 'in_transit', 'driving'].includes(str) || str.includes('ระหว่างเดินทาง') || str.includes('กำลังเดินทาง')) return 3
     if (['เสร็จสิ้น', 'completed', 'ถึงจุดหมายปลายทาง', 'finished'].includes(str) || str.includes('เสร็จสิ้น') || str.includes('completed') || str.includes('ถึงจุดหมาย')) return 4
@@ -291,12 +291,12 @@ function TrackingContent() {
   const currentStep = getStep(requeststatus)
 
   let displayStatus = requeststatus
-  if (currentStep === 1) displayStatus = 'คนขับรับงานแล้ว (กำลังเดินทางไปรับ)'
-  else if (currentStep === 2) displayStatus = 'คนขับถึงจุดรับแล้ว (กำลังออกเดินทาง)'
+  if (currentStep === 1) displayStatus = 'ผู้ให้บริการขับรถรับงานแล้ว (กำลังเดินทางไปรับ)'
+  else if (currentStep === 2) displayStatus = 'ผู้ให้บริการขับรถถึงจุดรับแล้ว (กำลังออกเดินทาง)'
   else if (currentStep === 3) displayStatus = 'กำลังเดินทางไปยังจุดหมายปลายทาง'
   else if (currentStep === 4) displayStatus = 'เสร็จสิ้นการบริการ (ถึงที่หมายเรียบร้อย)'
   else if (currentStep === -1) displayStatus = 'การเดินทางถูกยกเลิก'
-  else displayStatus = 'กำลังค้นหาพนักงานขับรถ...'
+  else displayStatus = 'กำลังค้นหาผู้ให้บริการขับรถ...'
 
   const leader = reqData.leader || reqData.buddyteam?.leader
   const follower = reqData.follower || reqData.buddyteam?.follower
@@ -308,7 +308,7 @@ function TrackingContent() {
 
   const driver2Name = follower && (follower.firstname || follower.name)
     ? `คุณ${follower.firstname || follower.name} ${follower.lastname || ''}`.trim()
-    : 'ผู้ช่วยคนขับ SafeSeat (บัดดี้)'
+    : 'ผู้ช่วยขับรถ SafeSeat (บัดดี้)'
   const driver2Phone = follower?.phone_no || follower?.phoneno || follower?.phone || reqData.follower_phone || ''
 
   const realLat = reqData.buddyteam?.currentloclat
@@ -338,7 +338,7 @@ function TrackingContent() {
   const isCompleted = requeststatus === 'เสร็จสิ้น' || requeststatus === 'completed'
 
   const stepsList = [
-    { label: 'คนขับรับงาน', step: 1 },
+    { label: 'ผู้ให้บริการขับรถรับงาน', step: 1 },
     { label: 'ถึงจุดรับ', step: 2 },
     { label: 'กำลังเดินทาง', step: 3 },
     { label: 'ถึงจุดหมายปลายทาง', step: 4 },
@@ -394,20 +394,20 @@ function TrackingContent() {
             </div>
             <div className="flex flex-col">
               <span className="text-base font-extrabold font-manrope">
-                {currentStep === 1 && 'คนขับรับงานแล้ว'}
+                {currentStep === 1 && 'ผู้ให้บริการขับรถรับงานแล้ว'}
                 {currentStep === 2 && 'ถึงจุดรับแล้ว'}
                 {currentStep === 3 && 'กำลังเดินทาง'}
                 {currentStep === 4 && 'ถึงจุดหมายปลายทางแล้ว'}
                 {requeststatus?.includes('ยกเลิก') || requeststatus?.includes('cancelled') ? 'การเดินทางถูกยกเลิก' : ''}
-                {currentStep === 0 && !requeststatus?.includes('ยกเลิก') && 'กำลังค้นหาคนขับ...'}
+                {currentStep === 0 && !requeststatus?.includes('ยกเลิก') && 'กำลังค้นหาผู้ให้บริการขับรถ...'}
               </span>
               <span className="text-xs text-[var(--color-text-muted)] mt-0.5 font-medium">
-                {currentStep === 1 && 'พนักงานขับรถรับงานเรียบร้อยแล้ว กำลังเดินทางไปรับผู้ใช้บริการที่จุดนัดหมาย'}
-                {currentStep === 2 && 'พนักงานขับรถเดินทางมาถึงจุดรับผู้ใช้บริการเรียบร้อยแล้ว'}
-                {currentStep === 3 && 'พนักงานขับรถกำลังพาผู้ใช้บริการเดินทางไปยังจุดหมายปลายทางอย่างปลอดภัย'}
+                {currentStep === 1 && 'ผู้ให้บริการขับรถรับงานเรียบร้อยแล้ว กำลังเดินทางไปรับผู้ใช้บริการที่จุดนัดหมาย'}
+                {currentStep === 2 && 'ผู้ให้บริการขับรถเดินทางมาถึงจุดรับผู้ใช้บริการเรียบร้อยแล้ว'}
+                {currentStep === 3 && 'ผู้ให้บริการขับรถกำลังพาผู้ใช้บริการเดินทางไปยังจุดหมายปลายทางอย่างปลอดภัย'}
                 {currentStep === 4 && 'เดินทางถึงจุดหมายปลายทางเรียบร้อยแล้ว ขอบคุณที่ใช้บริการ SafeSeat'}
                 {requeststatus?.includes('ยกเลิก') || requeststatus?.includes('cancelled') ? 'รายการเรียกรถนี้ถูกยกเลิกแล้ว' : ''}
-                {currentStep === 0 && !requeststatus?.includes('ยกเลิก') && 'ระบบกำลังค้นหาพนักงานขับรถบริเวณใกล้เคียง กรุณารอสักครู่'}
+                {currentStep === 0 && !requeststatus?.includes('ยกเลิก') && 'ระบบกำลังค้นหาผู้ให้บริการขับรถบริเวณใกล้เคียง กรุณารอสักครู่'}
               </span>
             </div>
           </div>
@@ -511,11 +511,11 @@ function TrackingContent() {
               </a>
             </div>
           </div>
-          {/* 👥 ข้อมูลการติดต่อทีมงานคนขับ & เบอร์ฉุกเฉิน (Driver Team & Emergency Contact) */}
+          {/* 👥 ข้อมูลการติดต่อทีมงานผู้ให้บริการขับรถ & เบอร์ฉุกเฉิน (Driver Team & Emergency Contact) */}
           <div className="flex flex-col gap-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h3 className="text-xl font-bold font-manrope text-[var(--color-text)] flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-[#2340A7]" /> ข้อมูลการติดต่อทีมงานคนขับ &amp; เบอร์ฉุกเฉิน
+                <UserCheck className="w-5 h-5 text-[#2340A7]" /> ข้อมูลการติดต่อทีมงานผู้ให้บริการขับรถ &amp; เบอร์ฉุกเฉิน
               </h3>
               {trackingUrl && (
                 <button
@@ -530,12 +530,12 @@ function TrackingContent() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* คนขับหลัก */}
+              {/* ผู้ให้บริการขับรถหลัก */}
               <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-[#2340A7]/15 rounded-xl text-[#2340A7] text-xl">👨‍✈️</div>
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">คนขับหลัก (Driver 1)</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ผู้ให้บริการขับรถหลัก (Driver 1)</span>
                     <div className="text-sm font-bold text-[var(--color-text)]">{driver1Name}</div>
                   </div>
                 </div>
@@ -551,18 +551,18 @@ function TrackingContent() {
                       className="px-4 py-2 bg-gradient-to-r from-[#2340A7] to-[#2563EB] !text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 hover:opacity-90 transition-opacity"
                       style={{ color: '#ffffff' }}
                     >
-                      <PhoneCall className="w-3.5 h-3.5 !text-white" style={{ color: '#ffffff' }} /> <span style={{ color: '#ffffff' }}>โทรหาคนขับ</span>
+                      <PhoneCall className="w-3.5 h-3.5 !text-white" style={{ color: '#ffffff' }} /> <span style={{ color: '#ffffff' }}>โทรหาผู้ให้บริการขับรถ</span>
                     </a>
                   )}
                 </div>
               </div>
 
-              {/* ผู้ช่วยคนขับ */}
+              {/* ผู้ช่วยขับรถ */}
               <div className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-2xl flex flex-col justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-blue-500/15 rounded-xl text-blue-500 text-xl">👩‍✈️</div>
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ผู้ช่วยคนขับ (Driver 2)</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] block">ผู้ช่วยขับรถ (Driver 2)</span>
                     <div className="text-sm font-bold text-[var(--color-text)]">{driver2Name}</div>
                   </div>
                 </div>
@@ -637,7 +637,7 @@ function TrackingContent() {
                 QR Code ติดตามการเดินทาง
               </h3>
               <p className="text-xs sm:text-sm text-[var(--color-text-muted)] mt-2 font-medium leading-relaxed break-words">
-                ให้ผู้ใช้บริการใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางของคนขับได้ทันทีเรียลไทม์
+                ให้ผู้ใช้บริการใช้กล้องโทรศัพท์สแกน QR Code นี้เพื่อเปิดหน้าติดตามการเดินทางของผู้ให้บริการขับรถได้ทันทีเรียลไทม์
               </p>
             </div>
 

@@ -33,8 +33,8 @@ export default function PubDashboardPage() {
       code: 'SERVICE // 01',
       title: 'เรียกรถให้ผู้ใช้บริการ',
       subtitle: 'REQUEST DESIGNATED DRIVER',
-      desc: 'เรียกพนักงานขับรถแทนมืออาชีพให้ผู้ใช้บริการของคุณ รับส่งถึงที่หมายอย่างปลอดภัยตลอดเส้นทาง',
-      btnLabel: 'เรียกคนขับแทนตอนนี้',
+      desc: 'เรียกผู้ให้บริการขับรถมืออาชีพให้ผู้ใช้บริการของคุณ รับส่งถึงที่หมายอย่างปลอดภัยตลอดเส้นทาง',
+      btnLabel: 'เรียกผู้ให้บริการขับรถตอนนี้',
       icon: Car,
       colorClass: 'text-[#2340A7]',
       borderHover: 'hover:border-[#2340A7]',
@@ -99,7 +99,7 @@ export default function PubDashboardPage() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-bold font-manrope tracking-tight leading-tight mb-3 text-[var(--color-text)]">
-            ยินดีต้อนรับกลับ,{' '}
+            ยินดีต้อนรับ,{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2340A7] to-[#2563EB]">
               {pubName}
             </span>

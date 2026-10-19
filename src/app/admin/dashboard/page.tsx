@@ -1,12 +1,76 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import api from '@/services/api'
 import AlertModal from '@/components/ui/AlertModal'
-import { Shield, Car, Store, AlertTriangle, User, LogOut, CheckCircle2, XCircle, Search, Calendar, Filter, RefreshCw, ChevronRight, Eye, FileText, Check, X, TrendingUp, BarChart2, Clock, BarChart3 } from 'lucide-react'
+import { Shield, Car, Store, AlertTriangle, User, LogOut, CheckCircle2, XCircle, Search, Calendar, Filter, RefreshCw, ChevronRight, Eye, FileText, Check, X, TrendingUp, BarChart2, Clock, BarChart3, CalendarDays } from 'lucide-react'
 
-// หน้าผู้ดูแลระบบ (Admin Dashboard: สถิติภาพรวม, อนุมัติคนขับ, อนุมัติสถานบันเทิง, และจัดการรายงาน)
+// Custom Thai Date Input Component (วัน / เดือน / ปี)
+function AdminThaiDateInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (val: string) => void
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const formatThaiDisplay = (isoStr: string) => {
+    if (!isoStr) return { short: 'วว/ดด/ปปปป', full: '' }
+    const parts = isoStr.split('-')
+    if (parts.length !== 3) return { short: isoStr, full: '' }
+    const y = parseInt(parts[0], 10)
+    const m = parts[1]
+    const d = parts[2]
+    const thaiYear = y + 543
+    const short = `${d}/${m}/${thaiYear}`
+    
+    try {
+      const date = new Date(y, parseInt(m, 10) - 1, parseInt(d, 10))
+      const full = date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+      return { short, full }
+    } catch {
+      return { short, full: '' }
+    }
+  }
+
+  const { short, full } = formatThaiDisplay(value)
+
+  return (
+    <div>
+      <label className="block text-[10px] font-bold uppercase tracking-wider text-[#64748B] mb-1">
+        {label}
+      </label>
+      <div 
+        onClick={() => {
+          try {
+            inputRef.current?.showPicker?.()
+          } catch {
+            inputRef.current?.focus()
+          }
+        }}
+        className="relative flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl bg-white border border-[#CBD5E1] hover:border-[#2563EB] transition-all cursor-pointer group shadow-xs"
+      >
+        <span className="text-xs sm:text-sm font-bold font-mono text-[#0F172A]">
+          {short}
+        </span>
+        <CalendarDays className="w-4 h-4 text-[#2563EB] group-hover:scale-110 transition-transform pointer-events-none" />
+        <input
+          ref={inputRef}
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+        />
+      </div>
+    </div>
+  )
+}
+
+// หน้าผู้ดูแลระบบ (Admin Dashboard: สถิติภาพรวม, อนุมัติผู้ให้บริการขับรถ, อนุมัติสถานบันเทิง, และจัดการรายงาน)
 interface AdminUser {
   username: string
 }
@@ -208,7 +272,16 @@ export default function AdminDashboard() {
   const [selectedReportType, setSelectedReportType] = useState<'driver' | 'user' | null>(null)
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null)
 
-  const [chartTimeframe, setChartTimeframe] = useState<'day' | 'week' | 'month' | 'year'>('day')
+  const [chartTimeframe, setChartTimeframe] = useState<'day' | 'week' | 'month' | 'year' | 'custom'>('day')
+  const [chartStartDate, setChartStartDate] = useState<string>(() => {
+    const d = new Date()
+    d.setDate(d.getDate() - 7)
+    return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+  })
+  const [chartEndDate, setChartEndDate] = useState<string>(() => {
+    return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+  })
+  const [showAdminCalendar, setShowAdminCalendar] = useState(false)
   const [chartHoverIndex, setChartHoverIndex] = useState<number | null>(null)
   const [visibleSeries, setVisibleSeries] = useState({
     driverApp: true,
@@ -328,7 +401,7 @@ export default function AdminDashboard() {
     try {
       const res = await api.put(`/admin/drivers/${username}/status`, { status: newStatus })
       if (res.data && res.data.success) {
-        showToast(newStatus === 'ปฏิเสธ' ? `ปฏิเสธและลบข้อมูลคำขอสมัครคนขับของ @${username} ออกจากระบบแล้ว` : `อนุมัติคำขอสมัครคนขับ @${username} เรียบร้อยแล้ว`)
+        showToast(newStatus === 'ปฏิเสธ' ? `ปฏิเสธและลบข้อมูลคำขอสมัครผู้ให้บริการขับรถของ @${username} ออกจากระบบแล้ว` : `อนุมัติคำขอสมัครผู้ให้บริการขับรถ @${username} เรียบร้อยแล้ว`)
         await fetchTabData('driver-app')
         setSelectedDriver(null)
       }
@@ -394,8 +467,8 @@ export default function AdminDashboard() {
   const promptDriverApprove = (username: string) => {
     setConfirmModal({
       isOpen: true,
-      title: 'ยืนยันการอนุมัติการสมัครคนขับ',
-      message: `คุณแน่ใจหรือไม่ว่าต้องการอนุมัติคำขอสมัครของคนขับ @${username}?`,
+      title: 'ยืนยันการอนุมัติการสมัครผู้ให้บริการขับรถ',
+      message: `คุณแน่ใจหรือไม่ว่าต้องการอนุมัติคำขอสมัครของผู้ให้บริการขับรถ @${username}?`,
       confirmText: 'ยืนยันการอนุมัติ (Approve)',
       confirmBg: 'bg-[#2563EB] hover:bg-[#1D4ED8]',
       onConfirm: () => handleDriverStatus(username, 'อนุมัติแล้ว')
@@ -405,8 +478,8 @@ export default function AdminDashboard() {
   const promptDriverReject = (username: string) => {
     setConfirmModal({
       isOpen: true,
-      title: 'ยืนยันการปฏิเสธการสมัครคนขับ',
-      message: `คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอสมัครของคนขับ @${username}? ข้อมูลจะถูกลบออกจากระบบทั้งหมด`,
+      title: 'ยืนยันการปฏิเสธการสมัครผู้ให้บริการขับรถ',
+      message: `คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอสมัครของผู้ให้บริการขับรถ @${username}? ข้อมูลจะถูกลบออกจากระบบทั้งหมด`,
       confirmText: 'ยืนยันการปฏิเสธ (Confirm Reject)',
       confirmBg: 'bg-red-600 hover:bg-red-700',
       onConfirm: () => handleDriverStatus(username, 'ปฏิเสธ')
@@ -436,7 +509,7 @@ export default function AdminDashboard() {
   }
 
   const promptReportApprove = (reportId: number, type: 'driver' | 'user') => {
-    const label = type === 'driver' ? `รายงานคนขับ #DRV-${reportId}` : `รายงานผู้ใช้บริการ #USR-${reportId}`
+    const label = type === 'driver' ? `รายงานผู้ให้บริการขับรถ #DRV-${reportId}` : `รายงานผู้ใช้บริการ #USR-${reportId}`
     const targetStatus = 'อนุมัติแล้ว'
     setConfirmModal({
       isOpen: true,
@@ -449,7 +522,7 @@ export default function AdminDashboard() {
   }
 
   const promptReportReject = (reportId: number, type: 'driver' | 'user') => {
-    const label = type === 'driver' ? `รายงานคนขับ #DRV-${reportId}` : `รายงานผู้ใช้บริการ #USR-${reportId}`
+    const label = type === 'driver' ? `รายงานผู้ให้บริการขับรถ #DRV-${reportId}` : `รายงานผู้ใช้บริการ #USR-${reportId}`
     setConfirmModal({
       isOpen: true,
       title: 'ยืนยันการปฏิเสธรายการรายงาน',
@@ -506,9 +579,13 @@ export default function AdminDashboard() {
       {}
       <aside className="w-full md:w-72 bg-white border-r border-[#E2E8F0] p-6 flex flex-col justify-between shrink-0 shadow-sm">
         <div className="flex flex-col gap-6">
-          <div className="flex items-center gap-3 border-b border-[#E2E8F0] pb-6">
-            <div className="w-10 h-10 rounded-xl bg-[#2563EB] text-white flex items-center justify-center shadow-sm">
-              <Shield className="w-5 h-5" />
+          <div className="flex items-center gap-3.5 border-b border-[#E2E8F0] pb-6">
+            <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-200 p-1.5 flex items-center justify-center shadow-xs shrink-0">
+              <img 
+                src="/images/safeseat_logo.png" 
+                alt="SafeSeat Logo" 
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
               <h2 className="text-xl font-black font-manrope text-[#0F172A]">SafeSeat Admin</h2>
@@ -538,7 +615,7 @@ export default function AdminDashboard() {
                   : 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A]'
               }`}
             >
-              <Car className="w-5 h-5" /> พิจารณาคนขับรถ
+              <Car className="w-5 h-5" /> พิจารณาผู้ให้บริการขับรถ
             </button>
 
             <button
@@ -562,7 +639,7 @@ export default function AdminDashboard() {
                   : 'text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0F172A]'
               }`}
             >
-              <AlertTriangle className="w-5 h-5" /> รายงานคนขับ
+              <AlertTriangle className="w-5 h-5" /> รายงานผู้ให้บริการขับรถ
             </button>
 
             <button
@@ -600,9 +677,9 @@ export default function AdminDashboard() {
             <ChevronRight className="w-4 h-4 text-[#94A3B8]" />
             <span className="text-[#2563EB] font-manrope uppercase tracking-wider font-black text-base">
               {activeTab === 'home' && 'ภาพรวมระบบ'}
-              {activeTab === 'driver-app' && 'พิจารณาอนุมัติคนขับ'}
+              {activeTab === 'driver-app' && 'พิจารณาอนุมัติผู้ให้บริการขับรถ'}
               {activeTab === 'pub-app' && 'พิจารณาอนุมัติสถานบันเทิง'}
-              {activeTab === 'driver-report' && 'รายงานความประพฤติคนขับ'}
+              {activeTab === 'driver-report' && 'รายงานความประพฤติผู้ให้บริการขับรถ'}
               {activeTab === 'user-report' && 'รายงานความประพฤติผู้ใช้บริการ'}
             </span>
           </div>
@@ -642,7 +719,7 @@ export default function AdminDashboard() {
                       className={`flex items-center gap-2.5 transition-opacity cursor-pointer text-sm font-bold ${visibleSeries.driverApp ? 'opacity-100' : 'opacity-40'}`}
                     >
                       <span className="w-3.5 h-3.5 rounded-full bg-[#2563EB]"></span>
-                      <span className="text-[#0F172A]">การสมัครคนขับ</span>
+                      <span className="text-[#0F172A]">การสมัครผู้ให้บริการขับรถ</span>
                     </button>
 
                     <button 
@@ -658,7 +735,7 @@ export default function AdminDashboard() {
                       className={`flex items-center gap-2.5 transition-opacity cursor-pointer text-sm font-bold ${visibleSeries.driverReport ? 'opacity-100' : 'opacity-40'}`}
                     >
                       <span className="w-3.5 h-3.5 rounded-full bg-[#EF4444]"></span>
-                      <span className="text-[#0F172A]">รายงานคนขับ</span>
+                      <span className="text-[#0F172A]">รายงานผู้ให้บริการขับรถ</span>
                     </button>
 
                     <button 
@@ -798,7 +875,7 @@ export default function AdminDashboard() {
                     }
                   }
 
-                  else {
+                  else if (chartTimeframe === 'year') {
                     // ปีนี้ (This Year): แสดง 12 เดือนของปีปัจจุบัน
                     const labels = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
                     const counts = {
@@ -831,6 +908,129 @@ export default function AdminDashboard() {
                       periodTitle: `สถิติรายเดือน ประจำปี ${yearThai}` 
                     }
                   }
+
+                  else {
+                    // กำหนดช่วงวันที่เอง (Custom Calendar Range)
+                    const sDate = new Date(`${chartStartDate}T00:00:00+07:00`)
+                    const eDate = new Date(`${chartEndDate}T23:59:59.999+07:00`)
+                    const validStart = sDate <= eDate ? sDate : eDate
+                    const validEnd = sDate <= eDate ? eDate : sDate
+
+                    const diffTime = Math.abs(validEnd.getTime() - validStart.getTime())
+                    const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
+
+                    const startThaiStr = validStart.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
+                    const endThaiStr = validEnd.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
+
+                    if (diffDays <= 1) {
+                      const labels = ['00.00 - 03.59', '04.00 - 07.59', '08.00 - 11.59', '12.00 - 15.59', '16.00 - 19.59', '20.00 - 23.59']
+                      const counts = {
+                        driverApp: [0, 0, 0, 0, 0, 0],
+                        pubApp: [0, 0, 0, 0, 0, 0],
+                        driverReport: [0, 0, 0, 0, 0, 0],
+                        userReport: [0, 0, 0, 0, 0, 0],
+                      }
+
+                      const countSlot = (items: any[], dateKey: string, arr: number[]) => {
+                        (items || []).forEach(item => {
+                          if (!item[dateKey]) return
+                          const d = parseThaiDate(item[dateKey])
+                          if (d >= validStart && d <= validEnd) {
+                            const hour = d.getHours()
+                            const slot = Math.min(Math.floor(hour / 4), 5)
+                            arr[slot] += 1
+                          }
+                        })
+                      }
+
+                      countSlot(drivers, 'regisdate', counts.driverApp)
+                      countSlot(pubs, 'regisdate', counts.pubApp)
+                      countSlot(driverReports, 'reportdate', counts.driverReport)
+                      countSlot(userReports, 'reportdate', counts.userReport)
+
+                      return {
+                        labels,
+                        datasets: counts,
+                        periodTitle: `สถิติตามช่วงวันที่เลือก (${startThaiStr})`,
+                      }
+                    } else if (diffDays <= 14) {
+                      const labels: string[] = []
+                      const counts = {
+                        driverApp: [] as number[],
+                        pubApp: [] as number[],
+                        driverReport: [] as number[],
+                        userReport: [] as number[],
+                      }
+
+                      const cur = new Date(validStart)
+                      while (cur <= validEnd && labels.length < 14) {
+                        const dayLabel = cur.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+                        labels.push(dayLabel)
+                        const dayKey = cur.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+
+                        const countDay = (items: any[], dateKey: string) => {
+                          return (items || []).filter(item => {
+                            if (!item[dateKey]) return false
+                            const d = parseThaiDate(item[dateKey])
+                            return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' }) === dayKey
+                          }).length
+                        }
+
+                        counts.driverApp.push(countDay(drivers, 'regisdate'))
+                        counts.pubApp.push(countDay(pubs, 'regisdate'))
+                        counts.driverReport.push(countDay(driverReports, 'reportdate'))
+                        counts.userReport.push(countDay(userReports, 'reportdate'))
+
+                        cur.setDate(cur.getDate() + 1)
+                      }
+
+                      return {
+                        labels,
+                        datasets: counts,
+                        periodTitle: `สถิติตามช่วงวันที่เลือก (${startThaiStr} - ${endThaiStr})`,
+                      }
+                    } else {
+                      const intervalCount = Math.min(diffDays, 7)
+                      const labels: string[] = []
+                      const counts = {
+                        driverApp: new Array(intervalCount).fill(0),
+                        pubApp: new Array(intervalCount).fill(0),
+                        driverReport: new Array(intervalCount).fill(0),
+                        userReport: new Array(intervalCount).fill(0),
+                      }
+                      const intervalDuration = diffTime / intervalCount
+
+                      for (let i = 0; i < intervalCount; i++) {
+                        const segStart = new Date(validStart.getTime() + i * intervalDuration)
+                        const segEnd = new Date(validStart.getTime() + (i + 1) * intervalDuration)
+                        const segLabel = `${segStart.toLocaleDateString('th-TH', { day: 'numeric', month: 'numeric' })}-${segEnd.toLocaleDateString('th-TH', { day: 'numeric', month: 'numeric' })}`
+                        labels.push(segLabel)
+
+                        const countSeg = (items: any[], dateKey: string) => {
+                          let c = 0
+                          ;(items || []).forEach(item => {
+                            if (!item[dateKey]) return
+                            const d = parseThaiDate(item[dateKey])
+                            if (d >= segStart && (i === intervalCount - 1 ? d <= segEnd : d < segEnd)) {
+                              c++
+                            }
+                          })
+                          return c
+                        }
+
+                        counts.driverApp[i] = countSeg(drivers, 'regisdate')
+                        counts.pubApp[i] = countSeg(pubs, 'regisdate')
+                        counts.driverReport[i] = countSeg(driverReports, 'reportdate')
+                        counts.userReport[i] = countSeg(userReports, 'reportdate')
+                      }
+
+                      return {
+                        labels,
+                        datasets: counts,
+                        periodTitle: `สถิติตามช่วงวันที่เลือก (${startThaiStr} - ${endThaiStr})`,
+                      }
+                    }
+                  }
                 }
 
                 const data = getAnalyticsData()
@@ -844,15 +1044,59 @@ export default function AdminDashboard() {
 
                 return (
                   <div className="flex flex-col gap-4">
-                    {/* Period Banner Description */}
-                    <div className="flex items-center justify-between px-1">
-                      <span className="text-xs sm:text-sm font-black text-[#2563EB] bg-blue-50 border border-blue-200 px-3.5 py-1.5 rounded-full shadow-xs">
-                        📊 {data.periodTitle}
-                      </span>
-                      <span className="text-xs font-bold text-[#64748B]">
-                        คลิกที่การ์ดช่วงเวลาด้านล่างเพื่อสลับมุมมอง
-                      </span>
+                    {/* Timeframe Switcher Tabs */}
+                    <div className="flex justify-end px-1">
+                      <div className="inline-flex items-center p-1 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl gap-1 shrink-0">
+                        {[
+                          { key: 'day' as const, label: 'วัน' },
+                          { key: 'week' as const, label: 'สัปดาห์' },
+                          { key: 'month' as const, label: 'เดือน' },
+                          { key: 'year' as const, label: 'ปี' },
+                          { key: 'custom' as const, label: '📅 ปฏิทิน' },
+                        ].map((tab) => (
+                          <button
+                            key={tab.key}
+                            onClick={() => setChartTimeframe(tab.key)}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors cursor-pointer text-center whitespace-nowrap ${
+                              chartTimeframe === tab.key
+                                ? 'bg-[#2563EB] text-white shadow-sm'
+                                : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white'
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
+
+                    {/* Expandable Calendar Date Range Bar for Admin */}
+                    {chartTimeframe === 'custom' && (
+                      <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#2563EB]/30 flex flex-col gap-3.5 animate-fade-in shadow-xs">
+                        <div className="flex items-center gap-2 text-xs font-bold text-[#2563EB]">
+                          <Calendar className="w-4 h-4 text-[#2563EB]" />
+                          <span>เลือกช่วงวันที่ต้องการกรองสถิติและกิจกรรมของระบบ</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <AdminThaiDateInput
+                            label="วันที่เริ่มต้น (วัน / เดือน / ปี)"
+                            value={chartStartDate}
+                            onChange={(val) => {
+                              setChartStartDate(val)
+                              setChartTimeframe('custom')
+                            }}
+                          />
+                          <AdminThaiDateInput
+                            label="วันที่สิ้นสุด (วัน / เดือน / ปี)"
+                            value={chartEndDate}
+                            onChange={(val) => {
+                              setChartEndDate(val)
+                              setChartTimeframe('custom')
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     <div className="relative pt-6 pb-2 px-2 bg-[#F8FAFC]/50 rounded-2xl border border-[#E2E8F0]">
                       {/* Y-Axis Guidelines */}
@@ -893,9 +1137,9 @@ export default function AdminDashboard() {
                               {isHovered && (
                                 <div className="absolute bottom-full mb-3 z-30 bg-[#0F172A] text-white p-3.5 rounded-2xl shadow-xl text-xs whitespace-nowrap min-w-[160px] pointer-events-none border border-slate-700">
                                   <div className="font-black border-b border-slate-700 pb-1.5 mb-2 text-blue-400 text-sm">{label}</div>
-                                  {visibleSeries.driverApp && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>การสมัครคนขับ:</span> <b className="text-white">{driverAppVal}</b></div>}
+                                  {visibleSeries.driverApp && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>การสมัครผู้ให้บริการขับรถ:</span> <b className="text-white">{driverAppVal}</b></div>}
                                   {visibleSeries.pubApp && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>การสมัครสถานบันเทิง:</span> <b className="text-white">{pubAppVal}</b></div>}
-                                  {visibleSeries.driverReport && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>รายงานคนขับ:</span> <b className="text-white">{driverReportVal}</b></div>}
+                                  {visibleSeries.driverReport && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>รายงานผู้ให้บริการขับรถ:</span> <b className="text-white">{driverReportVal}</b></div>}
                                   {visibleSeries.userReport && <div className="flex justify-between gap-3 text-slate-300 py-0.5"><span>รายงานผู้ใช้บริการ:</span> <b className="text-white">{userReportVal}</b></div>}
                                 </div>
                               )}
@@ -972,54 +1216,64 @@ export default function AdminDashboard() {
                       const drvRep = countInPeriods(driverReports, 'reportdate')
                       const usrRep = countInPeriods(userReports, 'reportdate')
 
+                      // Custom range stats
+                      const sDate = new Date(`${chartStartDate}T00:00:00+07:00`)
+                      const eDate = new Date(`${chartEndDate}T23:59:59.999+07:00`)
+                      const validStart = sDate <= eDate ? sDate : eDate
+                      const validEnd = sDate <= eDate ? eDate : sDate
+
+                      const countCustom = (items: any[], dateKey: string) => {
+                        return (items || []).filter(item => {
+                          if (!item[dateKey]) return false
+                          const d = parseThaiDate(item[dateKey])
+                          return d >= validStart && d <= validEnd
+                        }).length
+                      }
+                      const customDrv = countCustom(drivers, 'regisdate')
+                      const customPub = countCustom(pubs, 'regisdate')
+                      const customDrvRep = countCustom(driverReports, 'reportdate')
+                      const customUsrRep = countCustom(userReports, 'reportdate')
+
                       const periodStats = [
                         {
                           key: 'day' as const,
                           label: 'กิจกรรมวันนี้',
-                          timeTag: 'วันนี้ (Today)',
                           total: drv.day + pub.day + drvRep.day + usrRep.day,
                           apps: drv.day + pub.day,
                           reports: drvRep.day + usrRep.day,
                           icon: Clock,
                           color: 'text-pink-600',
-                          badgeBg: 'bg-pink-500/10 text-pink-600 border-pink-500/20',
                           activeBorder: 'border-pink-500 ring-2 ring-pink-500/20 bg-pink-50/40',
                         },
                         {
                           key: 'week' as const,
                           label: 'กิจกรรมสัปดาห์นี้',
-                          timeTag: 'สัปดาห์นี้ (This Week)',
                           total: drv.week + pub.week + drvRep.week + usrRep.week,
                           apps: drv.week + pub.week,
                           reports: drvRep.week + usrRep.week,
                           icon: Calendar,
                           color: 'text-blue-600',
-                          badgeBg: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
                           activeBorder: 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/40',
                         },
                         {
                           key: 'month' as const,
                           label: 'กิจกรรมเดือนนี้',
-                          timeTag: 'เดือนนี้ (This Month)',
                           total: drv.month + pub.month + drvRep.month + usrRep.month,
                           apps: drv.month + pub.month,
                           reports: drvRep.month + usrRep.month,
                           icon: TrendingUp,
                           color: 'text-indigo-600',
-                          badgeBg: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
                           activeBorder: 'border-indigo-500 ring-2 ring-indigo-500/20 bg-indigo-50/40',
                         },
                         {
-                          key: 'year' as const,
-                          label: 'กิจกรรมปีนี้',
-                          timeTag: 'ปีนี้ (This Year)',
-                          total: drv.year + pub.year + drvRep.year + usrRep.year,
-                          apps: drv.year + pub.year,
-                          reports: drvRep.year + usrRep.year,
+                          key: (chartTimeframe === 'custom' ? 'custom' : 'year') as any,
+                          label: chartTimeframe === 'custom' ? 'กิจกรรมตามช่วงวันที่เลือก' : 'กิจกรรมปีนี้',
+                          total: chartTimeframe === 'custom' ? (customDrv + customPub + customDrvRep + customUsrRep) : (drv.year + pub.year + drvRep.year + usrRep.year),
+                          apps: chartTimeframe === 'custom' ? (customDrv + customPub) : (drv.year + pub.year),
+                          reports: chartTimeframe === 'custom' ? (customDrvRep + customUsrRep) : (drvRep.year + usrRep.year),
                           icon: BarChart3,
-                          color: 'text-emerald-600',
-                          badgeBg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-                          activeBorder: 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/40',
+                          color: chartTimeframe === 'custom' ? 'text-purple-600' : 'text-emerald-600',
+                          activeBorder: chartTimeframe === 'custom' ? 'border-purple-500 ring-2 ring-purple-500/20 bg-purple-50/40' : 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/40',
                         },
                       ]
 
@@ -1031,22 +1285,23 @@ export default function AdminDashboard() {
                             return (
                               <div
                                 key={stat.key}
-                                onClick={() => setChartTimeframe(stat.key)}
+                                onClick={() => {
+                                  setChartTimeframe(stat.key)
+                                }}
                                 className={`p-5 bg-white border rounded-2xl shadow-xs flex flex-col justify-between cursor-pointer transition-all duration-200 hover:scale-[1.01] ${
                                   isSelected ? stat.activeBorder : 'border-[#E2E8F0] hover:border-slate-300'
                                 }`}
                               >
-                                <div className="flex items-center justify-between">
-                                  <div className={`p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl ${stat.color}`}>
+                                <div className="flex items-center gap-3">
+                                  <div className={`p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl ${stat.color} shrink-0`}>
                                     <IconComp className="w-5 h-5" />
                                   </div>
-                                  <span className={`text-xs font-black px-3 py-1 rounded-full border ${stat.badgeBg}`}>
-                                    {stat.timeTag}
+                                  <span className="text-sm sm:text-base font-bold text-[#0F172A]">
+                                    {stat.label}
                                   </span>
                                 </div>
                                 <div className="mt-4">
-                                  <div className="text-xs font-extrabold text-[#64748B] uppercase tracking-wider">{stat.label}</div>
-                                  <div className="text-3xl font-black font-manrope text-[#0F172A] mt-1">{stat.total} <span className="text-sm font-bold text-[#64748B]">รายการ</span></div>
+                                  <div className="text-3xl font-black font-manrope text-[#0F172A]">{stat.total} <span className="text-sm font-bold text-[#64748B]">รายการ</span></div>
                                   <div className="text-xs font-bold text-[#64748B] mt-2 flex items-center gap-2">
                                     <span className="text-blue-600 font-extrabold">สมัคร {stat.apps}</span>
                                     <span>•</span>
@@ -1071,7 +1326,7 @@ export default function AdminDashboard() {
         {activeTab === 'driver-app' && (
           <div className="p-6 bg-white border border-[#E2E8F0] rounded-2xl shadow-sm flex flex-col gap-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h2 className="text-2xl font-black font-manrope text-[#0F172A]">รายการอนุมัติพนักงานขับรถ (Driver Applications)</h2>
+              <h2 className="text-2xl font-black font-manrope text-[#0F172A]">รายการอนุมัติผู้ให้บริการขับรถ (Driver Applications)</h2>
               <span className="text-sm font-bold text-[#64748B]">
                 {statusFilter === 'รอดำเนินการ' ? 'รอดำเนินการพิจารณา' : statusFilter === 'All' ? 'รายการทั้งหมด' : statusFilter}
               </span>
@@ -1202,7 +1457,7 @@ export default function AdminDashboard() {
                     ))}
                     {drivers.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="p-8 text-center text-sm text-[#64748B] font-bold">ไม่มีคำขอสมัครคนขับในระบบขณะนี้</td>
+                        <td colSpan={6} className="p-8 text-center text-sm text-[#64748B] font-bold">ไม่มีคำขอสมัครผู้ให้บริการขับรถในระบบขณะนี้</td>
                       </tr>
                     )}
                   </tbody>
@@ -1361,7 +1616,7 @@ export default function AdminDashboard() {
         {activeTab === 'driver-report' && (
           <div className="p-6 bg-white border border-[#E2E8F0] rounded-2xl shadow-sm flex flex-col gap-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h2 className="text-2xl font-black font-manrope text-[#0F172A]">รายงานความประพฤติคนขับ (Driver Reports)</h2>
+              <h2 className="text-2xl font-black font-manrope text-[#0F172A]">รายงานความประพฤติผู้ให้บริการขับรถ (Driver Reports)</h2>
               <span className="text-sm font-bold text-[#64748B]">
                 {statusFilter === 'รอดำเนินการ' ? 'รอดำเนินการตรวจสอบ' : statusFilter === 'All' ? 'รายการทั้งหมด' : statusFilter}
               </span>
@@ -1504,7 +1759,7 @@ export default function AdminDashboard() {
                   })}
                     {driverReports.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="p-8 text-center text-sm text-[#64748B] font-bold">ไม่มีรายการร้องเรียนคนขับตามเงื่อนไขที่ค้นหา</td>
+                        <td colSpan={6} className="p-8 text-center text-sm text-[#64748B] font-bold">ไม่มีรายการร้องเรียนผู้ให้บริการขับรถตามเงื่อนไขที่ค้นหา</td>
                       </tr>
                     )}
                   </tbody>
@@ -1713,7 +1968,7 @@ export default function AdminDashboard() {
             <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl max-w-4xl w-full p-6 md:p-8 shadow-2xl flex flex-col gap-6 max-h-[90vh] overflow-y-auto my-auto">
               <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-4">
                 <div>
-                  <h3 className="text-2xl font-black font-manrope text-[var(--color-text)]">พิจารณาคนขับ: @{selectedDriver.username}</h3>
+                  <h3 className="text-2xl font-black font-manrope text-[var(--color-text)]">พิจารณาผู้ให้บริการขับรถ: @{selectedDriver.username}</h3>
                   <p className="text-sm font-semibold text-[var(--color-text-muted)] mt-1">ยื่นสมัครเมื่อ: {formatThaiDate(selectedDriver.regisdate)}</p>
                 </div>
                 <button onClick={() => setSelectedDriver(null)} className="p-2 text-[var(--color-text-muted)] hover:text-[var(--color-text)] text-2xl font-bold">✕</button>
@@ -1819,7 +2074,7 @@ export default function AdminDashboard() {
                         ปฏิเสธคำขอ
                       </button>
                       <button onClick={() => promptDriverApprove(selectedDriver.username)} className="px-6 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-xl text-sm font-extrabold cursor-pointer shadow-sm transition-all">
-                        อนุมัติคำขอคนขับ ✓
+                        อนุมัติคำขอผู้ให้บริการขับรถ ✓
                       </button>
                     </>
                   ) : (
@@ -2032,7 +2287,7 @@ export default function AdminDashboard() {
               <div className="flex justify-between items-center border-b border-[var(--color-border)] pb-4">
                 <div>
                   <h3 className="text-2xl font-black font-manrope text-[var(--color-text)]">
-                    รายละเอียดคำร้องเรียน ({selectedReportType === 'driver' ? 'คนขับรถ' : 'ผู้ใช้บริการ'})
+                    รายละเอียดคำร้องเรียน ({selectedReportType === 'driver' ? 'ผู้ให้บริการขับรถ' : 'ผู้ใช้บริการ'})
                   </h3>
                   <p className="text-sm font-semibold text-[var(--color-text-muted)] mt-1">
                     ID: {selectedReportType === 'driver' ? selectedReport.driverreportid : selectedReport.userreportid} | วันที่แจ้ง: {formatThaiDate(selectedReport.reportdate)}

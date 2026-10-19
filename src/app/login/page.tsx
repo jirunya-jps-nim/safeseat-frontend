@@ -208,7 +208,7 @@ function LoginContent() {
             <p className={`text-base sm:text-lg mt-6 leading-relaxed font-medium max-w-lg ${
               isDark ? 'text-slate-300' : 'text-[#475569]'
             }`}>
-              บริการผู้ขับขี่แทน พร้อมรับทุกที่ทุกเวลา คัดกรองคนขับทุกคนอย่างเข้มงวด และติดตามเส้นทางแบบเรียลไทม์ตลอดการเดินทาง
+              บริการผู้ขับขี่แทน พร้อมรับทุกที่ทุกเวลา คัดกรองผู้ให้บริการขับรถทุกคนอย่างเข้มงวด และติดตามเส้นทางแบบเรียลไทม์ตลอดการเดินทาง
             </p>
           </div>
 
@@ -274,7 +274,7 @@ function LoginContent() {
               <p className={`text-sm mt-2 font-medium ${
                 isDark ? 'text-slate-400' : 'text-[#64748B]'
               }`}>
-                ยินดีต้อนรับกลับ กรอกข้อมูลเพื่อเข้าใช้งาน
+                ยินดีต้อนรับ กรอกข้อมูลเพื่อเข้าใช้งาน
               </p>
             </div>
 
@@ -306,7 +306,7 @@ function LoginContent() {
                 }`}
               >
                 <Car className="w-4 h-4" />
-                <span>คนขับ</span>
+                <span>ผู้ให้บริการขับรถ</span>
               </button>
               <button
                 type="button"
